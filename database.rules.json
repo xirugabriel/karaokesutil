@@ -1,0 +1,30 @@
+{
+  "rules": {
+    "configuracoes": {
+      ".read": "auth != null",
+      "filaAberta": {
+        ".write": "root.child('admins').child(auth.uid).exists()"
+      },
+      "tocandoAgora": {
+        ".write": "root.child('admins').child(auth.uid).exists()"
+      }
+    },
+
+    "fila_karaoke": {
+      ".read": "auth != null",
+      ".indexOn": ["timestamp"],
+
+      "$uid": {
+        ".write": "auth != null && ($uid === auth.uid || root.child('admins').child(auth.uid).exists())",
+        ".validate": "!newData.exists() || (newData.child('uid').val() === $uid && newData.hasChildren(['uid','song','table','timestamp']) && newData.child('song').isString() && newData.child('song').val().length <= 300 && newData.child('table').val().length <= 20)"
+      }
+    },
+
+    "admins": {
+      "$uid": {
+        ".read": "auth != null && $uid === auth.uid",
+        ".write": false
+      }
+    }
+  }
+}

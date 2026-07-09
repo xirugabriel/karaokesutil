@@ -1,0 +1,8 @@
+{
+  "name": "sutil-karaoke-site",
+  "version": "2.0.0",
+  "private": true,
+  "dependencies": {
+    "yt-search": "^2.13.1"
+  }
+}
