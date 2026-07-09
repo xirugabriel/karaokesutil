@@ -853,20 +853,12 @@
                     Pedir música
                 </p>
                 <label>Qual música você vai cantar?</label>
-                <input id="song-input" type="text" placeholder="ex.: Evidências – Chitãozinho & Xororó"
-                       onkeydown="if(event.key==='Enter')requestTyped()">
-                <button onclick="requestTyped()">
-                    <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    Buscar minha música
-                </button>
-
-                <div class="section-head"><span>Ou busque direto aqui</span></div>
-                <div class="search-wrap">
-                    <svg class="search-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input id="yt-search" type="search" autocomplete="off" placeholder="Buscar música, artista ou cantor"
-                           oninput="onSearchInput(this.value)"
-                           onkeydown="if(event.key==='Enter'){doSearch(this.value);this.blur();}">
-                </div>
+<div class="search-wrap" style="margin-bottom: 20px;">
+    <svg class="search-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="yt-search" type="search" autocomplete="off" placeholder="Digite a música ou o cantor..."
+           oninput="onSearchInput(this.value)"
+           onkeydown="if(event.key==='Enter'){doSearch(this.value);this.blur();}">
+</div>
                 <p class="yt-note">Toque em uma sugestão para pedir o vídeo exato — é ele que vai tocar no telão. 🎤</p>
                 <div id="search-results"></div>
 
