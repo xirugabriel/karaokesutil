@@ -994,6 +994,29 @@ input {
     color: var(--primary-light);
     box-shadow: 0 6px 16px rgba(0,0,0,0.4);
 }
+/* Disco de vinil girando (quando não há capa da música) */
+.np-vinil {
+    width: 54px; height: 54px; border-radius: 50%;
+    position: relative;
+    background:
+        radial-gradient(circle at 50% 50%, transparent 0 8px, rgba(177,78,255,0.55) 8px 9px, transparent 9px),
+        repeating-radial-gradient(circle at 50% 50%, #17141f 0 2px, #0d0b13 2px 4px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.55), inset 0 0 10px rgba(0,0,0,0.6);
+    animation: vinil-gira 3.2s linear infinite;
+}
+.np-vinil::after { /* miolo do disco */
+    content: ''; position: absolute; inset: 40%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+    box-shadow: 0 0 8px rgba(177,78,255,0.7);
+}
+.np-vinil-luz { /* brilho que corre pela superfície */
+    position: absolute; inset: 0; border-radius: 50%;
+    background: linear-gradient(120deg, transparent 40%, rgba(255,255,255,0.14) 50%, transparent 60%);
+}
+@keyframes vinil-gira { to { transform: rotate(360deg); } }
+.np-card.np-empty .np-vinil { animation-duration: 6s; opacity: 0.65; }
+
 .np-body { flex: 1; min-width: 0; }
 .np-label {
     font-size: 10px; letter-spacing: 2px; text-transform: uppercase;

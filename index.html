@@ -1438,9 +1438,13 @@
         }
         card.classList.remove('hidden'); // sempre visível na tela principal
 
+        // Disco de vinil girando — entra sempre que não há um banner
+        // de capa da música (fica bem melhor que um ícone parado).
+        const vinil = '<div class="np-vinil"><span class="np-vinil-luz"></span></div>';
+
         if (!localNowPlaying || !localNowPlaying.song) {
             card.classList.add('np-empty');
-            art.style.backgroundImage = ''; art.innerHTML = ic('music', 'ic-lg');
+            art.style.backgroundImage = ''; art.innerHTML = vinil;
             document.getElementById('np-title').textContent = 'Ninguém no palco ainda';
             document.getElementById('np-artist').textContent = 'O DJ escolhe a próxima música';
             return;
@@ -1448,7 +1452,7 @@
 
         card.classList.remove('np-empty');
         if (localNowPlaying.thumb) { art.style.backgroundImage = `url('${localNowPlaying.thumb}')`; art.innerHTML = ''; }
-        else { art.style.backgroundImage = ''; art.innerHTML = ic('music', 'ic-lg'); }
+        else { art.style.backgroundImage = ''; art.innerHTML = vinil; }
         document.getElementById('np-title').textContent = localNowPlaying.song;
         document.getElementById('np-artist').textContent = localNowPlaying.channel
             || (localNowPlaying.table ? ('Mesa ' + localNowPlaying.table) : '');
