@@ -8,6 +8,10 @@
          color-scheme:dark mantém o cromo do navegador escuro (ajuda no Android). -->
     <meta name="color-scheme" content="dark">
     <title>Sutil Karaokê - Fila</title>
+    <!-- Ícone do site (aba do navegador, favoritos e tela inicial do iPhone) -->
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
@@ -1451,8 +1455,7 @@
         }
 
         card.classList.remove('np-empty');
-        if (localNowPlaying.thumb) { art.style.backgroundImage = `url('${localNowPlaying.thumb}')`; art.innerHTML = ''; }
-        else { art.style.backgroundImage = ''; art.innerHTML = vinil; }
+        art.style.backgroundImage = ''; art.innerHTML = vinil; // sempre o disco de vinil
         document.getElementById('np-title').textContent = localNowPlaying.song;
         document.getElementById('np-artist').textContent = localNowPlaying.channel
             || (localNowPlaying.table ? ('Mesa ' + localNowPlaying.table) : '');
