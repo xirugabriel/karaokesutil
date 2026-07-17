@@ -9,6 +9,8 @@
     <meta name="color-scheme" content="dark">
     <title>Sutil Karaokê - Fila</title>
     <!-- Ícone do site (aba do navegador, favoritos e tela inicial do iPhone) -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -793,10 +795,10 @@
                 <span class="tb-brand-sub">Karaokê</span>
                 <span class="tb-brand-main">do Sutil</span>
             </div>
-            <div class="tb-profile">
+            <button class="tb-profile" onclick="openProfile()" aria-label="Editar perfil">
                 <span class="tb-profile-label">Perfil</span>
                 <span class="tb-avatar" id="tb-avatar"></span>
-            </div>
+            </button>
         </div>
 
         <!-- ═══════ ABA: PEDIR (início) ═══════ -->
@@ -992,6 +994,28 @@
     </div>
 </div>
 
+<!-- ── EDITAR PERFIL (nome + foto) ────────────────────────── -->
+<div id="profile-sheet" class="modal-overlay hidden">
+    <div class="modal-box">
+        <h3>Meu Perfil</h3>
+        <p>É assim que você aparece na fila e no ranking.</p>
+        <div class="pf-avatar-wrap">
+            <span class="pf-avatar" id="pf-avatar"></span>
+            <button class="pf-avatar-edit" onclick="document.getElementById('pf-file').click()" aria-label="Trocar foto">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </button>
+        </div>
+        <input id="pf-file" type="file" accept="image/*" style="display:none" onchange="onPickPhoto(event)">
+        <label style="text-align:left; display:block;">Seu nome</label>
+        <input id="pf-name" type="text" maxlength="30" placeholder="Como você quer ser chamado">
+        <button class="btn-success" onclick="saveProfile()">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+            Salvar
+        </button>
+        <button class="btn-cancel" onclick="closeProfile()">Cancelar</button>
+    </div>
+</div>
+
 <div class="footer-badge">
     <svg class="ic ic-sm" viewBox="0 0 24 24" style="vertical-align:-3px; stroke: rgba(255,255,255,0.2); margin-right:6px;"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5S9.44 3 11 3s2 .5 3 .5 1.72-.5 2.5-.5a2.5 2.5 0 0 1 0 5c-.78 0-1.5-.5-2.5-.5Z"/><path d="M5 8v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2V8"/></svg>
     CHOPP GELADO &middot; BOA MÚSICA &middot; BOA COMPANHIA
@@ -1098,6 +1122,7 @@
             currentUser = user.displayName;
             currentUID = user.uid;
             attachDataListeners();
+            carregarPerfil();
         } else {
             currentUser = null;
             currentUID = null;
@@ -1231,8 +1256,14 @@
             snap.forEach((c) => { linhas.push({ id: c.key, ...c.val() }); });
             linhas.sort((a, b) => (b.pontos || 0) - (a.pontos || 0));
             renderRanking(linhas);
-        }).catch(() => {
-            list.innerHTML = `<div class="empty-queue"><span>${ic('trofeu','ic-lg')}</span>Não consegui carregar o ranking agora. Tente de novo.</div>`;
+        }).catch((e) => {
+            // Erro de PERMISSÃO = as regras do Firebase ainda não liberam
+            // a leitura de /ranking. Precisa republicar o database.rules.json.
+            const msg = (e && (e.code === 'PERMISSION_DENIED' || /permission/i.test(e.message || '')))
+                ? 'O ranking está bloqueado pelas regras do Firebase.<br>Republique o <b>database.rules.json</b> (nó <b>ranking</b>) no console.'
+                : 'Não consegui carregar o ranking agora.<br>Verifique a conexão e tente de novo.';
+            list.innerHTML = `<div class="empty-queue"><span>${ic('trofeu','ic-lg')}</span>${msg}</div>`;
+            console.error('[ranking] falha ao ler', rankingModo, e);
         });
     }
 
@@ -1478,16 +1509,92 @@
     }
 
     /* ════════ TOP BAR / PERFIL ════════ */
-    function setTopbar() {
+    let perfilFoto = null;   // foto salva do usuário (data URL)
+    let fotoEditada;         // foto escolhida no modal, ainda não salva
+
+    function aplicarAvatar(el) {
         const u = firebase.auth().currentUser;
-        const av = document.getElementById('tb-avatar');
-        if (u && u.photoURL) { av.style.backgroundImage = `url('${u.photoURL}')`; av.textContent = ''; }
-        else { av.style.backgroundImage = ''; av.textContent = (currentUser || '?').charAt(0).toUpperCase(); }
+        const foto = perfilFoto || (u && u.photoURL);
+        if (foto) { el.style.backgroundImage = `url('${foto}')`; el.textContent = ''; }
+        else { el.style.backgroundImage = ''; el.textContent = (currentUser || '?').charAt(0).toUpperCase(); }
     }
-    function logout() {
-        if (!confirm('Sair da sua conta?')) return;
-        currentTab = 'pedir';
-        firebase.auth().signOut();
+    function setTopbar() { aplicarAvatar(document.getElementById('tb-avatar')); }
+
+    // Fonte da verdade do que aparece: nosso nó perfis/{uid}. Assim,
+    // mesmo que o login do Google reescreva o perfil do Auth, o nome
+    // e a foto escolhidos pelo cliente continuam valendo.
+    function carregarPerfil() {
+        if (!currentUID) return;
+        db.ref('perfis/' + currentUID).once('value').then((snap) => {
+            const p = snap.val() || {};
+            if (p.nome) currentUser = p.nome;
+            if (p.foto) perfilFoto = p.foto;
+            setTopbar();
+            updateUI();
+        }).catch(() => {});
+    }
+
+    function openProfile() {
+        document.getElementById('pf-name').value = currentUser || '';
+        fotoEditada = undefined;
+        aplicarAvatar(document.getElementById('pf-avatar'));
+        document.getElementById('profile-sheet').classList.remove('hidden');
+    }
+    function closeProfile() {
+        document.getElementById('profile-sheet').classList.add('hidden');
+    }
+
+    // Redimensiona a foto pra um avatar pequeno (quadrado central) e
+    // guarda como data URL — não precisa de Firebase Storage.
+    function onPickPhoto(ev) {
+        const file = ev.target.files && ev.target.files[0];
+        ev.target.value = ''; // deixa reescolher a mesma foto depois
+        if (!file) return;
+        if (!/^image\//.test(file.type)) { showToast('Escolha uma imagem.', 'error'); return; }
+        const reader = new FileReader();
+        reader.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+                const S = 200;
+                const canvas = document.createElement('canvas');
+                canvas.width = S; canvas.height = S;
+                const lado = Math.min(img.width, img.height);
+                const sx = (img.width - lado) / 2, sy = (img.height - lado) / 2;
+                canvas.getContext('2d').drawImage(img, sx, sy, lado, lado, 0, 0, S, S);
+                fotoEditada = canvas.toDataURL('image/jpeg', 0.72);
+                const el = document.getElementById('pf-avatar');
+                el.style.backgroundImage = `url('${fotoEditada}')`; el.textContent = '';
+            };
+            img.onerror = () => showToast('Não consegui ler a imagem.', 'error');
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function saveProfile() {
+        const nome = document.getElementById('pf-name').value.trim();
+        if (nome.length < 2) { showToast('Digite um nome válido.', 'error'); return; }
+        const foto = (fotoEditada !== undefined) ? fotoEditada : perfilFoto;
+        if (foto && foto.length > 90000) { showToast('Foto muito pesada, tente outra.', 'error'); return; }
+
+        const dados = { nome };
+        if (foto) dados.foto = foto;
+
+        db.ref('perfis/' + currentUID).set(dados).then(() => {
+            currentUser = nome;
+            if (foto) perfilFoto = foto;
+            const u = firebase.auth().currentUser;
+            if (u) u.updateProfile({ displayName: nome }).catch(() => {});
+            setTopbar();
+            updateUI();
+            closeProfile();
+            showToast('Perfil atualizado!', 'success');
+        }).catch((e) => {
+            const permissao = e && (e.code === 'PERMISSION_DENIED' || /permission/i.test(e.message || ''));
+            showToast(permissao
+                ? 'Bloqueado pelas regras do Firebase — republique o database.rules.json.'
+                : 'Não consegui salvar. Tente de novo.', 'error');
+        });
     }
 
     /* ════════ DJ — TOCANDO AGORA ════════ */
