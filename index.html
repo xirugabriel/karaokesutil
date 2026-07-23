@@ -1298,6 +1298,35 @@
         searchTimer = setTimeout(() => doSearch(v), 450);
     }
 
+    // Manda a busca pro APP do bar pelo Firebase e espera a resposta.
+    // O servidor do site (Vercel) é bloqueado pelo YouTube por ser IP
+    // de datacenter; o app roda na internet do bar, que funciona.
+    function buscarViaApp(termo) {
+        return new Promise((resolve, reject) => {
+            if (!currentUID) { reject(new Error('Entre com sua conta para buscar.')); return; }
+            const ref = db.ref('buscas').push();
+            let pronto = false;
+            const limpar = () => { ref.off(); ref.remove().catch(() => {}); };
+            const prazo = setTimeout(() => {
+                if (pronto) return;
+                limpar();
+                reject(new Error('O sistema do bar não respondeu. Confira se o karaokê está aberto.'));
+            }, 15000);
+            ref.on('value', (snap) => {
+                const v = snap.val();
+                if (v && v.resultado !== undefined && v.resultado !== null) {
+                    pronto = true;
+                    clearTimeout(prazo);
+                    const res = Array.isArray(v.resultado) ? v.resultado : [];
+                    limpar();
+                    resolve(res);
+                }
+            });
+            ref.set({ q: termo, uid: currentUID, ts: firebase.database.ServerValue.TIMESTAMP })
+               .catch(() => { clearTimeout(prazo); ref.off(); reject(new Error('Não consegui enviar a busca.')); });
+        });
+    }
+
     async function doSearch(q) {
         q = (q || '').trim();
         const box = document.getElementById('search-results');
@@ -1306,11 +1335,8 @@
         try {
             // Prioriza versões de karaokê (sem repetir a palavra se já estiver na busca)
             const apiQ = /karaok/i.test(q) ? q : (q + ' karaokê');
-            // Busca GRATUITA: função /api/busca no próprio Vercel
-            const r = await fetch('/api/busca?q=' + encodeURIComponent(apiQ));
-            const d = await r.json();
-            if (d.erro) throw new Error(d.erro);
-            const items = d.videos || [];
+            // Busca pelo app do bar (o servidor do site é bloqueado pelo YouTube)
+            const items = await buscarViaApp(apiQ);
             if (!items.length) {
                 box.innerHTML = `<div class="sr-msg">Nada encontrado. Tente escrever de outro jeito
                     (nome da música + cantor).</div>`;
