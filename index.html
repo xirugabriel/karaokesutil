@@ -980,6 +980,10 @@
                 <div class="rq-channel" id="rq-channel"></div>
             </div>
         </div>
+        <button id="rq-trocar" class="rq-trocar hidden" onclick="trocarMusicaDoPedido()">
+            <svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Trocar música
+        </button>
         <div id="rq-song-row" class="hidden" style="text-align:left;">
             <label>Música + Cantor / Banda</label>
             <input id="rq-song" type="text" placeholder="ex.: Evidências – Chitãozinho & Xororó">
@@ -1053,6 +1057,7 @@
     let currentUID = null;
     let isAdmin = false;
     let localQueue = [];
+    let espelhoQueue = null; // fila completa espelhada pelo app (site + DJ)
     let isQueueOpen = true;
     let localNowPlaying = null;
     let currentTab = 'pedir';
@@ -1115,6 +1120,35 @@
             localNowPlaying = snapshot.val();
             updateUI();
         });
+
+        // 🪞 Fila COMPLETA publicada pelo app do bar (inclui os pedidos
+        // feitos pelo operador/DJ, que não existem em fila_karaoke).
+        db.ref('fila_espelho').on('value', (snapshot) => {
+            const v = snapshot.val();
+            if (v && v.ts) {
+                const itens = v.itens
+                    ? (Array.isArray(v.itens) ? v.itens : Object.values(v.itens))
+                    : [];
+                espelhoQueue = itens;
+            } else {
+                espelhoQueue = null; // app antigo/sem espelho → usa só fila_karaoke
+            }
+            updateUI();
+        });
+    }
+
+    // Fila que aparece pros clientes: o espelho do app quando existe,
+    // completado com pedidos do site que ainda não chegaram nele
+    // (ex.: pedido feito agora com o app do bar fechado).
+    function filaParaMostrar() {
+        if (!espelhoQueue) {
+            return localQueue.map(r => ({ name: r.name, song: r.song, table: r.table, thumb: r.thumb || '', uid: r.uid, dj: false }));
+        }
+        const vistos = new Set(espelhoQueue.map(e => e && e.uid).filter(Boolean));
+        const extras = localQueue
+            .filter(r => !vistos.has(r.uid))
+            .map(r => ({ name: r.name, song: r.song, table: r.table, thumb: r.thumb || '', uid: r.uid, dj: false }));
+        return [...espelhoQueue, ...extras];
     }
 
     firebase.auth().onAuthStateChanged((user) => {
@@ -1385,8 +1419,21 @@
         const mine = localQueue.find(r => r.uid === currentUID);
         document.getElementById('rq-heading').textContent = mine ? 'Atualizar pedido' : 'Confirmar pedido';
         document.getElementById('rq-table').value = mine ? (mine.table || '') : '';
+        // Só faz sentido "trocar música" quando já existe um pedido seu
+        // (pedido novo já está escolhendo a música agora, pela busca).
+        document.getElementById('rq-trocar').classList.toggle('hidden', !mine);
         document.getElementById('request-sheet').classList.remove('hidden');
         setTimeout(() => document.getElementById('rq-table').focus(), 120);
+    }
+
+    // Fecha a folha de confirmação e leva pra busca, pra escolher uma
+    // música nova. A mesa continua salva no pedido atual e volta a
+    // aparecer sozinha quando a folha reabrir com a nova música.
+    function trocarMusicaDoPedido() {
+        closeRequestSheet();
+        goTab('pedir');
+        const inp = document.getElementById('yt-search');
+        setTimeout(() => { inp.focus(); inp.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150);
     }
 
     // Editar o próprio pedido SEM perder a posição na fila (mantém o timestamp).
@@ -1520,10 +1567,13 @@
 
     function renderYourTurn() {
         const card = document.getElementById('your-turn');
-        const idx = localQueue.findIndex(r => r.uid === currentUID);
-        if (idx === -1) { card.classList.add('hidden'); return; }
+        const req = localQueue.find(r => r.uid === currentUID);
+        if (!req) { card.classList.add('hidden'); return; }
         card.classList.remove('hidden');
-        const req = localQueue[idx];
+        // Posição na fila COMPLETA (inclui pedidos do DJ na frente)
+        const completa = filaParaMostrar();
+        let idx = completa.findIndex(r => r.uid === currentUID);
+        if (idx === -1) idx = completa.length; // ainda não espelhado → fim da fila
         document.getElementById('turn-song').textContent = req.song;
         document.getElementById('turn-artist').textContent = req.channel || ('Mesa ' + req.table);
         document.getElementById('turn-pos').textContent = '#' + String(idx + 1).padStart(2, '0');
@@ -1701,20 +1751,21 @@
     function renderClientQueue() {
         const list = document.getElementById('client-queue');
         list.innerHTML = '';
-        if (localQueue.length === 0) {
+        const filaCompleta = filaParaMostrar();
+        if (filaCompleta.length === 0) {
             list.innerHTML = `<div class="empty-queue"><span>${ic('mic','ic-lg')}</span>Fila vazia — seja o primeiro a pedir!</div>`;
             return;
         }
-        localQueue.forEach((req, i) => {
+        filaCompleta.forEach((req, i) => {
             const isFirst = i === 0;
-            const me = req.uid === currentUID;
+            const me = req.uid && req.uid === currentUID;
             list.innerHTML += `
-                <li class="queue-item${me ? ' is-me' : ''}">
+                <li class="queue-item${me ? ' is-me' : ''}${isFirst ? ' is-first' : ''}">
                     <div class="position-badge">${i + 1}</div>
-                    ${req.thumb ? `<span class="q-thumb" style="background-image:url('${req.thumb}')"></span>` : ''}
+                    ${req.thumb ? `<span class="q-thumb" style="background-image:url('${req.thumb}')"></span>` : `<span class="q-avatar">${esc((req.name || '?').charAt(0).toUpperCase())}</span>`}
                     <div class="song-info">
                         <span class="song-title">${esc(req.song)}</span>
-                        <span class="singer-name">${me ? 'Você' : esc(req.name)} · Mesa ${esc(req.table)}</span>
+                        <span class="singer-name">${me ? 'Você' : esc(req.name)}${req.table ? ' · Mesa ' + esc(req.table) : ''}${req.dj ? ` <span class="dj-chip">${ic('sliders','ic-xs')} DJ</span>` : ''}</span>
                     </div>
                     ${isFirst ? `<span class="stage-badge">${ic('mic','ic-sm')} Palco</span>` : (me ? '<span class="me-badge">Você</span>' : '')}
                 </li>`;
