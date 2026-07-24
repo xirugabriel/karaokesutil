@@ -1303,9 +1303,11 @@ input {
 
 .rk-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .rk-nome {
+    display: flex; align-items: center; min-width: 0;
     font-weight: 600; font-size: 14.5px; color: var(--text);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* o NOME encolhe com "…"; a badge "Você" fica inteira ao lado */
+.rk-nome-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .rk-sub { font-size: 12px; color: var(--text-muted); }
 .rk-pontos {
     font-family: 'Outfit', sans-serif;
@@ -1333,7 +1335,11 @@ input {
     font-size: 20px; font-weight: 700;
     color: var(--secondary-light);
     min-width: 44px; text-align: center;
+    display: flex; align-items: center; justify-content: center;
 }
+/* sem posição ainda (não pontuou) → mostra um microfone discreto */
+.rk-me-pos.sem { color: var(--text-muted); }
+.rk-me-pos.sem .ic { width: 20px; height: 20px; }
 .rk-me-sep {
     text-align: center; font-size: 11px; color: var(--text-muted);
     letter-spacing: 0.3px; margin: 8px 0 14px;

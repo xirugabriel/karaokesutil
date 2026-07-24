@@ -1282,7 +1282,9 @@
 
     function carregarRanking() {
         const list = document.getElementById('rk-list');
-        document.getElementById('rk-me').innerHTML = '';
+        // Card do usuário já aparece NA HORA (sem esperar o Firebase):
+        // nome + 0 pts + sem posição. Depois se atualiza com os dados reais.
+        renderMeuCard({ name: currentUser, pontos: 0, posicao: null });
         list.innerHTML = `<div class="empty-queue"><span>${ic('trofeu','ic-lg')}</span>Carregando ranking…</div>`;
         const ref = rankingModo === 'geral'
             ? db.ref('ranking/geral')
@@ -1304,21 +1306,44 @@
         });
     }
 
-    // Card fixo no topo com a pontuação do PRÓPRIO usuário — aparece
-    // mesmo se ele estiver fora do top 20, só pra ele ver seus pontos.
-    async function renderMinhaPontuacao(ref, top20) {
+    // Monta o card do usuário (topo do ranking). Aceita dados parciais:
+    // sem posição → mostra microfone; sem pontos → texto de incentivo.
+    function renderMeuCard(d) {
         const box = document.getElementById('rk-me');
-        box.innerHTML = '';
+        if (!currentUID) { box.innerHTML = ''; return; }
+        d = d || {};
+        const nome = esc(d.name || currentUser || 'Você');
+        const pontos = d.pontos || 0;
+        const musicas = d.musicas || 0;
+        const temPos = typeof d.posicao === 'number';
+        const sub = pontos > 0
+            ? `${musicas} ${musicas === 1 ? 'música' : 'músicas'} · melhor nota ${d.melhorNota || 0}`
+            : 'ainda sem pontos · cante e apareça no placar!';
+        box.innerHTML = `
+            <div class="rk-me-card">
+                <span class="rk-me-pos${temPos ? '' : ' sem'}">${temPos ? '#' + d.posicao : ic('mic','ic-sm')}</span>
+                <div class="rk-info">
+                    <span class="rk-nome"><span class="rk-nome-txt">${nome}</span><span class="me-badge">Você</span></span>
+                    <span class="rk-sub">${sub}</span>
+                </div>
+                <span class="rk-pontos">${pontos}<small>pts</small></span>
+            </div>
+            <div class="rk-me-sep">— seu lugar no placar · continue cantando! —</div>`;
+    }
+
+    // Busca a pontuação real do usuário e ATUALIZA o card (que já está
+    // na tela desde o início). Aparece mesmo fora do top 20.
+    async function renderMinhaPontuacao(ref, top20) {
         if (!currentUID) return;
         try {
             const meuSnap = await ref.child(currentUID).once('value');
             const meu = meuSnap.val();
-            if (!meu) return; // ainda não pontuou → não mostra nada
+            if (!meu) return; // ainda não pontuou → mantém o placeholder (0 pts)
 
             // Posição real: se está no top 20, usa o índice; senão conta
             // quantos têm MAIS pontos que ele + 1 (uma consulta a mais).
             const noTop = top20.findIndex(r => r.id === currentUID);
-            let posicao = '—';
+            let posicao = null;
             if (noTop >= 0) {
                 posicao = noTop + 1;
             } else {
@@ -1328,17 +1353,13 @@
                 } catch (e) { /* sem posição exata, mostra só os pontos */ }
             }
 
-            const musicas = meu.musicas || 0;
-            box.innerHTML = `
-                <div class="rk-me-card">
-                    <span class="rk-me-pos">${typeof posicao === 'number' ? '#' + posicao : ''}</span>
-                    <div class="rk-info">
-                        <span class="rk-nome">${esc(meu.name || 'Você')} <span class="me-badge">Você</span></span>
-                        <span class="rk-sub">${musicas} ${musicas === 1 ? 'música' : 'músicas'} · melhor nota ${meu.melhorNota || 0}</span>
-                    </div>
-                    <span class="rk-pontos">${meu.pontos || 0}<small>pts</small></span>
-                </div>
-                <div class="rk-me-sep">— seu lugar no placar · continue cantando! —</div>`;
+            renderMeuCard({
+                name: meu.name || currentUser,
+                pontos: meu.pontos || 0,
+                musicas: meu.musicas || 0,
+                melhorNota: meu.melhorNota || 0,
+                posicao: posicao,
+            });
         } catch (e) { /* silencioso: o card é um extra, não trava o ranking */ }
     }
 
@@ -1359,7 +1380,7 @@
                 <li class="rk-item pos-${i + 1}${me ? ' is-me' : ''}">
                     <span class="rk-pos">${i + 1}</span>
                     <div class="rk-info">
-                        <span class="rk-nome">${esc(r.name || 'Cantor')}${me ? ' <span class="me-badge">Você</span>' : ''}</span>
+                        <span class="rk-nome"><span class="rk-nome-txt">${esc(r.name || 'Cantor')}</span>${me ? '<span class="me-badge">Você</span>' : ''}</span>
                         <span class="rk-sub">${musicas} ${musicas === 1 ? 'música' : 'músicas'} · melhor nota ${r.melhorNota || 0}</span>
                     </div>
                     <span class="rk-pontos">${r.pontos || 0}<small>pts</small></span>
