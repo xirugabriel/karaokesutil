@@ -1318,6 +1318,27 @@ input {
 .rk-pontos small { font-size: 10px; font-weight: 600; margin-left: 2px; -webkit-text-fill-color: var(--text-muted); }
 .rk-item.is-me { border-color: rgba(43,184,255,0.5); box-shadow: 0 0 16px rgba(43,184,255,0.14); }
 
+/* Card fixo com a pontuação do próprio usuário (topo do ranking) */
+#rk-me { margin-bottom: 6px; }
+#rk-me:empty { display: none; }
+.rk-me-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 15px; border-radius: 14px;
+    background: linear-gradient(135deg, rgba(43,184,255,0.14), rgba(177,78,255,0.10));
+    border: 1px solid rgba(43,184,255,0.55);
+    box-shadow: 0 0 22px rgba(43,184,255,0.16);
+}
+.rk-me-pos {
+    font-family: 'Outfit', sans-serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--secondary-light);
+    min-width: 44px; text-align: center;
+}
+.rk-me-sep {
+    text-align: center; font-size: 11px; color: var(--text-muted);
+    letter-spacing: 0.3px; margin: 8px 0 14px;
+}
+
 /* ── EDITAR PERFIL ───────────────────────────────────────── */
 .pf-avatar-wrap { position: relative; width: 104px; height: 104px; margin: 4px auto 22px; }
 .pf-avatar {
