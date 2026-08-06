@@ -327,6 +327,21 @@
             flex-shrink: 0;
             margin-left: 10px;
         }
+        /* Selo do PRÓXIMO da fila (verde "pronto pra subir") */
+        .next-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 11px; font-weight: 700; letter-spacing: 1px;
+            color: #2BE0A6;
+            background: rgba(43,224,166,0.14);
+            border: 1px solid rgba(43,224,166,0.35);
+            padding: 3px 10px; border-radius: 20px;
+            white-space: nowrap; flex-shrink: 0; margin-left: 10px;
+            animation: badge-pulse-next 2.5s ease-in-out infinite;
+        }
+        @keyframes badge-pulse-next {
+            0%, 100% { box-shadow: 0 0 0 0   rgba(43,224,166,0.55); }
+            50%       { box-shadow: 0 0 0 8px rgba(43,224,166,0);   }
+        }
 
         .position-badge {
             font-family: 'Outfit', sans-serif;
@@ -809,6 +824,7 @@
                 <div class="np-art" id="np-art"></div>
                 <div class="np-body">
                     <span class="np-label">Tocando Agora</span>
+                    <div class="np-singer" id="np-singer"></div>
                     <div class="np-title" id="np-title"></div>
                     <div class="np-artist" id="np-artist"></div>
                     <div class="np-wave" id="np-wave"></div>
@@ -1082,6 +1098,7 @@
         info:    '<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
         play:    '<polygon points="7 4 19 12 7 20 7 4"/>',
         chevR:   '<path d="m9 6 6 6-6 6"/>',
+        relogio: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>',
         trofeu:  '<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/>'
     };
     function ic(name, cls) { return `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 24 24">${ICONS[name]}</svg>`; }
@@ -1440,11 +1457,12 @@
             }
             box.innerHTML = items.map(v => {
                 const data = encodeURIComponent(JSON.stringify(v));
+                const dur = v.duration ? esc(v.duration) : '';
                 return `<button class="sr-item" onclick='openRequest(JSON.parse(decodeURIComponent("${data}")))'>
-                    <span class="sr-thumb" style="background-image:url('${v.thumb}')"></span>
+                    <span class="sr-thumb" style="background-image:url('${v.thumb}')">${dur ? `<span class="sr-dur">${dur}</span>` : ''}</span>
                     <span class="sr-info">
                         <span class="sr-title">${esc(v.title)}</span>
-                        <span class="sr-ch">${esc(v.channel)}</span>
+                        <span class="sr-ch"><span class="sr-ch-name">${esc(v.channel)}</span>${dur ? `<span class="sr-time">${ic('relogio','ic-xs')}${dur}</span>` : ''}</span>
                     </span>
                     <span class="sr-add">${ic('play','ic-sm')}</span>
                 </button>`;
@@ -1612,9 +1630,12 @@
         // de capa da música (fica bem melhor que um ícone parado).
         const vinil = '<div class="np-vinil"><span class="np-vinil-luz"></span></div>';
 
+        const singer = document.getElementById('np-singer');
+
         if (!localNowPlaying || !localNowPlaying.song) {
             card.classList.add('np-empty');
             art.style.backgroundImage = ''; art.innerHTML = vinil;
+            singer.innerHTML = '';
             document.getElementById('np-title').textContent = 'Ninguém no palco ainda';
             document.getElementById('np-artist').textContent = 'O DJ escolhe a próxima música';
             return;
@@ -1622,9 +1643,13 @@
 
         card.classList.remove('np-empty');
         art.style.backgroundImage = ''; art.innerHTML = vinil; // sempre o disco de vinil
+        // Nome de quem está cantando (o cliente no palco)
+        const nome = localNowPlaying.name || '';
+        singer.innerHTML = nome
+            ? ic('mic', 'ic-sm') + esc(nome) + (localNowPlaying.table ? ' <span class="np-mesa">Mesa ' + esc(localNowPlaying.table) + '</span>' : '')
+            : '';
         document.getElementById('np-title').textContent = localNowPlaying.song;
-        document.getElementById('np-artist').textContent = localNowPlaying.channel
-            || (localNowPlaying.table ? ('Mesa ' + localNowPlaying.table) : '');
+        document.getElementById('np-artist').textContent = localNowPlaying.channel || '';
     }
 
     function renderYourTurn() {
@@ -1641,8 +1666,10 @@
         document.getElementById('turn-pos').textContent = '#' + String(idx + 1).padStart(2, '0');
         const flash = document.getElementById('turn-flash');
         const remain = document.getElementById('turn-remain');
-        if (idx === 0) { flash.textContent = 'É A SUA VEZ!'; remain.textContent = 'Você está no palco'; }
-        else if (idx === 1) { flash.textContent = 'PREPARE-SE!'; remain.textContent = 'Falta 1 música'; }
+        // idx = posição na fila de ESPERA. #1 é o PRÓXIMO a cantar
+        // (quem está no palco é o "Tocando Agora", não a fila).
+        if (idx === 0) { flash.textContent = 'VOCÊ É O PRÓXIMO!'; remain.textContent = 'Prepare-se pra subir ao palco'; }
+        else if (idx === 1) { flash.textContent = 'QUASE LÁ!'; remain.textContent = 'Falta 1 antes de você'; }
         else { flash.textContent = 'SUA VEZ ESTÁ CHEGANDO!'; remain.textContent = 'Faltam ' + idx + ' músicas'; }
     }
 
@@ -1829,7 +1856,7 @@
                         <span class="song-title">${esc(req.song)}</span>
                         <span class="singer-name">${me ? 'Você' : esc(req.name)}${req.table ? ' · Mesa ' + esc(req.table) : ''}${req.dj ? ` <span class="dj-chip">${ic('sliders','ic-xs')} DJ</span>` : ''}</span>
                     </div>
-                    ${isFirst ? `<span class="stage-badge">${ic('mic','ic-sm')} Palco</span>` : (me ? '<span class="me-badge">Você</span>' : '')}
+                    ${isFirst ? `<span class="next-badge">${ic('mic','ic-sm')} Próximo</span>` : (me ? '<span class="me-badge">Você</span>' : '')}
                 </li>`;
         });
     }
