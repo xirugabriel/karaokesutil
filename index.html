@@ -1458,13 +1458,14 @@
             box.innerHTML = items.map(v => {
                 const data = encodeURIComponent(JSON.stringify(v));
                 const dur = v.duration ? esc(v.duration) : '';
-                // Já baixada no PC do karaokê = toca na hora, sem risco
+                // Já está na biblioteca do PC — sem risco de falhar o
+                // download. (Não muda a ordem da fila, só a garantia.)
                 const pronta = !!v.offline;
                 return `<button class="sr-item${pronta ? ' sr-pronta' : ''}" onclick='openRequest(JSON.parse(decodeURIComponent("${data}")))'>
                     <span class="sr-thumb" style="background-image:url('${v.thumb}')">${dur ? `<span class="sr-dur">${dur}</span>` : ''}</span>
                     <span class="sr-info">
                         <span class="sr-title">${esc(v.title)}</span>
-                        <span class="sr-ch"><span class="sr-ch-name">${esc(v.channel)}</span>${dur ? `<span class="sr-time">${ic('relogio','ic-xs')}${dur}</span>` : ''}${pronta ? `<span class="sr-pronta-chip">${ic('check','ic-xs')}Toca na hora</span>` : ''}</span>
+                        <span class="sr-ch"><span class="sr-ch-name">${esc(v.channel)}</span>${dur ? `<span class="sr-time">${ic('relogio','ic-xs')}${dur}</span>` : ''}${pronta ? `<span class="sr-pronta-chip">${ic('check','ic-xs')}Já baixada</span>` : ''}</span>
                     </span>
                     <span class="sr-add">${ic('play','ic-sm')}</span>
                 </button>`;
