@@ -924,10 +924,11 @@
                 Ranking dos Cantores
             </p>
             <div class="rk-toggle">
-                <button id="rk-mensal" class="rk-opt ativo" onclick="setRankingModo('mensal')">Este mês</button>
+                <button id="rk-diario" class="rk-opt ativo" onclick="setRankingModo('diario')">Hoje</button>
+                <button id="rk-mensal" class="rk-opt" onclick="setRankingModo('mensal')">Este mês</button>
                 <button id="rk-geral" class="rk-opt" onclick="setRankingModo('geral')">Geral</button>
             </div>
-            <p class="rk-hint">Peça pelo site, cante e some pontos — cada nota da TV entra no seu placar!</p>
+            <p class="rk-hint">Vale a sua <b>maior nota</b> — bateu o próprio recorde, sobe no ranking!</p>
             <div id="rk-me"></div>
             <ul class="rk-list" id="rk-list"></ul>
         </div>
@@ -1281,20 +1282,32 @@
     }
 
     /* ════════ RANKING DOS CANTORES ════════ */
-    // O app do karaokê soma as notas de cada conta (só pedidos
-    // feitos pelo site) em ranking/geral e ranking/mensal/AAAA-MM.
-    let rankingModo = 'mensal';
+    // Ranking por RECORDE (maior nota), não por soma. O app grava um
+    // registro POR USUÁRIO em cada período (a chave é o uid), então
+    // cada pessoa aparece UMA vez, com a sua melhor nota do período:
+    //   ranking/diario/AAAA-MM-DD  ·  ranking/mensal/AAAA-MM  ·  ranking/geral
+    let rankingModo = 'diario';
 
     function setRankingModo(modo) {
         rankingModo = modo;
-        document.getElementById('rk-mensal').classList.toggle('ativo', modo === 'mensal');
-        document.getElementById('rk-geral').classList.toggle('ativo', modo === 'geral');
+        ['diario', 'mensal', 'geral'].forEach((m) => {
+            const b = document.getElementById('rk-' + m);
+            if (b) b.classList.toggle('ativo', modo === m);
+        });
         carregarRanking();
     }
 
     function chaveMesAtual() {
         const d = new Date();
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    }
+    function chaveDiaAtual() {
+        return chaveMesAtual() + '-' + String(new Date().getDate()).padStart(2, '0');
+    }
+    function refDoRanking() {
+        if (rankingModo === 'geral') return db.ref('ranking/geral');
+        if (rankingModo === 'mensal') return db.ref('ranking/mensal/' + chaveMesAtual());
+        return db.ref('ranking/diario/' + chaveDiaAtual());
     }
 
     function carregarRanking() {
@@ -1303,13 +1316,12 @@
         // nome + 0 pts + sem posição. Depois se atualiza com os dados reais.
         renderMeuCard({ name: currentUser, pontos: 0, posicao: null });
         list.innerHTML = `<div class="empty-queue"><span>${ic('trofeu','ic-lg')}</span>Carregando ranking…</div>`;
-        const ref = rankingModo === 'geral'
-            ? db.ref('ranking/geral')
-            : db.ref('ranking/mensal/' + chaveMesAtual());
-        ref.orderByChild('pontos').limitToLast(20).once('value').then((snap) => {
+        const ref = refDoRanking();
+        // ordena pelo RECORDE (melhorNota) — cada usuário aparece 1x
+        ref.orderByChild('melhorNota').limitToLast(20).once('value').then((snap) => {
             const linhas = [];
             snap.forEach((c) => { linhas.push({ id: c.key, ...c.val() }); });
-            linhas.sort((a, b) => (b.pontos || 0) - (a.pontos || 0));
+            linhas.sort((a, b) => (b.melhorNota || 0) - (a.melhorNota || 0));
             renderRanking(linhas);
             renderMinhaPontuacao(ref, linhas); // card fixo no topo (mesmo fora do top 20)
         }).catch((e) => {
@@ -1330,12 +1342,12 @@
         if (!currentUID) { box.innerHTML = ''; return; }
         d = d || {};
         const nome = esc(d.name || currentUser || 'Você');
-        const pontos = d.pontos || 0;
+        const recorde = d.melhorNota || 0;   // 🏆 o que vale no ranking
         const musicas = d.musicas || 0;
         const temPos = typeof d.posicao === 'number';
-        const sub = pontos > 0
-            ? `${musicas} ${musicas === 1 ? 'música' : 'músicas'} · melhor nota ${d.melhorNota || 0}`
-            : 'ainda sem pontos · cante e apareça no placar!';
+        const sub = recorde > 0
+            ? `seu recorde ${rotuloPeriodo()} · ${musicas} ${musicas === 1 ? 'música' : 'músicas'}`
+            : 'ainda sem nota · cante e apareça no placar!';
         box.innerHTML = `
             <div class="rk-me-card">
                 <span class="rk-me-pos${temPos ? '' : ' sem'}">${temPos ? '#' + d.posicao : ic('mic','ic-sm')}</span>
@@ -1343,7 +1355,7 @@
                     <span class="rk-nome"><span class="rk-nome-txt">${nome}</span><span class="me-badge">Você</span></span>
                     <span class="rk-sub">${sub}</span>
                 </div>
-                <span class="rk-pontos">${pontos}<small>pts</small></span>
+                <span class="rk-pontos">${recorde}<small>pts</small></span>
             </div>
             <div class="rk-me-sep">— seu lugar no placar · continue cantando! —</div>`;
     }
@@ -1358,16 +1370,16 @@
             if (!meu) return; // ainda não pontuou → mantém o placeholder (0 pts)
 
             // Posição real: se está no top 20, usa o índice; senão conta
-            // quantos têm MAIS pontos que ele + 1 (uma consulta a mais).
+            // quantos têm RECORDE MAIOR que o dele + 1 (1 consulta a mais).
             const noTop = top20.findIndex(r => r.id === currentUID);
             let posicao = null;
             if (noTop >= 0) {
                 posicao = noTop + 1;
             } else {
                 try {
-                    const acima = await ref.orderByChild('pontos').startAt((meu.pontos || 0) + 1).once('value');
+                    const acima = await ref.orderByChild('melhorNota').startAt((meu.melhorNota || 0) + 1).once('value');
                     posicao = acima.numChildren() + 1;
-                } catch (e) { /* sem posição exata, mostra só os pontos */ }
+                } catch (e) { /* sem posição exata, mostra só o recorde */ }
             }
 
             renderMeuCard({
@@ -1380,14 +1392,22 @@
         } catch (e) { /* silencioso: o card é um extra, não trava o ranking */ }
     }
 
+    function rotuloPeriodo() {
+        if (rankingModo === 'geral') return 'de todos os tempos';
+        if (rankingModo === 'mensal') return 'do mês';
+        return 'de hoje';
+    }
+
     function renderRanking(linhas) {
         const list = document.getElementById('rk-list');
         if (!linhas.length) {
+            const vazio = {
+                geral:  'O placar geral ainda está vazio.<br>Peça uma música pelo site e inaugure o ranking!',
+                mensal: 'Ninguém pontuou este mês ainda.<br>Peça uma música e seja o primeiro do placar!',
+                diario: 'Ninguém cantou hoje ainda.<br>Peça uma música e abra a noite no topo!',
+            };
             list.innerHTML = `<div class="empty-queue"><span>${ic('trofeu','ic-lg')}</span>` +
-                (rankingModo === 'geral'
-                    ? 'O placar geral ainda está vazio.<br>Peça uma música pelo site e inaugure o ranking!'
-                    : 'Ninguém pontuou este mês ainda.<br>Peça uma música e seja o primeiro do placar!') +
-                `</div>`;
+                (vazio[rankingModo] || vazio.geral) + `</div>`;
             return;
         }
         list.innerHTML = linhas.map((r, i) => {
@@ -1398,9 +1418,9 @@
                     <span class="rk-pos">${i + 1}</span>
                     <div class="rk-info">
                         <span class="rk-nome"><span class="rk-nome-txt">${esc(r.name || 'Cantor')}</span>${me ? '<span class="me-badge">Você</span>' : ''}</span>
-                        <span class="rk-sub">${musicas} ${musicas === 1 ? 'música' : 'músicas'} · melhor nota ${r.melhorNota || 0}</span>
+                        <span class="rk-sub">recorde ${rotuloPeriodo()} · ${musicas} ${musicas === 1 ? 'música' : 'músicas'}</span>
                     </div>
-                    <span class="rk-pontos">${r.pontos || 0}<small>pts</small></span>
+                    <span class="rk-pontos">${r.melhorNota || 0}<small>pts</small></span>
                 </li>`;
         }).join('');
     }
