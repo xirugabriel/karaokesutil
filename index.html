@@ -1321,7 +1321,7 @@
         ref.orderByChild('melhorNota').limitToLast(20).once('value').then((snap) => {
             const linhas = [];
             snap.forEach((c) => { linhas.push({ id: c.key, ...c.val() }); });
-            linhas.sort((a, b) => (b.melhorNota || 0) - (a.melhorNota || 0));
+            linhas.sort(compararRanking);
             renderRanking(linhas);
             renderMinhaPontuacao(ref, linhas); // card fixo no topo (mesmo fora do top 20)
         }).catch((e) => {
@@ -1346,7 +1346,7 @@
         const musicas = d.musicas || 0;
         const temPos = typeof d.posicao === 'number';
         const sub = recorde > 0
-            ? `seu recorde ${rotuloPeriodo()} · ${musicas} ${musicas === 1 ? 'música' : 'músicas'}`
+            ? subDoRanking(d, true)
             : 'ainda sem nota · cante e apareça no placar!';
         box.innerHTML = `
             <div class="rk-me-card">
@@ -1370,15 +1370,26 @@
             if (!meu) return; // ainda não pontuou → mantém o placeholder (0 pts)
 
             // Posição real: se está no top 20, usa o índice; senão conta
-            // quantos têm RECORDE MAIOR que o dele + 1 (1 consulta a mais).
+            // quem está à frente — respeitando o DESEMPATE:
+            //   (a) recorde maior que o meu
+            //   (b) recorde igual, mas 2ª nota melhor (ou mesmo tudo
+            //       igual e menos músicas)
             const noTop = top20.findIndex(r => r.id === currentUID);
             let posicao = null;
             if (noTop >= 0) {
                 posicao = noTop + 1;
             } else {
                 try {
-                    const acima = await ref.orderByChild('melhorNota').startAt((meu.melhorNota || 0) + 1).once('value');
-                    posicao = acima.numChildren() + 1;
+                    const minha = meu.melhorNota || 0;
+                    const acima = await ref.orderByChild('melhorNota').startAt(minha + 1).once('value');
+                    const empatados = await ref.orderByChild('melhorNota').equalTo(minha).once('value');
+                    let naFrente = acima.numChildren();
+                    empatados.forEach((c) => {
+                        if (c.key === currentUID) return;
+                        const o = c.val() || {};
+                        if (compararRanking(o, meu) < 0) naFrente++; // ele vem antes
+                    });
+                    posicao = naFrente + 1;
                 } catch (e) { /* sem posição exata, mostra só o recorde */ }
             }
 
@@ -1387,6 +1398,7 @@
                 pontos: meu.pontos || 0,
                 musicas: meu.musicas || 0,
                 melhorNota: meu.melhorNota || 0,
+                segundaNota: meu.segundaNota || 0,
                 posicao: posicao,
             });
         } catch (e) { /* silencioso: o card é um extra, não trava o ranking */ }
@@ -1396,6 +1408,25 @@
         if (rankingModo === 'geral') return 'de todos os tempos';
         if (rankingModo === 'mensal') return 'do mês';
         return 'de hoje';
+    }
+
+    // Classificação: 1) maior nota  2) DESEMPATE pela 2ª maior nota
+    //                3) ainda empatado → quem tem menos músicas (fez
+    //                   a mesma marca com menos tentativas)
+    function compararRanking(a, b) {
+        return (b.melhorNota || 0) - (a.melhorNota || 0)
+            || (b.segundaNota || 0) - (a.segundaNota || 0)
+            || (a.musicas || 0) - (b.musicas || 0);
+    }
+
+    // Linha de detalhe: mostra o critério de desempate (2ª maior nota)
+    function subDoRanking(r, meu) {
+        const musicas = r.musicas || 0;
+        const txtMus = musicas + ' ' + (musicas === 1 ? 'música' : 'músicas');
+        const seg = r.segundaNota || 0;
+        return seg > 0
+            ? `${meu ? 'sua ' : ''}2ª melhor: <b>${seg}</b> · ${txtMus}`
+            : `${meu ? 'você ' : ''}sem 2ª nota ainda · ${txtMus}`;
     }
 
     function renderRanking(linhas) {
@@ -1418,7 +1449,7 @@
                     <span class="rk-pos">${i + 1}</span>
                     <div class="rk-info">
                         <span class="rk-nome"><span class="rk-nome-txt">${esc(r.name || 'Cantor')}</span>${me ? '<span class="me-badge">Você</span>' : ''}</span>
-                        <span class="rk-sub">recorde ${rotuloPeriodo()} · ${musicas} ${musicas === 1 ? 'música' : 'músicas'}</span>
+                        <span class="rk-sub">${subDoRanking(r, false)}</span>
                     </div>
                     <span class="rk-pontos">${r.melhorNota || 0}<small>pts</small></span>
                 </li>`;
