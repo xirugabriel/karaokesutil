@@ -29,6 +29,23 @@
     fillScreen();
     window.addEventListener('resize', fillScreen);
 
+    // Partículas de luz subindo atrás do nome (particle-text)
+    const palco = intro.querySelector('.intro-stage');
+    if (palco && !palco.querySelector('.intro-particulas')) {
+        const camada = document.createElement('div');
+        camada.className = 'intro-particulas';
+        for (let i = 0; i < 26; i++) {
+            const p = document.createElement('i');
+            p.style.left = (Math.random() * 100).toFixed(1) + '%';
+            p.style.setProperty('--d', (3 + Math.random() * 3).toFixed(1) + 's');
+            p.style.setProperty('--atraso', (Math.random() * 3).toFixed(1) + 's');
+            const t = 2 + Math.random() * 2.5;
+            p.style.width = p.style.height = t.toFixed(1) + 'px';
+            camada.appendChild(p);
+        }
+        palco.insertBefore(camada, palco.firstChild);
+    }
+
     // Build the equalizer bars under the title
     const eq = document.getElementById('intro-eq');
     if (eq) {
@@ -60,7 +77,9 @@
 
 
 /* ══════════════════════════════════════════════════════════════
-   1. CANVAS BACKGROUND — floating music notes
+   1. CANVAS BACKGROUND — ORB (aurora de luz que respira e deriva)
+   Desenhado em BAIXA resolução e esticado via CSS: os gradientes
+   saem macios de graça e o celular nem sente o custo.
 ══════════════════════════════════════════════════════════════ */
 (function () {
     const canvas = document.createElement('canvas');
@@ -68,59 +87,40 @@
     document.body.insertBefore(canvas, document.body.firstChild);
 
     const ctx = canvas.getContext('2d');
+    const W = 240; // resolução interna (o CSS estica pra tela toda)
+    let H = 420;
 
     function resize() {
-        canvas.width  = window.innerWidth;
-        canvas.height = window.innerHeight;
+        H = Math.round(W * (window.innerHeight / Math.max(1, window.innerWidth)));
+        canvas.width = W;
+        canvas.height = H;
     }
     resize();
     window.addEventListener('resize', resize);
 
-    const NOTES = ['♪', '♫', '♬', '♩', '🎵'];
+    // três orbes de luz nas cores da casa
+    const ORBS = [
+        { c: '177,78,255',  r: 150, ax: 0.30, ay: 0.24, sx: 0.00023, sy: 0.00031, ph: 0.0, a: 0.34 },
+        { c: '43,184,255',  r: 120, ax: 0.34, ay: 0.30, sx: 0.00029, sy: 0.00021, ph: 2.1, a: 0.26 },
+        { c: '255,77,157',  r:  95, ax: 0.26, ay: 0.20, sx: 0.00019, sy: 0.00027, ph: 4.2, a: 0.18 },
+    ];
 
-    class MusicNote {
-        constructor(preplace) {
-            this._init(preplace);
+    (function tick(t) {
+        ctx.clearRect(0, 0, W, H);
+        ctx.globalCompositeOperation = 'lighter';
+        for (const o of ORBS) {
+            const x = W * 0.5 + Math.sin(t * o.sx + o.ph) * W * o.ax;
+            const y = H * 0.42 + Math.cos(t * o.sy + o.ph) * H * o.ay;
+            const pulso = 1 + Math.sin(t * 0.0006 + o.ph) * 0.12; // respira
+            const g = ctx.createRadialGradient(x, y, 0, x, y, o.r * pulso);
+            g.addColorStop(0, `rgba(${o.c},${o.a})`);
+            g.addColorStop(0.55, `rgba(${o.c},${o.a * 0.35})`);
+            g.addColorStop(1, `rgba(${o.c},0)`);
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, W, H);
         }
-        _init(preplace) {
-            this.x      = Math.random() * canvas.width;
-            this.y      = preplace ? Math.random() * canvas.height : canvas.height + 20;
-            this.size   = Math.random() * 18 + 8;
-            this.speed  = Math.random() * 0.45 + 0.12;
-            this.drift  = (Math.random() - 0.5) * 0.35;
-            this.alpha  = Math.random() * 0.28 + 0.04;
-            this.fade   = Math.random() * 0.0005 + 0.0002;
-            this.glyph  = NOTES[Math.floor(Math.random() * NOTES.length)];
-            this.rot    = 0;
-            this.rotSpd = (Math.random() - 0.5) * 0.018;
-        }
-        update() {
-            this.y     -= this.speed;
-            this.x     += this.drift;
-            this.alpha -= this.fade;
-            this.rot   += this.rotSpd;
-            if (this.alpha <= 0 || this.y < -30) this._init(false);
-        }
-        draw() {
-            ctx.save();
-            ctx.globalAlpha = Math.max(0, this.alpha);
-            ctx.translate(this.x, this.y);
-            ctx.rotate(this.rot);
-            ctx.font      = `${this.size}px sans-serif`;
-            ctx.fillStyle = '#E8821A';
-            ctx.textAlign = 'center';
-            ctx.fillText(this.glyph, 0, 0);
-            ctx.restore();
-        }
-    }
-
-    const notes = Array.from({ length: 28 }, (_, i) => new MusicNote(i < 18));
-
-    (function tick() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        notes.forEach(n => { n.update(); n.draw(); });
         requestAnimationFrame(tick);
-    })();
+    })(0);
 })();
 
 
@@ -360,4 +360,62 @@ setInterval(pollQueueMembership, 500);
         }
     `;
     document.head.appendChild(style);
+})();
+
+
+/* ══════════════════════════════════════════════════════════════
+   ✨ PILL NAV — a "pílula" desliza atrás do item ativo
+══════════════════════════════════════════════════════════════ */
+(function () {
+    const nav = document.getElementById('bottom-nav');
+    if (!nav) return;
+
+    const pilula = document.createElement('span');
+    pilula.className = 'nav-pilula';
+    nav.insertBefore(pilula, nav.firstChild);
+
+    function mover() {
+        const ativo = nav.querySelector('button.active');
+        if (!ativo) { pilula.style.opacity = '0'; return; }
+        pilula.style.opacity = '1';
+        pilula.style.left = ativo.offsetLeft + 'px';
+        pilula.style.width = ativo.offsetWidth + 'px';
+    }
+
+    // acompanha trocas de aba (o app mexe na classe .active)
+    new MutationObserver(mover).observe(nav, {
+        subtree: true, attributes: true, attributeFilter: ['class'],
+    });
+    window.addEventListener('resize', mover);
+    setTimeout(mover, 60);
+})();
+
+
+/* ══════════════════════════════════════════════════════════════
+   ✨ SPOTLIGHT — o brilho segue o dedo/mouse nos cards
+══════════════════════════════════════════════════════════════ */
+(function () {
+    const ALVOS = '.np-card, .turn-card, .steps-card, .rk-me-card, .sr-item';
+
+    function marcar() {
+        document.querySelectorAll(ALVOS).forEach((el) => {
+            if (!el.classList.contains('spot-card')) el.classList.add('spot-card');
+        });
+    }
+    marcar();
+    new MutationObserver(marcar).observe(document.body, { childList: true, subtree: true });
+
+    function seguir(e) {
+        const p = e.touches ? e.touches[0] : e;
+        const card = (e.target.closest && e.target.closest(ALVOS));
+        if (!card) return;
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', ((p.clientX - r.left) / r.width * 100) + '%');
+        card.style.setProperty('--my', ((p.clientY - r.top) / r.height * 100) + '%');
+        card.classList.add('tocado');
+        clearTimeout(card._spotT);
+        card._spotT = setTimeout(() => card.classList.remove('tocado'), 1400);
+    }
+    document.addEventListener('mousemove', seguir, { passive: true });
+    document.addEventListener('touchstart', seguir, { passive: true });
 })();

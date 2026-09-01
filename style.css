@@ -10,8 +10,12 @@
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    z-index: 0;
+    /* -1 = fica ATRÁS de todo o conteúdo (é fundo, não véu) */
+    z-index: -1;
     pointer-events: none;
+    /* desenhado pequeno e esticado: os gradientes ficam macios de graça */
+    filter: blur(28px) saturate(115%);
+    opacity: 0.85;
 }
 
 /* Máscaras pretas que cobrem as safe areas (notch no topo, indicador na base)
@@ -1591,3 +1595,170 @@ input {
     line-height: 1.45;
 }
 .ban-rodape { font-size: 12px; color: var(--text-muted); margin-top: 16px; line-height: 1.5; }
+
+/* ════════════════════════════════════════════════════════════
+   ✨ REPAGINAÇÃO — camadas, cards e navegação
+   ════════════════════════════════════════════════════════════ */
+
+/* ── DITHER/NOISE: grão fino por cima de tudo (tira o "liso digital") ── */
+body::after {
+    content: '';
+    position: fixed; inset: -50%;
+    pointer-events: none; z-index: -1;   /* fica no fundo, junto do orb */
+    opacity: 0.05;
+    background-image:
+        repeating-conic-gradient(#fff 0% 25%, transparent 0% 50%);
+    background-size: 3px 3px;
+    animation: grao-anda 8s steps(6) infinite;
+}
+@keyframes grao-anda {
+    0%   { transform: translate(0, 0); }
+    16%  { transform: translate(-2px, 1px); }
+    33%  { transform: translate(1px, -2px); }
+    50%  { transform: translate(-1px, -1px); }
+    66%  { transform: translate(2px, 1px); }
+    83%  { transform: translate(-2px, 2px); }
+    100% { transform: translate(0, 0); }
+}
+
+/* ── SPOTLIGHT CARD: um brilho segue o dedo/mouse pelo card ── */
+.spot-card {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+.spot-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    pointer-events: none; z-index: 0;
+    background: radial-gradient(
+        220px circle at var(--mx, 50%) var(--my, 0%),
+        rgba(177, 78, 255, 0.20), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.35s;
+}
+.spot-card:hover::before, .spot-card.tocado::before { opacity: 1; }
+.spot-card > * { position: relative; z-index: 1; }
+
+/* ── ELECTRIC BORDER: contorno vivo correndo pela borda ── */
+.borda-eletrica {
+    position: relative;
+    isolation: isolate;
+}
+.borda-eletrica::after {
+    content: '';
+    position: absolute; inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--giro, 0deg),
+        transparent 0deg, var(--primary) 60deg,
+        var(--secondary) 120deg, transparent 190deg, transparent 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    animation: borda-gira 4s linear infinite;
+}
+@keyframes borda-gira { to { --giro: 360deg; } }
+@property --giro { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+
+/* ── STAR BORDER: botão principal com estrelas correndo ── */
+.btn-estrela {
+    position: relative;
+    overflow: hidden;
+}
+.btn-estrela::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(115deg, transparent 30%,
+        rgba(255,255,255,0.35) 48%, transparent 62%);
+    transform: translateX(-120%);
+    animation: estrela-passa 3.4s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes estrela-passa {
+    0%, 62% { transform: translateX(-120%); }
+    100%    { transform: translateX(120%); }
+}
+
+/* ── PILL NAV: a "pílula" desliza atrás do item ativo ── */
+#bottom-nav { position: fixed; }
+#bottom-nav .nav-pilula {
+    position: absolute;
+    top: 8px; bottom: calc(8px + env(safe-area-inset-bottom));
+    border-radius: 14px;
+    background: linear-gradient(160deg, rgba(177,78,255,0.28), rgba(43,184,255,0.16));
+    border: 1px solid rgba(177,78,255,0.45);
+    box-shadow: 0 0 22px rgba(177,78,255,0.28);
+    transition: left 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                width 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none; z-index: 0;
+}
+#bottom-nav button { position: relative; z-index: 1; }
+#bottom-nav button.active { background: transparent !important; }
+#bottom-nav button.active .ic { filter: drop-shadow(0 0 8px rgba(205,139,255,0.9)); }
+
+/* ── ANIMATED LIST: itens entram em cascata ── */
+.rk-item, .queue-item, .sr-item {
+    animation: item-entra 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes item-entra {
+    from { opacity: 0; transform: translateY(14px) scale(0.98); }
+    to   { opacity: 1; transform: none; }
+}
+.sr-item:nth-child(1) { animation-delay: 0.02s; }
+.sr-item:nth-child(2) { animation-delay: 0.06s; }
+.sr-item:nth-child(3) { animation-delay: 0.10s; }
+.sr-item:nth-child(4) { animation-delay: 0.14s; }
+.sr-item:nth-child(n+5) { animation-delay: 0.18s; }
+
+/* ── FUZZY TEXT: título com leve tremor cromático ── */
+.titulo-fuzzy {
+    position: relative;
+    text-shadow:
+        0.6px 0 rgba(255,77,157,0.5),
+       -0.6px 0 rgba(43,184,255,0.5);
+    animation: fuzzy 3.5s steps(8) infinite;
+}
+@keyframes fuzzy {
+    0%, 92%, 100% { text-shadow: 0.6px 0 rgba(255,77,157,0.45), -0.6px 0 rgba(43,184,255,0.45); }
+    94%  { text-shadow: 2px 0 rgba(255,77,157,0.7), -2px 0 rgba(43,184,255,0.7); }
+    96%  { text-shadow: -1.5px 0 rgba(255,77,157,0.6), 1.5px 0 rgba(43,184,255,0.6); }
+}
+
+/* ── INTRO: STROKE TEXT — o nome se desenha em contorno e preenche ── */
+#intro .brand-main {
+    /* contorno primeiro, preenchimento depois */
+    -webkit-text-stroke: 1.5px rgba(205, 139, 255, 0.95);
+    color: transparent;
+    animation: stroke-preenche 1.5s ease-out 0.75s forwards;
+}
+@keyframes stroke-preenche {
+    0%   { color: transparent; -webkit-text-stroke-color: rgba(205,139,255,0.95);
+           text-shadow: none; }
+    55%  { color: rgba(246, 243, 252, 0.35); }
+    100% { color: #F6F3FC; -webkit-text-stroke-color: rgba(205,139,255,0.28);
+           text-shadow: 0 0 34px rgba(177,78,255,0.55); }
+}
+
+/* partículas de luz subindo atrás do nome na intro */
+.intro-particulas {
+    position: absolute; inset: 0;
+    pointer-events: none; overflow: hidden; z-index: 0;
+}
+.intro-particulas i {
+    position: absolute;
+    bottom: -12px;
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    box-shadow: 0 0 10px var(--primary-light);
+    animation: particula-sobe var(--d, 4s) linear var(--atraso, 0s) infinite;
+    opacity: 0;
+}
+@keyframes particula-sobe {
+    0%   { opacity: 0; transform: translateY(0) scale(0.6); }
+    12%  { opacity: 0.9; }
+    80%  { opacity: 0.5; }
+    100% { opacity: 0; transform: translateY(-58vh) scale(1.1); }
+}

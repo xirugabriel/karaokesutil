@@ -820,7 +820,7 @@
         <div id="tab-pedir" class="tab-panel">
 
             <!-- Tocando agora (controlado pelo DJ) -->
-            <section id="now-playing" class="np-card hidden">
+            <section id="now-playing" class="np-card borda-eletrica hidden">
                 <div class="np-art" id="np-art"></div>
                 <div class="np-body">
                     <span class="np-label">Tocando Agora</span>
@@ -880,7 +880,7 @@
 
             <!-- PEDIDO (digitar é o principal) -->
             <div id="search-area">
-                <p class="queue-section-title">
+                <p class="queue-section-title titulo-fuzzy">
                     <svg class="title-ic" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                     Pedir música
                 </p>
@@ -920,7 +920,7 @@
 
         <!-- ═══════ ABA: MINHA FILA ═══════ -->
         <div id="tab-fila" class="tab-panel hidden">
-            <p class="queue-section-title">
+            <p class="queue-section-title titulo-fuzzy">
                 <svg class="title-ic" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                 Fila Atual
             </p>
@@ -929,7 +929,7 @@
 
         <!-- ═══════ ABA: RANKING ═══════ -->
         <div id="tab-ranking" class="tab-panel hidden">
-            <p class="queue-section-title">
+            <p class="queue-section-title titulo-fuzzy">
                 <svg class="title-ic" viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg>
                 Ranking dos Cantores
             </p>
@@ -945,7 +945,7 @@
 
         <!-- ═══════ ABA: REGRAS ═══════ -->
         <div id="tab-regras" class="tab-panel hidden">
-            <p class="queue-section-title">
+            <p class="queue-section-title titulo-fuzzy">
                 <svg class="title-ic" viewBox="0 0 24 24"><path d="M8 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M16 3h2a2 2 0 0 1 2 2a2 2 0 0 1-2 2h-2z"/><line x1="8" y1="12" x2="14" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
                 Regras da Casa
             </p>
@@ -1018,7 +1018,7 @@
         </div>
         <label style="text-align:left; display:block;">Número da mesa</label>
         <input id="rq-table" type="number" inputmode="numeric" placeholder="ex.: 7">
-        <button class="btn-success" onclick="confirmRequest()">
+        <button class="btn-success btn-estrela" onclick="confirmRequest()">
             <svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
             Confirmar pedido
         </button>
