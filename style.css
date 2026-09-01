@@ -74,7 +74,11 @@
 }
 
 body { background-color: #000; color: var(--tinta); }
-html, body { overflow-x: hidden !important; max-width: 100%; }
+/* `clip` no lugar de `hidden`: os dois cortam a sobra lateral, mas
+   `hidden` faria o body virar caixa de rolagem — e aí o documento
+   deixa de rolar, o Safari não recolhe as barras e a página não
+   pinta atrás delas. */
+html, body { overflow-x: clip; max-width: 100%; }
 
 /* sobras de versões anteriores */
 #bg-canvas, .mancha, #intro { display: none !important; }
