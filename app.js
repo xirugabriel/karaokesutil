@@ -714,3 +714,135 @@ setInterval(pollQueueMembership, 500);
         ligarTudo();
     }
 })();
+
+
+/* ══════════════════════════════════════════════════════════════
+   🎠 CIRCULAR GALLERY — categorias curvadas num arco
+   Porte do componente do ReactBits.
+
+   ⚠️ POR QUE NÃO É WebGL COMO O ORIGINAL: o componente deles roda
+   sobre a biblioteca OGL e desenha num canvas WebGL próprio. Esta
+   página JÁ tem um canvas WebGL rodando sem parar (o CRT do fundo).
+   Dois contextos desenhando ao mesmo tempo num celular é bateria e
+   risco de engasgo — ainda mais depois do travamento da rodada
+   passada. Então a MATEMÁTICA é a mesma (copiada do update() deles),
+   só que aplicada com transform, que a GPU resolve de graça:
+
+     R   = (H² + b²) / 2b        · raio do círculo do arco
+     arc = R - √(R² - x²)        · quanto o item desce
+     rot = -sinal(x) · asin(x/R) · quanto ele tomba
+
+   Custo: o laço PARA sozinho quando a esteira assenta. Parado, zero.
+══════════════════════════════════════════════════════════════ */
+(function () {
+    const CURVA = 36;      // quanto o item da ponta desce, em pixels
+    const SUAVE = 0.085;   // quanto o movimento persegue o alvo por quadro
+    const RODA  = 1.6;     // sensibilidade do scroll do mouse
+
+    const esteira = document.querySelector('.cats-scroll');
+    if (!esteira) return;
+    const itens = [].slice.call(esteira.querySelectorAll('.cat'));
+    if (itens.length < 2) return;
+
+    esteira.classList.add('cg-palco');
+
+    let passo = 0, total = 0, meia = 0;
+    const extra = new Array(itens.length).fill(0);
+    let alvo = 0, atual = 0, ultimo = 0;
+    let rodando = false, arrastando = false, partiuX = 0, partiuAlvo = 0;
+
+    const ESPACO = 11;   // mesmo gap que a esteira usava no CSS
+
+    /* O passo vem da LARGURA do item, não do espaçamento entre dois.
+       Dois motivos: no carregamento a tela do cliente ainda está
+       oculta e todo retângulo mede 0; e depois que vira palco os
+       itens ficam todos em left:50%, então não há mais espaçamento
+       para medir. A largura sobrevive aos dois casos. */
+    function medir() {
+        const larg = itens[0].getBoundingClientRect().width;
+        if (larg > 0) {
+            passo = larg + ESPACO;
+            total = passo * itens.length;
+        }
+        meia = esteira.clientWidth / 2;
+        return passo > 0 && meia > 0;
+    }
+
+    function desenhar() {
+        const dir = atual > ultimo ? 'direita' : 'esquerda';
+        const b = CURVA;
+        const R = (meia * meia + b * b) / (2 * b);
+
+        itens.forEach((el, i) => {
+            let x = i * passo - atual + extra[i];
+
+            /* Rodízio infinito: quem sai por um lado reentra pelo outro.
+               É o mesmo "extra" do original. */
+            const meiaLargura = passo / 2;
+            if (dir === 'direita' && x + meiaLargura < -meia) { extra[i] += total; x += total; }
+            if (dir === 'esquerda' && x - meiaLargura >  meia) { extra[i] -= total; x -= total; }
+
+            const xr = Math.min(Math.abs(x), meia);
+            const arco = R - Math.sqrt(Math.max(0, R * R - xr * xr));
+            const giro = -Math.sign(x) * Math.asin(xr / R) * (180 / Math.PI);
+
+            el.style.transform =
+                `translate(-50%, 0) translate(${x}px, ${arco}px) rotate(${giro}deg)`;
+        });
+
+        ultimo = atual;
+    }
+
+    function laco() {
+        atual += (alvo - atual) * SUAVE;
+        desenhar();
+        // assentou? para o laço. Nada roda com a esteira parada.
+        if (!arrastando && Math.abs(alvo - atual) < 0.4) {
+            atual = alvo; desenhar(); rodando = false; return;
+        }
+        requestAnimationFrame(laco);
+    }
+
+    function acordar() {
+        if (rodando) return;
+        rodando = true;
+        requestAnimationFrame(laco);
+    }
+
+    // ---- arrastar ----
+    function pegar(x) { arrastando = true; partiuX = x; partiuAlvo = alvo; esteira.classList.add('cg-pegando'); }
+    function mover(x) { if (arrastando) { alvo = partiuAlvo - (x - partiuX); acordar(); } }
+    function soltar()  {
+        if (!arrastando) return;
+        arrastando = false;
+        esteira.classList.remove('cg-pegando');
+        alvo = Math.round(alvo / passo) * passo;   // encaixa no item mais próximo
+        acordar();
+    }
+
+    esteira.addEventListener('touchstart', (e) => pegar(e.touches[0].clientX), { passive: true });
+    esteira.addEventListener('touchmove',  (e) => { mover(e.touches[0].clientX); }, { passive: true });
+    esteira.addEventListener('touchend', soltar);
+    esteira.addEventListener('mousedown', (e) => { pegar(e.clientX); e.preventDefault(); });
+    window.addEventListener('mousemove', (e) => mover(e.clientX));
+    window.addEventListener('mouseup', soltar);
+    esteira.addEventListener('wheel', (e) => {
+        alvo += (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * RODA;
+        acordar();
+    }, { passive: true });
+
+    /* Arrastar não pode virar clique: sem isto, deslizar a esteira
+       dispararia a busca da categoria que ficou embaixo do dedo. */
+    itens.forEach((el) => {
+        el.addEventListener('click', (ev) => {
+            if (Math.abs(alvo - partiuAlvo) > 6) { ev.preventDefault(); ev.stopPropagation(); }
+        }, true);
+    });
+
+    // só desenha quando já dá pra medir (a aba pode estar oculta ainda)
+    function reiniciar() { if (medir()) desenhar(); }
+    reiniciar();
+    window.addEventListener('resize', reiniciar, { passive: true });
+    // a aba começa escondida: remede quando ela realmente aparece
+    if (window.ResizeObserver) new ResizeObserver(reiniciar).observe(esteira);
+})();

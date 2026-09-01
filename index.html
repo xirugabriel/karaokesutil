@@ -886,10 +886,6 @@
 
                 <div class="section-head">
                     <span>Navegar por categorias</span>
-                    <button class="section-link" id="btn-cats" onclick="verTodasCategorias()">
-                        <span id="btn-cats-txt">Ver todas</span>
-                        <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-                    </button>
                 </div>
                 <div class="cats-scroll">
                     <button class="cat cat-roxo" onclick="searchCategory('Sertanejo')"><span class="cat-ic"><svg viewBox="0 0 24 24"><path d="M7 13c-2.2.5-4 1.4-4 2.5C3 17.4 7 19 12 19s9-1.6 9-3.5c0-1.1-1.8-2-4-2.5"/><path d="M7.5 14V8a4.5 4.5 0 0 1 9 0v6"/><path d="M7.5 11h9"/></svg></span>Sertanejo</button>
@@ -1452,21 +1448,6 @@
     function toggleQueueStatus() { settingsRef.set(!isQueueOpen); }
 
     /* ════════ NAVEGAÇÃO POR ABAS ════════ */
-    /* "Ver todas": as categorias vivem numa esteira horizontal e as
-       últimas ficam escondidas fora da tela. Antes este botão só dava
-       foco na busca — não mostrava categoria nenhuma. Agora ele abre a
-       esteira em grade, com todas visíveis de uma vez, e volta ao
-       normal no segundo toque. */
-    function verTodasCategorias() {
-        const esteira = document.querySelector('.cats-scroll');
-        const rotulo  = document.getElementById('btn-cats-txt');
-        const botao   = document.getElementById('btn-cats');
-        if (!esteira) return;
-        const aberto = esteira.classList.toggle('em-grade');
-        if (rotulo) rotulo.textContent = aberto ? 'Ver menos' : 'Ver todas';
-        if (botao)  botao.classList.toggle('aberto', aberto);
-    }
-
     function goTab(tab) {
         currentTab = tab;
         updateUI();

@@ -420,17 +420,6 @@ button { position: relative; overflow: hidden; }
 }
 .cats-scroll::-webkit-scrollbar { display: none; }
 
-/* "Ver todas": a esteira vira grade e mostra tudo de uma vez */
-.cats-scroll.em-grade {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 11px;
-    overflow: visible;
-}
-.cats-scroll.em-grade .cat { width: auto; }
-/* a setinha aponta pra cima quando está aberto */
-.section-link.aberto .ic { transform: rotate(-90deg); }
-.section-link .ic { transition: transform var(--rapido); }
 
 .cat {
     position: relative;
@@ -1411,4 +1400,40 @@ button { position: relative; overflow: hidden; }
 /* quem pediu menos movimento não leva bolha nem estouro */
 @media (prefers-reduced-motion: reduce) {
     .goo-camada { display: none; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   🎠 CIRCULAR GALLERY — categorias no arco
+   O posicionamento vem do app.js (transform por item). Aqui só o
+   palco: altura fixa pra caber a curva, e itens soltos do fluxo.
+   ════════════════════════════════════════════════════════════ */
+.cats-scroll.cg-palco {
+    position: relative;
+    display: block;
+    /* card (108) + topo (12) + mergulho da ponta (36) + a sobra que a
+       inclinação cria (~20). Menos que isso corta as pontas embaixo. */
+    height: 178px;
+    margin: 0 -18px;
+    padding: 0;
+    overflow: hidden;
+    touch-action: pan-y;     /* arrasta de lado sem travar a rolagem */
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.cats-scroll.cg-pegando { cursor: grabbing; }
+
+.cats-scroll.cg-palco .cat {
+    position: absolute;
+    left: 50%;
+    top: 12px;
+    margin: 0;
+    /* SEM transição: o transform é reescrito a cada quadro pelo laço.
+       Com transição, cada quadro reinicia uma interpolação de 0,18s e
+       o arrasto fica borrachudo, sempre atrasado em relação ao dedo. */
+    transition: none;
+    /* o transform inteiro é escrito pelo app.js; a origem embaixo
+       faz o item tombar como se estivesse apoiado no arco */
+    transform-origin: 50% 92%;
+    will-change: transform;
 }
