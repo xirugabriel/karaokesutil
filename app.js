@@ -69,108 +69,23 @@ function comThrottle(fn) {
 
 
 /* ══════════════════════════════════════════════════════════════
-   1. FUNDO — AERO SHARDS + DITHER
-   Cacos de vidro colorido girando devagar, com uma trama de
-   pontos (dither) por cima. Canvas único, leve no celular.
+   1. FUNDO — ORB (esfera de plasma)
+   Feito 100% em CSS: a esfera gira na GPU (transform), sem
+   canvas e sem redesenhar nada por quadro. É o fundo mais leve
+   possível pro celular — não gasta bateria nem trava a rolagem.
 ══════════════════════════════════════════════════════════════ */
 (function () {
-    const canvas = document.createElement('canvas');
-    canvas.id = 'bg-canvas';
-    document.body.insertBefore(canvas, document.body.firstChild);
-    const ctx = canvas.getContext('2d');
+    const fundo = document.createElement("div");
+    fundo.id = "orb-fundo";
+    fundo.innerHTML =
+        '<span class="orb-plasma"></span>' +
+        '<span class="orb-plasma orb-2"></span>' +
+        '<span class="orb-brilho"></span>';
+    document.body.insertBefore(fundo, document.body.firstChild);
 
-    // ⚡ No celular desenhamos em resolução MENOR (o fundo é borrado
-    // mesmo, ninguém percebe) — é o que mais economiza bateria/GPU.
-    const MOBILE = window.matchMedia('(hover: none)').matches;
-
-    let W = 0, H = 0, DPR = 1;
-    function resize() {
-        DPR = MOBILE ? 0.6 : Math.min(window.devicePixelRatio || 1, 1.5);
-        W = canvas.width = Math.floor(window.innerWidth * DPR);
-        H = canvas.height = Math.floor(window.innerHeight * DPR);
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = window.innerHeight + 'px';
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    const CORES = [
-        [177, 78, 255],   // roxo
-        [43, 184, 255],   // azul
-        [255, 77, 157],   // magenta
-        [140, 110, 255],  // violeta
-    ];
-
-    // cada caco: polígono irregular que gira e deriva
-    const CACOS = Array.from({ length: MOBILE ? 6 : 11 }, (_, i) => {
-        const lados = 3 + Math.floor(Math.random() * 3); // 3 a 5 lados
-        const pontos = Array.from({ length: lados }, (_, k) => {
-            const a = (k / lados) * Math.PI * 2 + Math.random() * 0.5;
-            const r = 0.55 + Math.random() * 0.45;
-            return [Math.cos(a) * r, Math.sin(a) * r];
-        });
-        return {
-            pontos,
-            x: Math.random(), y: Math.random(),
-            tam: 110 + Math.random() * 260,
-            cor: CORES[i % CORES.length],
-            giro: Math.random() * Math.PI * 2,
-            vGiro: (Math.random() - 0.5) * 0.00022,
-            vx: (Math.random() - 0.5) * 0.000035,
-            vy: (Math.random() - 0.5) * 0.000028,
-            alpha: 0.22 + Math.random() * 0.26,
-        };
-    });
-
-    function desenharCaco(c, t) {
-        const x = ((c.x + c.vx * t) % 1.25 + 1.25) % 1.25 - 0.12;
-        const y = ((c.y + c.vy * t) % 1.25 + 1.25) % 1.25 - 0.12;
-        const px = x * W, py = y * H;
-        const s = c.tam * DPR;
-        const ang = c.giro + c.vGiro * t;
-
-        ctx.save();
-        ctx.translate(px, py);
-        ctx.rotate(ang);
-        ctx.beginPath();
-        c.pontos.forEach(([ax, ay], i) => {
-            const vx = ax * s, vy = ay * s;
-            i ? ctx.lineTo(vx, vy) : ctx.moveTo(vx, vy);
-        });
-        ctx.closePath();
-
-        const [r, g, b] = c.cor;
-        const rgb = r + ',' + g + ',' + b;
-        const grad = ctx.createLinearGradient(-s, -s, s, s);
-        grad.addColorStop(0, 'rgba(' + rgb + ',' + c.alpha + ')');
-        grad.addColorStop(1, 'rgba(' + rgb + ',0)');
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        ctx.strokeStyle = 'rgba(' + rgb + ',' + (c.alpha * 1.6) + ')';
-        ctx.lineWidth = 1.2 * DPR;
-        ctx.stroke();
-        ctx.restore();
-    }
-
-    // ⚡ Limita a ~30 quadros/s (o fundo é lento, não precisa de 60)
-    // e PARA de desenhar quando a aba não está à vista.
-    const INTERVALO = 1000 / 30;
-    let ultimo = 0;
-    (function tick(t) {
-        requestAnimationFrame(tick);
-        if (document.hidden) return;
-        if (t - ultimo < INTERVALO) return;
-        ultimo = t;
-        ctx.clearRect(0, 0, W, H);
-        ctx.globalCompositeOperation = 'lighter';
-        for (const c of CACOS) desenharCaco(c, t);
-    })(0);
-
-    // DITHER: trama de pontos por cima dos cacos
-    const dither = document.createElement('div');
-    dither.id = 'dither';
-    document.body.insertBefore(dither, canvas.nextSibling);
+    const dither = document.createElement("div");
+    dither.id = "dither";
+    document.body.insertBefore(dither, fundo.nextSibling);
 })();
 
 
