@@ -1,3 +1,15 @@
+/* ⚡ utilitários de performance */
+var MOBILE_UI = window.matchMedia('(hover: none)').matches;
+function comThrottle(fn) {
+    var agendado = false, ultimoEvento = null;
+    return function (e) {
+        ultimoEvento = e;
+        if (agendado) return;
+        agendado = true;
+        requestAnimationFrame(function () { agendado = false; fn(ultimoEvento); });
+    };
+}
+
 /**
  * Sutil Karaokê — Interactivity & Animations
  * Loaded after Firebase inline scripts in index.html
@@ -10,6 +22,15 @@
     const intro = document.getElementById('intro');
     if (!intro) return;
     document.documentElement.classList.add('intro-lock');
+
+    // MAGIC RINGS atrás do nome
+    const palco = intro.querySelector('.intro-stage');
+    if (palco && !palco.querySelector('.intro-aneis')) {
+        const a = document.createElement('div');
+        a.className = 'intro-aneis';
+        a.innerHTML = '<i></i><i></i><i></i>';
+        palco.insertBefore(a, palco.firstChild);
+    }
 
     let saiu = false;
     function sair() {
@@ -38,9 +59,13 @@
     document.body.insertBefore(canvas, document.body.firstChild);
     const ctx = canvas.getContext('2d');
 
+    // ⚡ No celular desenhamos em resolução MENOR (o fundo é borrado
+    // mesmo, ninguém percebe) — é o que mais economiza bateria/GPU.
+    const MOBILE = window.matchMedia('(hover: none)').matches;
+
     let W = 0, H = 0, DPR = 1;
     function resize() {
-        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        DPR = MOBILE ? 0.6 : Math.min(window.devicePixelRatio || 1, 1.5);
         W = canvas.width = Math.floor(window.innerWidth * DPR);
         H = canvas.height = Math.floor(window.innerHeight * DPR);
         canvas.style.width = window.innerWidth + 'px';
@@ -57,7 +82,7 @@
     ];
 
     // cada caco: polígono irregular que gira e deriva
-    const CACOS = Array.from({ length: 11 }, (_, i) => {
+    const CACOS = Array.from({ length: MOBILE ? 6 : 11 }, (_, i) => {
         const lados = 3 + Math.floor(Math.random() * 3); // 3 a 5 lados
         const pontos = Array.from({ length: lados }, (_, k) => {
             const a = (k / lados) * Math.PI * 2 + Math.random() * 0.5;
@@ -108,11 +133,18 @@
         ctx.restore();
     }
 
+    // ⚡ Limita a ~30 quadros/s (o fundo é lento, não precisa de 60)
+    // e PARA de desenhar quando a aba não está à vista.
+    const INTERVALO = 1000 / 30;
+    let ultimo = 0;
     (function tick(t) {
+        requestAnimationFrame(tick);
+        if (document.hidden) return;
+        if (t - ultimo < INTERVALO) return;
+        ultimo = t;
         ctx.clearRect(0, 0, W, H);
         ctx.globalCompositeOperation = 'lighter';
         for (const c of CACOS) desenharCaco(c, t);
-        requestAnimationFrame(tick);
     })(0);
 
     // DITHER: trama de pontos por cima dos cacos
@@ -414,8 +446,9 @@ setInterval(pollQueueMembership, 500);
         clearTimeout(card._spotT);
         card._spotT = setTimeout(() => card.classList.remove('tocado'), 1400);
     }
-    document.addEventListener('mousemove', seguir, { passive: true });
-    document.addEventListener('touchstart', seguir, { passive: true });
+    if (!MOBILE_UI) {
+        document.addEventListener('mousemove', comThrottle(seguir), { passive: true });
+    }
 })();
 
 
@@ -448,8 +481,9 @@ setInterval(pollQueueMembership, 500);
         clearTimeout(card._t);
         card._t = setTimeout(() => card.classList.remove('tocado'), 1200);
     }
-    document.addEventListener('mousemove', brilhoBento, { passive: true });
-    document.addEventListener('touchstart', brilhoBento, { passive: true });
+    if (!MOBILE_UI) {
+        document.addEventListener('mousemove', comThrottle(brilhoBento), { passive: true });
+    }
 
     /* ---- PROFILE CARD 3D: o "tocando agora" inclina com o dedo ---- */
     function tilt3d(e) {
@@ -466,8 +500,9 @@ setInterval(pollQueueMembership, 500);
         clearTimeout(card._tilt);
         card._tilt = setTimeout(() => { card.style.transform = ''; }, 1600);
     }
-    document.addEventListener('mousemove', tilt3d, { passive: true });
-    document.addEventListener('touchmove', tilt3d, { passive: true });
+    if (!MOBILE_UI) {
+        document.addEventListener('mousemove', comThrottle(tilt3d), { passive: true });
+    }
 
     /* ---- GOOEY NAV: a bolha "salta" ao trocar de aba ---- */
     const nav = document.getElementById('bottom-nav');

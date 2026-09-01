@@ -1954,3 +1954,72 @@ body::after {
     animation: linha-abre 0.9s cubic-bezier(0.22, 1, 0.36, 1) 1.5s forwards;
 }
 @keyframes linha-abre { to { width: min(74vw, 520px); } }
+
+/* ════════════════════════════════════════════════════════════
+   🎬 INTRO — correção de centralização + MAGIC RINGS
+   ════════════════════════════════════════════════════════════ */
+#intro {
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    right: 0 !important; bottom: 0 !important;
+    width: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important;      /* respeita a barra do Safari */
+    min-height: 100vh;
+    margin: 0 !important; padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden;
+}
+#intro .intro-stage {
+    width: 100%;
+    height: auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px;
+    padding: 0 16px;
+    text-align: center;
+}
+.intro-nome {
+    max-width: 100%;
+    /* cabe em qualquer tela sem estourar */
+    font-size: clamp(34px, 11vw, 120px) !important;
+}
+
+/* ✨ MAGIC RINGS atrás do nome na intro */
+.intro-aneis {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(78vw, 460px); aspect-ratio: 1;
+    pointer-events: none; z-index: 0;
+}
+.intro-aneis i {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    animation: intro-anel 4s cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
+    opacity: 0;
+}
+.intro-aneis i:nth-child(2) { animation-delay: 1.33s; }
+.intro-aneis i:nth-child(3) { animation-delay: 2.66s; }
+@keyframes intro-anel {
+    0%   { transform: scale(0.42); opacity: 0; }
+    18%  { opacity: 0.6; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+.intro-stage > .intro-nome, .intro-stage > .intro-linha { position: relative; z-index: 1; }
+
+/* ── ⚡ PERFORMANCE: efeitos caros só onde tem mouse ─────────── */
+@media (hover: none) {
+    /* celular: sem blur/blend em tela cheia (é o que mais trava) */
+    #bg-canvas { filter: none !important; }
+    #dither { mix-blend-mode: normal !important; opacity: 0.28 !important; }
+    .np-card { transform: none !important; }          /* sem tilt 3D no toque */
+    .spot-card::before, .bento-card::before { display: none; }
+    .titulo-fuzzy { animation: none; text-shadow: none; }
+}
