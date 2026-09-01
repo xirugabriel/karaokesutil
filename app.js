@@ -419,3 +419,81 @@ setInterval(pollQueueMembership, 500);
     document.addEventListener('mousemove', seguir, { passive: true });
     document.addEventListener('touchstart', seguir, { passive: true });
 })();
+
+
+/* ══════════════════════════════════════════════════════════════
+   🔥 REFORMA — Bento, Card 3D, Gooey nav, Wheel, Manchas
+══════════════════════════════════════════════════════════════ */
+(function () {
+
+    /* ---- manchas de cor respirando nos cantos (shape blur) ---- */
+    [['177,78,255', '-12vw', '-8vh', '58vw', '0s'],
+     ['43,184,255', '62vw', '58vh', '52vw', '-7s'],
+     ['255,77,157', '30vw', '18vh', '38vw', '-13s']].forEach(([c, l, t, s, d]) => {
+        const m = document.createElement('div');
+        m.className = 'mancha';
+        m.style.cssText = `left:${l};top:${t};width:${s};height:${s};
+            background:radial-gradient(circle,rgba(${c},0.30),transparent 68%);
+            animation-delay:${d};`;
+        document.body.appendChild(m);
+    });
+
+    /* ---- brilho que segue o dedo nos cards do BENTO ---- */
+    function brilhoBento(e) {
+        const p = e.touches ? e.touches[0] : e;
+        const card = e.target.closest && e.target.closest('.bento-card');
+        if (!card) return;
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', ((p.clientX - r.left) / r.width * 100) + '%');
+        card.style.setProperty('--my', ((p.clientY - r.top) / r.height * 100) + '%');
+        card.classList.add('tocado');
+        clearTimeout(card._t);
+        card._t = setTimeout(() => card.classList.remove('tocado'), 1200);
+    }
+    document.addEventListener('mousemove', brilhoBento, { passive: true });
+    document.addEventListener('touchstart', brilhoBento, { passive: true });
+
+    /* ---- PROFILE CARD 3D: o "tocando agora" inclina com o dedo ---- */
+    function tilt3d(e) {
+        const p = e.touches ? e.touches[0] : e;
+        const card = document.getElementById('now-playing');
+        if (!card || card.classList.contains('hidden')) return;
+        const r = card.getBoundingClientRect();
+        if (p.clientY < r.top - 60 || p.clientY > r.bottom + 60) {
+            card.style.transform = ''; return;
+        }
+        const rx = ((p.clientY - r.top) / r.height - 0.5) * -9;   // graus
+        const ry = ((p.clientX - r.left) / r.width - 0.5) * 12;
+        card.style.transform = `perspective(800px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+        clearTimeout(card._tilt);
+        card._tilt = setTimeout(() => { card.style.transform = ''; }, 1600);
+    }
+    document.addEventListener('mousemove', tilt3d, { passive: true });
+    document.addEventListener('touchmove', tilt3d, { passive: true });
+
+    /* ---- GOOEY NAV: a bolha "salta" ao trocar de aba ---- */
+    const nav = document.getElementById('bottom-nav');
+    if (nav) {
+        nav.addEventListener('click', (e) => {
+            if (!e.target.closest('button')) return;
+            nav.classList.remove('saltando');
+            void nav.offsetWidth;
+            nav.classList.add('saltando');
+            setTimeout(() => nav.classList.remove('saltando'), 500);
+        });
+    }
+
+    /* ---- OPTION WHEEL: destaca a categoria no centro da esteira ---- */
+    const esteira = document.querySelector('.cats-scroll');
+    if (esteira) {
+        function destacar() {
+            const meio = esteira.scrollLeft + esteira.clientWidth / 2;
+            esteira.querySelectorAll('.cat').forEach((c) => {
+                const centro = c.offsetLeft + c.offsetWidth / 2;
+                c.classList.toggle('perto', Math.abs(centro - meio) < c.offsetWidth * 0.62);
+            });
+        }
+        esteira.addEventListener('scroll', destacar, { passive: true });
+        setTimeout(destacar, 120);
+    }
+})();
