@@ -298,8 +298,14 @@ void main() {
     gl.uniform1f(u.uMix, AJUSTES.teto);
 
     function redimensionar() {
-        const larg = Math.max(1, Math.round(window.innerWidth  * ESCALA));
-        const alt  = Math.max(1, Math.round(window.innerHeight * ESCALA));
+        /* Mede a PRÓPRIA caixa, não a janela: o canvas agora transborda
+           120px acima e abaixo do viewport pra cobrir o notch e a barra
+           do navegador. Usar innerHeight desenharia no tamanho da janela
+           e a imagem sairia esticada nessa sobra. */
+        const cssL = canvas.clientWidth  || window.innerWidth;
+        const cssA = canvas.clientHeight || window.innerHeight;
+        const larg = Math.max(1, Math.round(cssL * ESCALA));
+        const alt  = Math.max(1, Math.round(cssA * ESCALA));
         if (canvas.width === larg && canvas.height === alt) return;
         canvas.width = larg;
         canvas.height = alt;
@@ -316,11 +322,16 @@ void main() {
            esticar e virar listra comprida no celular em pé. */
         const CEL_LARG = 13, CEL_ALT = 26;
         gl.uniform2f(u.uGrid,
-            Math.max(14, Math.round(window.innerWidth  / CEL_LARG)),
-            Math.max(14, Math.round(window.innerHeight / CEL_ALT)));
+            Math.max(14, Math.round(cssL / CEL_LARG)),
+            Math.max(14, Math.round(cssA / CEL_ALT)));
     }
     redimensionar();
     window.addEventListener("resize", redimensionar, { passive: true });
+    /* A caixa do canvas muda por CSS (a sangra que cobre o notch), e isso
+       não dispara `resize` da janela. Sem observar a própria caixa, o
+       shader ficaria desenhando na medida antiga e a imagem sairia
+       esticada na sobra. */
+    if (window.ResizeObserver) new ResizeObserver(redimensionar).observe(canvas);
 
     // o dedo/mouse entorta o sinal de leve
     const alvo = { x: 0, y: 0 };

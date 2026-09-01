@@ -43,26 +43,37 @@
 /* O !important não é preguiça: o <style> embutido no index.html crava
    z-index -1 aqui, e como essa camada é PRETA OPACA, com -1 ela fica
    na frente do canvas (-2) e tapa o tubo por completo. */
-#bg-fill {
+/* AS TRÊS CAMADAS TRANSBORDAM DE PROPÓSITO.
+   Elemento `position: fixed` se apoia no viewport SEM a área do chrome
+   do navegador — então `inset: 0` parava logo abaixo da barra de status
+   e o fundo não subia até o topo, mesmo com a página já indo até lá.
+   Esticando 120px para cima e para baixo, a pintura cobre o notch, a
+   barra do Safari e o indicador de início, sobrando em qualquer caso. */
+#bg-fill, #crt-fundo, #dither {
     position: fixed;
-    inset: 0;
+    left: 0; right: 0;
+    /* !important porque o <style> embutido no index.html vem DEPOIS do
+       link deste arquivo no <head>: em empate de especificidade quem
+       vence é ele, e o `inset: 0` de lá anulava esta sangra. */
+    top: calc(-1 * var(--sangra)) !important;
+    bottom: auto !important;
+    height: calc(100% + var(--sangra) * 2) !important;
+    pointer-events: none;
+}
+:root { --sangra: 120px; }
+
+#bg-fill {
     z-index: -3 !important;
     background-image: none !important;
     background-color: #000 !important;
 }
 #crt-fundo {
-    position: fixed;
-    inset: 0;
-    width: 100%; height: 100%;
+    width: 100%;
     display: block;
     z-index: -2;
-    pointer-events: none;
 }
 #dither {
-    position: fixed;
-    inset: 0;
     z-index: -1;
-    pointer-events: none;
     opacity: 1 !important;
     background-color: rgba(0, 0, 0, 0.18);
 }
