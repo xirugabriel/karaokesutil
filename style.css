@@ -2340,3 +2340,137 @@ html.intro-lock .footer-badge {
     animation: intro-sai 0.55s ease forwards !important;
     pointer-events: none !important;
 }
+
+/* ════════════════════════════════════════════════════════════
+   💡 LOGO NEON "SUTIL-OKÊ" — letreiro vazado ciano → magenta
+   Usada na intro e na barra de topo, com glitch só na ENTRADA.
+
+   Por que duas cópias em vez de uma: contorno com DEGRADÊ não
+   existe em CSS. Testei `background-clip: text` com text-stroke e
+   ele preenche o miolo da letra — vira letra sólida, não vazada.
+   Então são duas cópias sobrepostas, cada uma com contorno de uma
+   cor, e uma máscara em degradê revelando cada metade. O resultado
+   é o contorno passando de ciano a magenta com o miolo vazado.
+   ════════════════════════════════════════════════════════════ */
+.logoneon {
+    position: relative;
+    display: inline-block;
+    font-family: 'Anton', 'Outfit', sans-serif;
+    font-weight: 400;              /* Anton só tem um peso, já é pesada */
+    letter-spacing: 0.015em;
+    /* NÃO pode ser 1: o acento do Ê fica acima da caixa e a máscara
+       recorta pela borda dela (mask-clip é border-box), decepando o
+       acento — a logo virava "SUTIL-OKE". A entrelinha maior dá o
+       espaço de sobra em cima pro acento caber dentro da máscara. */
+    line-height: 1.3;
+    white-space: nowrap;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none !important;  /* letra vazada: sombra vazaria por dentro */
+}
+
+.logoneon .ln-frio,
+.logoneon .ln-quente {
+    display: block;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+/* a quente fica exatamente por cima da fria */
+.logoneon .ln-quente {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+}
+
+/* O brilho vem de drop-shadow, NÃO de text-shadow: drop-shadow usa o
+   que foi realmente desenhado (só o traço), então o halo acompanha o
+   contorno. text-shadow usaria a silhueta cheia da letra e acenderia
+   o miolo, que tem que ficar apagado. */
+.logoneon .ln-frio {
+    -webkit-text-stroke: var(--ln-traco) #B9F2FF;
+    filter: drop-shadow(0 0 3px rgba(34, 211, 238, 0.95))
+            drop-shadow(0 0 11px rgba(34, 211, 238, 0.55));
+    -webkit-mask-image: linear-gradient(96deg, #000 20%, transparent 70%);
+            mask-image: linear-gradient(96deg, #000 20%, transparent 70%);
+}
+.logoneon .ln-quente {
+    -webkit-text-stroke: var(--ln-traco) #FFC2F5;
+    filter: drop-shadow(0 0 3px rgba(233, 53, 224, 0.95))
+            drop-shadow(0 0 11px rgba(233, 53, 224, 0.55));
+    -webkit-mask-image: linear-gradient(96deg, transparent 30%, #000 80%);
+            mask-image: linear-gradient(96deg, transparent 30%, #000 80%);
+}
+
+/* ── medidas nos dois lugares ─────────────────────────────── */
+.logoneon-grande {
+    --ln-traco: 2px;
+    font-size: clamp(38px, 12.5vw, 118px);
+}
+.logoneon-barra {
+    --ln-traco: 1.1px;
+    font-size: 24px;
+}
+.logoneon-barra .ln-frio,
+.logoneon-barra .ln-quente {
+    /* na barra o halo tem que ser curto, senão borra no texto vizinho */
+    filter: drop-shadow(0 0 3px rgba(34, 211, 238, 0.8));
+}
+.logoneon-barra .ln-quente {
+    filter: drop-shadow(0 0 3px rgba(233, 53, 224, 0.8));
+}
+
+/* fica acima dos anéis da intro */
+.intro-stage > .logoneon { z-index: 1; }
+
+/* ════════════════════════════════════════════════════════════
+   ⚡ GLITCH DE ENTRADA
+   O componente original pinta os pseudo-elementos com um fundo
+   OPACO pra tapar o original e simular deslocamento. Aqui o fundo
+   é o CRT animado — um retângulo opaco piscando por cima ficaria
+   horrível. Troquei por separação de canal: as cópias entram
+   transparentes e deslocadas, o que no neon lê como sinal sujo.
+   E é só na entrada: as cópias somem e a logo fica limpa.
+   ════════════════════════════════════════════════════════════ */
+.logoneon::before,
+.logoneon::after {
+    content: attr(data-texto);
+    position: absolute;
+    top: 0; left: 0;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    pointer-events: none;
+    opacity: 0;
+}
+.logoneon::before {
+    -webkit-text-stroke: var(--ln-traco) #22D3EE;
+    transform: translateX(-7px);
+    animation: ln-fatia 0.65s linear 2 alternate-reverse,
+               ln-apaga 0.4s ease 1.15s forwards;
+}
+.logoneon::after {
+    -webkit-text-stroke: var(--ln-traco) #E935E0;
+    transform: translateX(7px);
+    animation: ln-fatia 0.47s linear 3 alternate,
+               ln-apaga 0.4s ease 1.15s forwards;
+}
+
+@keyframes ln-fatia {
+    0%   { opacity: 1; clip-path: inset(20% 0 50% 0); }
+    10%  { opacity: 1; clip-path: inset(10% 0 60% 0); }
+    20%  { opacity: 1; clip-path: inset(30% 0 40% 0); }
+    30%  { opacity: 1; clip-path: inset(45% 0 18% 0); }
+    40%  { opacity: 1; clip-path: inset(12% 0 62% 0); }
+    50%  { opacity: 1; clip-path: inset(28% 0 44% 0); }
+    60%  { opacity: 1; clip-path: inset(52% 0 12% 0); }
+    70%  { opacity: 1; clip-path: inset(16% 0 58% 0); }
+    80%  { opacity: 1; clip-path: inset(36% 0 30% 0); }
+    90%  { opacity: 1; clip-path: inset(24% 0 48% 0); }
+    100% { opacity: 1; clip-path: inset(40% 0 26% 0); }
+}
+@keyframes ln-apaga {
+    to { opacity: 0; }
+}
+
+/* quem pediu menos movimento no sistema não leva glitch nenhum */
+@media (prefers-reduced-motion: reduce) {
+    .logoneon::before, .logoneon::after { animation: none; opacity: 0; }
+}

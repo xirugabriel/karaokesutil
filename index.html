@@ -14,7 +14,8 @@
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Anton: condensada e pesada, é o desenho de letreiro de neon da logo -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Anton&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
         :root {
@@ -698,7 +699,10 @@
 <!-- INTRO CLEAN: fundo preto + o nome se desenhando (stroke text) -->
 <div id="intro">
     <div class="intro-stage">
-        <h1 class="intro-nome" data-texto="SUTIOKÊ">SUTIOKÊ</h1>
+        <h1 class="logoneon logoneon-grande" data-texto="SUTIL-OKÊ">
+            <span class="ln-frio">SUTIL-OKÊ</span>
+            <span class="ln-quente">SUTIL-OKÊ</span>
+        </h1>
         <span class="intro-linha"></span>
     </div>
 </div>
@@ -801,7 +805,10 @@
                 <svg class="ic" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="2" y1="14" x2="6" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="18" y1="16" x2="22" y2="16"/></svg>
             </button>
             <div class="tb-brand">
-                <span class="tb-nome">SUTIOKÊ</span>
+                <span class="logoneon logoneon-barra" data-texto="SUTIL-OKÊ">
+                    <span class="ln-frio">SUTIL-OKÊ</span>
+                    <span class="ln-quente">SUTIL-OKÊ</span>
+                </span>
             </div>
             <button class="tb-profile" onclick="openProfile()" aria-label="Editar perfil">
                 <span class="tb-profile-label">Perfil</span>
