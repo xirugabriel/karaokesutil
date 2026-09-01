@@ -942,25 +942,63 @@
 
             <!-- Cartaz do topo -->
             <div class="rk-hero">
-                <svg class="rk-hero-trofeu" viewBox="0 0 64 64" aria-hidden="true">
-                    <defs>
-                        <linearGradient id="grad-trofeu" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stop-color="#7AD6FF"/>
-                            <stop offset="52%" stop-color="#B14EFF"/>
-                            <stop offset="100%" stop-color="#FF4D9D"/>
-                        </linearGradient>
-                    </defs>
-                    <path d="M20 8h24v14a12 12 0 0 1-24 0z" fill="url(#grad-trofeu)" opacity=".9"/>
-                    <path d="M44 11h6v4a8 8 0 0 1-8 8M20 11h-6v4a8 8 0 0 0 8 8" fill="none" stroke="url(#grad-trofeu)" stroke-width="3"/>
-                    <path d="M28 34h8v8h-8z" fill="url(#grad-trofeu)" opacity=".75"/>
-                    <path d="M20 46h24v6H20z" fill="url(#grad-trofeu)"/>
-                    <path d="M24 42h16v4H24z" fill="url(#grad-trofeu)" opacity=".85"/>
-                    <path d="m32 14 2.2 4.6 5 .6-3.7 3.5 1 5-4.5-2.5-4.5 2.5 1-5-3.7-3.5 5-.6z" fill="#fff" opacity=".92"/>
-                </svg>
+                <!-- Se existir um trofeu.png na pasta, ele é usado no lugar
+                     do desenho abaixo. Não precisa mexer em código: o
+                     onload marca o bloco e o SVG some sozinho. -->
+                <div class="rk-arte">
+                    <img src="trofeu.png" class="rk-trofeu-img" alt="" decoding="async"
+                         onload="this.closest('.rk-arte').classList.add('tem-imagem')"
+                         onerror="this.remove()">
+                    <svg class="rk-hero-trofeu" viewBox="0 0 100 100" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="tr-taca" x1="0.15" y1="0" x2="0.9" y2="1">
+                                <stop offset="0%"  stop-color="#8FE3FF"/>
+                                <stop offset="38%" stop-color="#B14EFF"/>
+                                <stop offset="100%" stop-color="#FF3D8F"/>
+                            </linearGradient>
+                            <linearGradient id="tr-base" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%"  stop-color="#C77BFF"/>
+                                <stop offset="60%" stop-color="#7C3AED"/>
+                                <stop offset="100%" stop-color="#FF3D8F"/>
+                            </linearGradient>
+                            <linearGradient id="tr-luz" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%"   stop-color="#fff" stop-opacity=".85"/>
+                                <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+                            </linearGradient>
+                            <radialGradient id="tr-chao">
+                                <stop offset="0%"   stop-color="#A855F7" stop-opacity=".55"/>
+                                <stop offset="100%" stop-color="#A855F7" stop-opacity="0"/>
+                            </radialGradient>
+                        </defs>
+
+                        <!-- sombra no chão, que dá a sensação de flutuar -->
+                        <ellipse class="tr-sombra" cx="50" cy="92" rx="26" ry="5" fill="url(#tr-chao)"/>
+
+                        <g class="tr-corpo">
+                            <!-- alças -->
+                            <path d="M28 22H17c-1 12 4 19 12 21" fill="none" stroke="url(#tr-taca)" stroke-width="5" stroke-linecap="round"/>
+                            <path d="M72 22h11c1 12-4 19-12 21" fill="none" stroke="url(#tr-taca)" stroke-width="5" stroke-linecap="round"/>
+                            <!-- taça -->
+                            <path d="M28 16h44v20c0 13-9.8 22-22 22s-22-9-22-22z" fill="url(#tr-taca)"/>
+                            <!-- boca da taça -->
+                            <ellipse cx="50" cy="16" rx="22" ry="5" fill="#DCC0FF" opacity=".95"/>
+                            <ellipse cx="50" cy="16" rx="16.5" ry="3.2" fill="#4C1D95" opacity=".55"/>
+                            <!-- brilho especular -->
+                            <path d="M35 20c-1 12 1 21 7 27-9-4-13-14-12-27z" fill="url(#tr-luz)"/>
+                            <!-- haste e base -->
+                            <path d="M45 58h10v10H45z" fill="url(#tr-base)"/>
+                            <path d="M36 68h28l-3 8H39z" fill="url(#tr-base)"/>
+                            <rect x="30" y="76" width="40" height="9" rx="3" fill="url(#tr-base)"/>
+                            <rect x="30" y="76" width="40" height="3.5" rx="1.8" fill="#fff" opacity=".28"/>
+                            <!-- estrela -->
+                            <path d="m50 25 4.6 9.4 10.4 1.5-7.5 7.3 1.8 10.3L50 48.6l-9.3 4.9 1.8-10.3-7.5-7.3 10.4-1.5z" fill="#fff" opacity=".95"/>
+                        </g>
+                    </svg>
+                </div>
                 <div class="rk-hero-txt">
                     <div class="rk-hero-tit">Mostre seu talento</div>
                     <div class="rk-hero-sub">Cante, conquiste as melhores notas e suba no ranking!</div>
-                    <button class="rk-hero-btn" onclick="goTab('regras')">
+                    <button class="rk-hero-btn" onclick="abrirComoFunciona()">
                         Como funciona?
                         <svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                     </button>
@@ -1097,6 +1135,77 @@
             Salvar
         </button>
         <button class="btn-cancel" onclick="closeProfile()">Cancelar</button>
+    </div>
+</div>
+
+<!-- ── COMO FUNCIONA O RANKING ────────────────────────────── -->
+<div id="rk-info" class="modal-overlay hidden">
+    <div class="modal-box">
+        <h3>Como funciona o ranking</h3>
+
+        <ul class="rk-regras">
+            <li>
+                <span class="rk-regra-n">1</span>
+                <div>
+                    <b>Vale a sua melhor nota.</b>
+                    É ela que aparece no placar — não a soma, nem a média.
+                </div>
+            </li>
+            <li>
+                <span class="rk-regra-n">2</span>
+                <div>
+                    <b>Empatou? Ganha a segunda melhor.</b>
+                    A sua segunda maior nota é o critério de desempate.
+                </div>
+            </li>
+            <li>
+                <span class="rk-regra-n">3</span>
+                <div>
+                    <b>Os três primeiros levam R$ 600 em consumo.</b>
+                    <span class="rk-premios">
+                        <span class="rk-premio ouro"><b>1º</b> R$ 300</span>
+                        <span class="rk-premio prata"><b>2º</b> R$ 200</span>
+                        <span class="rk-premio bronze"><b>3º</b> R$ 100</span>
+                    </span>
+                </div>
+            </li>
+            <li>
+                <span class="rk-regra-n">4</span>
+                <div>
+                    <b>A roleta abre a partir de 950 pontos.</b>
+                    Bateu a marca na sua apresentação, você gira e leva o prêmio.
+                </div>
+            </li>
+        </ul>
+
+        <button class="btn-success" onclick="fecharComoFunciona()">Entendi</button>
+    </div>
+</div>
+
+<!-- ── RECORTAR A FOTO DE PERFIL ──────────────────────────── -->
+<div id="crop-sheet" class="modal-overlay hidden">
+    <div class="modal-box">
+        <h3>Ajustar foto</h3>
+        <p>Arraste para enquadrar. Use dois dedos ou a barra para aproximar.</p>
+
+        <!-- palco quadrado com máscara redonda: o que fica dentro do
+             círculo é exatamente o que vira o avatar -->
+        <div class="crop-stage" id="crop-stage">
+            <img id="crop-img" alt="" draggable="false">
+            <div class="crop-mask"></div>
+        </div>
+
+        <div class="crop-zoom">
+            <svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            <input type="range" id="crop-zoom" min="1" max="4" step="0.01" value="1" aria-label="Aproximar">
+            <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
+        </div>
+
+        <button class="btn-success" onclick="aplicarCorte()">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+            Usar esta foto
+        </button>
+        <button class="btn-cancel" onclick="fecharCorte()">Cancelar</button>
     </div>
 </div>
 
@@ -1939,24 +2048,169 @@
         if (!file) return;
         if (!/^image\//.test(file.type)) { showToast('Escolha uma imagem.', 'error'); return; }
         const reader = new FileReader();
-        reader.onload = () => {
-            const img = new Image();
-            img.onload = () => {
-                const S = 200;
-                const canvas = document.createElement('canvas');
-                canvas.width = S; canvas.height = S;
-                const lado = Math.min(img.width, img.height);
-                const sx = (img.width - lado) / 2, sy = (img.height - lado) / 2;
-                canvas.getContext('2d').drawImage(img, sx, sy, lado, lado, 0, 0, S, S);
-                fotoEditada = canvas.toDataURL('image/jpeg', 0.72);
-                const el = document.getElementById('pf-avatar');
-                el.style.backgroundImage = `url('${fotoEditada}')`; el.textContent = '';
-            };
-            img.onerror = () => showToast('Não consegui ler a imagem.', 'error');
-            img.src = reader.result;
-        };
+        reader.onload = () => abrirCorte(reader.result);
+        reader.onerror = () => showToast('Não consegui ler o arquivo.', 'error');
         reader.readAsDataURL(file);
     }
+
+    /* ════════ RECORTE DA FOTO DE PERFIL ════════
+       Antes a foto era cortada sozinha pelo centro — quem estivesse
+       fora do meio da imagem ficava de fora. Agora a pessoa enquadra.
+
+       Como funciona: o <img> é posicionado por transform dentro de um
+       palco quadrado (só transform, que a GPU resolve sem repintar).
+       A escala BASE é a de "cobrir" o palco; o zoom multiplica ela.
+       No fim, a área visível é recortada num canvas de 200×200 — o
+       mesmo tamanho e qualidade que já se salvava antes. */
+    const corte = { escala: 1, x: 0, y: 0, base: 1, lado: 0, img: null };
+
+    function abrirCorte(dataURL) {
+        const img = document.getElementById('crop-img');
+        const palco = document.getElementById('crop-stage');
+        const zoom = document.getElementById('crop-zoom');
+
+        img.onload = () => {
+            corte.img = img;
+            /* A folha PRECISA aparecer antes da medida: com display:none
+               o palco mede 0, a escala base saía 0 e a imagem sumia. */
+            document.getElementById('crop-sheet').classList.remove('hidden');
+            corte.lado = palco.clientWidth;
+            // "cobrir": a menor escala em que a imagem ainda tapa o palco
+            corte.base = Math.max(corte.lado / img.naturalWidth,
+                                  corte.lado / img.naturalHeight);
+            corte.escala = 1;
+            zoom.value = 1;
+            // começa centralizado
+            corte.x = (corte.lado - img.naturalWidth  * corte.base) / 2;
+            corte.y = (corte.lado - img.naturalHeight * corte.base) / 2;
+            desenharCorte();
+        };
+        img.onerror = () => showToast('Não consegui ler a imagem.', 'error');
+        img.src = dataURL;
+    }
+
+    function abrirComoFunciona() {
+        document.getElementById('rk-info').classList.remove('hidden');
+    }
+    function fecharComoFunciona() {
+        document.getElementById('rk-info').classList.add('hidden');
+    }
+
+    function fecharCorte() {
+        document.getElementById('crop-sheet').classList.add('hidden');
+    }
+
+    function escalaAtual() { return corte.base * corte.escala; }
+
+    /* A imagem nunca pode "descolar" e mostrar buraco: o deslocamento
+       fica preso entre a borda direita/inferior e zero. */
+    function prenderCorte() {
+        const s = escalaAtual();
+        const largura = corte.img.naturalWidth  * s;
+        const altura  = corte.img.naturalHeight * s;
+        corte.x = Math.min(0, Math.max(corte.lado - largura, corte.x));
+        corte.y = Math.min(0, Math.max(corte.lado - altura,  corte.y));
+    }
+
+    function desenharCorte() {
+        if (!corte.img) return;
+        prenderCorte();
+        const s = escalaAtual();
+        corte.img.style.transform =
+            `translate(${corte.x}px, ${corte.y}px) scale(${s})`;
+    }
+
+    function aplicarCorte() {
+        if (!corte.img) return;
+        const S = 200;
+        const s = escalaAtual();
+        // canto superior esquerdo do palco, em pixels da imagem original
+        const sx = -corte.x / s;
+        const sy = -corte.y / s;
+        const lado = corte.lado / s;   // quanto da imagem cabe no palco
+        const canvas = document.createElement('canvas');
+        canvas.width = S; canvas.height = S;
+        canvas.getContext('2d').drawImage(corte.img, sx, sy, lado, lado, 0, 0, S, S);
+        fotoEditada = canvas.toDataURL('image/jpeg', 0.72);
+        const el = document.getElementById('pf-avatar');
+        el.style.backgroundImage = `url('${fotoEditada}')`;
+        el.textContent = '';
+        fecharCorte();
+    }
+
+    /* ---- arrastar (1 dedo) e pinça (2 dedos) ---- */
+    (function ligarGestos() {
+        const palco = document.getElementById('crop-stage');
+        const zoom  = document.getElementById('crop-zoom');
+        if (!palco) return;
+
+        zoom.addEventListener('input', () => {
+            const antes = escalaAtual();
+            corte.escala = parseFloat(zoom.value);
+            const depois = escalaAtual();
+            // aproxima mantendo o CENTRO do palco parado — senão a
+            // imagem foge para o canto a cada toque no controle
+            const meio = corte.lado / 2;
+            corte.x = meio - (meio - corte.x) * (depois / antes);
+            corte.y = meio - (meio - corte.y) * (depois / antes);
+            desenharCorte();
+        });
+
+        let arrastando = false, ultimoX = 0, ultimoY = 0;
+        let distInicial = 0, escalaInicial = 1;
+
+        const dist = (t) => Math.hypot(
+            t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+
+        palco.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                distInicial = dist(e.touches);
+                escalaInicial = corte.escala;
+                arrastando = false;
+            } else if (e.touches.length === 1) {
+                arrastando = true;
+                ultimoX = e.touches[0].clientX;
+                ultimoY = e.touches[0].clientY;
+            }
+        }, { passive: true });
+
+        palco.addEventListener('touchmove', (e) => {
+            e.preventDefault();   // impede a página de rolar junto
+            if (e.touches.length === 2 && distInicial > 0) {
+                const fator = dist(e.touches) / distInicial;
+                const antes = escalaAtual();
+                corte.escala = Math.min(4, Math.max(1, escalaInicial * fator));
+                zoom.value = corte.escala;
+                const depois = escalaAtual();
+                const meio = corte.lado / 2;
+                corte.x = meio - (meio - corte.x) * (depois / antes);
+                corte.y = meio - (meio - corte.y) * (depois / antes);
+                desenharCorte();
+            } else if (arrastando && e.touches.length === 1) {
+                corte.x += e.touches[0].clientX - ultimoX;
+                corte.y += e.touches[0].clientY - ultimoY;
+                ultimoX = e.touches[0].clientX;
+                ultimoY = e.touches[0].clientY;
+                desenharCorte();
+            }
+        }, { passive: false });
+
+        palco.addEventListener('touchend', () => { arrastando = false; distInicial = 0; });
+
+        // mouse, pro caso de abrirem no computador
+        palco.addEventListener('mousedown', (e) => {
+            arrastando = true; ultimoX = e.clientX; ultimoY = e.clientY;
+            e.preventDefault();
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!arrastando) return;
+            corte.x += e.clientX - ultimoX;
+            corte.y += e.clientY - ultimoY;
+            ultimoX = e.clientX; ultimoY = e.clientY;
+            desenharCorte();
+        });
+        window.addEventListener('mouseup', () => { arrastando = false; });
+    })();
 
     function saveProfile() {
         const nome = document.getElementById('pf-name').value.trim();
