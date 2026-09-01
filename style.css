@@ -437,7 +437,7 @@ button { position: relative; overflow: hidden; }
     overflow: hidden;
     isolation: isolate;          /* prende o blend dentro do card */
     flex: 0 0 auto;
-    width: 108px; height: 140px;
+    width: 134px; height: 178px;
     margin: 0; padding: 0;
     display: block;
     border: 1px solid var(--linha) !important;
@@ -470,52 +470,105 @@ button { position: relative; overflow: hidden; }
         rgba(6, 4, 12, .92) 100%);
 }
 
-/* brilho holográfico (do ProfileCard) — parado por padrão */
+/* ── BRILHO HOLOGRÁFICO ──────────────────────────────────────
+   Agora com a receita cheia do ProfileCard: três gradientes
+   empilhados e combinados entre si (color + hard-light) antes de
+   o conjunto ser aplicado sobre a foto com color-dodge.
+     1. faixas de arco-íris (as "sunpillar" do original)
+     2. banda metálica na diagonal, que faz o vinco de reflexo
+     3. escurecimento radial, pra não estourar o branco
+
+   O `isolation: isolate` no card é o que torna isto barato: o
+   blend enxerga só as camadas do próprio card, nunca o CRT que
+   anima atrás. Sem isso, cada quadro do fundo obrigaria os sete
+   cards a recompor. */
 .cat-holo {
     position: absolute;
     inset: 0;
     z-index: 2;
     pointer-events: none;
-    opacity: 0;
+    opacity: .42;
     mix-blend-mode: color-dodge;
-    background-size: 300% 300%;
-    background-image: repeating-linear-gradient(
-        -18deg,
-        hsl(2, 100%, 73%)   calc(5% * 1),
-        hsl(53, 100%, 69%)  calc(5% * 2),
-        hsl(93, 100%, 69%)  calc(5% * 3),
-        hsl(176, 100%, 76%) calc(5% * 4),
-        hsl(228, 100%, 74%) calc(5% * 5),
-        hsl(283, 100%, 73%) calc(5% * 6),
-        hsl(2, 100%, 73%)   calc(5% * 7));
-    filter: brightness(.5) contrast(1.4) saturate(.7);
-}
-/* só o card do meio acende e move o arco-íris */
-.cat.no-centro .cat-holo {
-    opacity: .5;
-    animation: holo 7s linear infinite;
-}
-@keyframes holo {
-    0%   { background-position:   0% 50%; }
-    100% { background-position: 300% 50%; }
+    background-image:
+        repeating-linear-gradient(
+            0deg,
+            hsl(2, 100%, 73%)   5%,
+            hsl(53, 100%, 69%)  10%,
+            hsl(93, 100%, 69%)  15%,
+            hsl(176, 100%, 76%) 20%,
+            hsl(228, 100%, 74%) 25%,
+            hsl(283, 100%, 73%) 30%,
+            hsl(2, 100%, 73%)   35%),
+        repeating-linear-gradient(
+            -38deg,
+            #0e152e 0%,
+            hsl(180, 10%, 60%) 3.8%,
+            hsl(180, 29%, 66%) 4.5%,
+            hsl(180, 10%, 60%) 5.2%,
+            #0e152e 10%,
+            #0e152e 12%),
+        radial-gradient(
+            farthest-corner circle at 40% 30%,
+            hsla(0, 0%, 0%, .10) 12%,
+            hsla(0, 0%, 0%, .18) 22%,
+            hsla(0, 0%, 0%, .30) 120%);
+    background-blend-mode: color, hard-light;
+    background-size: 300% 300%, 220% 220%, 180% 180%;
+    background-position: 0 0, 0 0, center;
+    filter: brightness(.72) contrast(1.5) saturate(1.1);
+
+    /* O brilho é forte, mas alivia onde fica o ROSTO (terço superior
+       ao centro). Sem isto o arco-íris cobre a cara do cantor — e a
+       foto está ali justamente pra ser reconhecida. Nas bordas e no
+       pé ele continua cheio, que é onde o holográfico aparece. */
+    -webkit-mask-image: radial-gradient(ellipse 66% 44% at 50% 31%,
+        rgba(0,0,0,.16) 0%, rgba(0,0,0,.55) 52%, #000 100%);
+            mask-image: radial-gradient(ellipse 66% 44% at 50% 31%,
+        rgba(0,0,0,.16) 0%, rgba(0,0,0,.55) 52%, #000 100%);
 }
 
-/* selo do gênero, no alto */
-.cat-selo {
+/* o vinco de luz que corre por cima — é o ::before do original */
+.cat-holo::after {
+    content: '';
     position: absolute;
-    top: 9px; left: 9px;
-    z-index: 3;
-    width: 32px; height: 32px;
-    display: grid; place-items: center;
-    border-radius: 11px;
-    background: rgba(10, 8, 18, .62);
-    border: 1px solid rgba(255, 255, 255, .14);
-    backdrop-filter: blur(3px);
+    inset: -30%;
+    background: linear-gradient(58deg,
+        transparent 34%,
+        rgba(255, 255, 255, .50) 46%,
+        rgba(210, 235, 255, .85) 50%,
+        rgba(255, 255, 255, .50) 54%,
+        transparent 66%);
+    opacity: .40;
+    transform: translateX(-38%);
+    -webkit-mask-image: radial-gradient(ellipse 58% 38% at 50% 30%,
+        rgba(0,0,0,.30) 0%, #000 70%);
+            mask-image: radial-gradient(ellipse 58% 38% at 50% 30%,
+        rgba(0,0,0,.30) 0%, #000 70%);
 }
-.cat-selo svg {
-    width: 19px; height: 19px;
-    fill: none; stroke-width: 1.8;
-    stroke-linecap: round; stroke-linejoin: round;
+
+/* O card do meio acende: brilho mais forte, arco-íris andando e o
+   vinco de luz varrendo. Só ele anima. */
+.cat.no-centro .cat-holo {
+    opacity: .60;
+    filter: brightness(.78) contrast(1.55) saturate(1.3);
+    animation: holo 7s linear infinite;
+}
+.cat.no-centro .cat-holo::after {
+    opacity: .55;
+    animation: holo-vinco 3.6s ease-in-out infinite;
+}
+@keyframes holo {
+    0%   { background-position:   0% 0%,   0% 0%, center; }
+    100% { background-position: 300% 100%, 220% 0%, center; }
+}
+@keyframes holo-vinco {
+    0%, 100% { transform: translateX(-38%); }
+    50%      { transform: translateX(38%); }
+}
+
+/* um halo da cor do gênero em volta do card do meio */
+.cat.no-centro {
+    border-color: rgba(255, 255, 255, .28) !important;
 }
 
 /* nome do gênero, no pé */
@@ -525,7 +578,7 @@ button { position: relative; overflow: hidden; }
     z-index: 3;
     display: block;
     font-family: 'Outfit', sans-serif;
-    font-size: 15px; font-weight: 700;
+    font-size: 17px; font-weight: 700;
     color: #fff;
     line-height: 1.15;
     text-shadow: 0 2px 8px rgba(0, 0, 0, .85);
@@ -545,11 +598,11 @@ button { position: relative; overflow: hidden; }
 .cat.no-centro { border-color: rgba(255, 255, 255, .22) !important; }
 
 /* ── cores por gênero ─────────────────────────────────────── */
-.cat-roxo  .cat-selo svg { stroke: var(--roxo); }
-.cat-rosa  .cat-selo svg { stroke: var(--rosa); }
-.cat-azul  .cat-selo svg { stroke: var(--azul); }
-.cat-verde .cat-selo svg { stroke: var(--verde); }
-.cat-ambar .cat-selo svg { stroke: var(--ambar); }
+.cat-roxo.no-centro  { box-shadow: 0 0 0 1px rgba(168,85,247,.5), 0 8px 26px rgba(168,85,247,.35) !important; }
+.cat-rosa.no-centro  { box-shadow: 0 0 0 1px rgba(236,72,153,.5), 0 8px 26px rgba(236,72,153,.35) !important; }
+.cat-azul.no-centro  { box-shadow: 0 0 0 1px rgba(56,189,248,.5), 0 8px 26px rgba(56,189,248,.35) !important; }
+.cat-verde.no-centro { box-shadow: 0 0 0 1px rgba(52,211,153,.5), 0 8px 26px rgba(52,211,153,.35) !important; }
+.cat-ambar.no-centro { box-shadow: 0 0 0 1px rgba(251,191,36,.5), 0 8px 26px rgba(251,191,36,.35) !important; }
 
 .cat-roxo::after  { background: linear-gradient(90deg, transparent, var(--roxo),  transparent); }
 .cat-rosa::after  { background: linear-gradient(90deg, transparent, var(--rosa),  transparent); }
@@ -565,7 +618,8 @@ button { position: relative; overflow: hidden; }
 .cat-ambar { background: linear-gradient(165deg, rgba(251,191,36,.30), rgba(20,18,32,.98) 68%) !important; }
 
 @media (prefers-reduced-motion: reduce) {
-    .cat.no-centro .cat-holo { animation: none; }
+    .cat.no-centro .cat-holo,
+    .cat.no-centro .cat-holo::after { animation: none; }
 }
 
 /* ── FAIXA DE DESTAQUE ──────────────────────────────────────── */
@@ -1507,9 +1561,9 @@ button { position: relative; overflow: hidden; }
 .cats-scroll.cg-palco {
     position: relative;
     display: block;
-    /* card (140) + topo (12) + mergulho da ponta (30) + a sobra da
+    /* card (178) + topo (12) + mergulho da ponta (30) + a sobra da
        inclinação. Menos que isso corta as pontas embaixo. */
-    height: 200px;
+    height: 240px;
     margin: 0 -18px;
     padding: 0;
     overflow: hidden;
