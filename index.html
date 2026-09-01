@@ -11,9 +11,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <!-- SEM theme-color de propósito: assim o iOS deixa as barras translúcidas,
-         desfocando o conteúdo (efeito da Apple) em vez de pintar uma cor sólida.
-         color-scheme:dark mantém o cromo do navegador escuro (ajuda no Android). -->
+    <!-- theme-color define a cor das barras do navegador. Antes estava
+         omitido de propósito, mas para este objetivo o raciocínio era
+         errado: sem ele o Safari AMOSTRA a cor do fundo da página e pode
+         escolher um preto ligeiramente diferente, criando um degrau
+         visível na emenda. Fixando em preto puro, as barras ficam
+         exatamente da cor do fundo do site. -->
+    <meta name="theme-color" content="#000000">
     <meta name="color-scheme" content="dark">
     <title>Sutil Karaokê - Fila</title>
     <!-- Ícone do site (aba do navegador, favoritos e tela inicial do iPhone) -->
