@@ -859,3 +859,160 @@ setInterval(pollQueueMembership, 500);
     // a aba começa escondida: remede quando ela realmente aparece
     if (window.ResizeObserver) new ResizeObserver(reiniciar).observe(esteira);
 })();
+
+
+/* ══════════════════════════════════════════════════════════════
+   ⚡ ELECTRIC BORDER no card "sua vez"
+   Porte do componente do ReactBits. Ele traça o contorno
+   arredondado e desloca cada ponto com ruído em várias oitavas,
+   redesenhando a cada quadro — é isso que faz a borda tremer como
+   um fio de eletricidade.
+
+   📱 O ORIGINAL É CARO. São ~725 pontos × 2 eixos × 10 oitavas por
+   quadro, a 60fps, numa página que já roda o shader do CRT. Quatro
+   travas, sem mudar o desenho:
+     · 30 quadros por segundo (o original vai a 60)
+     · 5 oitavas no celular em vez de 10 — as últimas só somam
+       detalhe fino que some num traço de 2px
+     · 1 ponto a cada 3,2px de perímetro, em vez de 1 a cada 2
+     · para de desenhar quando o card sai da tela ou o app vai
+       pro segundo plano
+══════════════════════════════════════════════════════════════ */
+(function () {
+    const card = document.getElementById('your-turn');
+    if (!card) return;
+
+    const COR      = '#7DD8FF';
+    const VELOC    = 1;
+    const CAOS     = 0.11;
+    const RAIO     = 22;
+    const MARGEM   = 26;    // folga em volta pro traço poder escapar
+    const OITAVAS  = MOBILE_UI ? 5 : 8;
+    const QUADROS  = 30;
+    const DESLOC   = 26;
+
+    const tela = document.createElement('canvas');
+    tela.className = 'turn-raio';
+    card.insertBefore(tela, card.firstChild);
+    const ctx = tela.getContext('2d');
+    if (!ctx) { tela.remove(); return; }
+
+    let larg = 0, alt = 0, dpr = 1, tempo = 0, anterior = 0, ultimo = 0;
+    let naTela = true;
+
+    const aleatorio = (x) => (Math.sin(x * 12.9898) * 43758.5453) % 1;
+
+    function ruido2D(x, y) {
+        const i = Math.floor(x), j = Math.floor(y);
+        const fx = x - i, fy = y - j;
+        const a = aleatorio(i + j * 57);
+        const b = aleatorio(i + 1 + j * 57);
+        const c = aleatorio(i + (j + 1) * 57);
+        const d = aleatorio(i + 1 + (j + 1) * 57);
+        const ux = fx * fx * (3 - 2 * fx);
+        const uy = fy * fy * (3 - 2 * fy);
+        return a * (1 - ux) * (1 - uy) + b * ux * (1 - uy) + c * (1 - ux) * uy + d * ux * uy;
+    }
+
+    function ruidoOitavas(x, semente, t) {
+        let y = 0, amplitude = CAOS, frequencia = 10;
+        for (let i = 0; i < OITAVAS; i++) {
+            if (i > 0) y += amplitude * ruido2D(frequencia * x + semente * 100, t * frequencia * 0.3);
+            frequencia *= 1.6;
+            amplitude *= 0.7;
+        }
+        return y;
+    }
+
+    // ponto sobre o retângulo arredondado, em t de 0 a 1
+    function pontoNaBorda(t, x0, y0, w, h, r) {
+        const retaW = w - 2 * r, retaH = h - 2 * r;
+        const arco = (Math.PI * r) / 2;
+        const total = 2 * retaW + 2 * retaH + 4 * arco;
+        let d = t * total, acc = 0;
+        const canto = (cx, cy, ini, p) => ({
+            x: cx + r * Math.cos(ini + p * (Math.PI / 2)),
+            y: cy + r * Math.sin(ini + p * (Math.PI / 2)),
+        });
+        if (d <= acc + retaW) return { x: x0 + r + ((d - acc) / retaW) * retaW, y: y0 };
+        acc += retaW;
+        if (d <= acc + arco) return canto(x0 + w - r, y0 + r, -Math.PI / 2, (d - acc) / arco);
+        acc += arco;
+        if (d <= acc + retaH) return { x: x0 + w, y: y0 + r + ((d - acc) / retaH) * retaH };
+        acc += retaH;
+        if (d <= acc + arco) return canto(x0 + w - r, y0 + h - r, 0, (d - acc) / arco);
+        acc += arco;
+        if (d <= acc + retaW) return { x: x0 + w - r - ((d - acc) / retaW) * retaW, y: y0 + h };
+        acc += retaW;
+        if (d <= acc + arco) return canto(x0 + r, y0 + h - r, Math.PI / 2, (d - acc) / arco);
+        acc += arco;
+        if (d <= acc + retaH) return { x: x0, y: y0 + h - r - ((d - acc) / retaH) * retaH };
+        acc += retaH;
+        return canto(x0 + r, y0 + r, Math.PI, (d - acc) / arco);
+    }
+
+    function medir() {
+        const r = card.getBoundingClientRect();
+        if (!r.width) return false;
+        larg = r.width + MARGEM * 2;
+        alt  = r.height + MARGEM * 2;
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        tela.width  = larg * dpr;
+        tela.height = alt * dpr;
+        tela.style.width  = larg + 'px';
+        tela.style.height = alt + 'px';
+        tela.style.left = -MARGEM + 'px';
+        tela.style.top  = -MARGEM + 'px';
+        return true;
+    }
+
+    function desenhar(agora) {
+        requestAnimationFrame(desenhar);
+        if (!naTela || document.hidden || card.classList.contains('hidden')) { anterior = agora; return; }
+        if (agora - ultimo < 1000 / QUADROS) return;
+        ultimo = agora;
+        if (!larg && !medir()) return;
+
+        tempo += Math.min((agora - anterior) / 1000, 0.1) * VELOC;
+        anterior = agora;
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, larg, alt);
+        ctx.strokeStyle = COR;
+        ctx.lineWidth = 1.4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.shadowColor = COR;
+        ctx.shadowBlur = 7;
+
+        const bw = larg - 2 * MARGEM, bh = alt - 2 * MARGEM;
+        const r = Math.min(RAIO, Math.min(bw, bh) / 2);
+        const perimetro = 2 * (bw + bh) + 2 * Math.PI * r;
+        const amostras = Math.floor(perimetro / 3.2);
+
+        ctx.beginPath();
+        for (let i = 0; i <= amostras; i++) {
+            const t = i / amostras;
+            const p = pontoNaBorda(t, MARGEM, MARGEM, bw, bh, r);
+            const x = p.x + ruidoOitavas(t * 8, 0, tempo) * DESLOC;
+            const y = p.y + ruidoOitavas(t * 8, 1, tempo) * DESLOC;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+    }
+
+    if (window.ResizeObserver) new ResizeObserver(medir).observe(card);
+    if (window.IntersectionObserver) {
+        new IntersectionObserver(([e]) => { naTela = e.isIntersecting; }).observe(card);
+    }
+    /* O card nasce oculto e só aparece quando a pessoa tem pedido na
+       fila. ResizeObserver só entrega no fim de um quadro; medir na
+       troca da classe é síncrono e não depende disso. */
+    if (window.MutationObserver) {
+        new MutationObserver(() => { if (!card.classList.contains('hidden')) medir(); })
+            .observe(card, { attributes: true, attributeFilter: ['class'] });
+    }
+    medir();
+    requestAnimationFrame(desenhar);
+})();

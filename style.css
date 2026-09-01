@@ -1087,7 +1087,76 @@ button { position: relative; overflow: hidden; }
 }
 .next-badge .ic, .stage-badge .ic { width: 13px; height: 13px; stroke: var(--verde); }
 
-.turn-card { padding: 20px 18px; margin-bottom: 24px; }
+/* ── CARD "SUA VEZ" ─────────────────────────────────────────── */
+.turn-card {
+    position: relative;
+    padding: 22px 18px;
+    margin-bottom: 24px;
+    background: linear-gradient(155deg, rgba(125, 216, 255, .07), transparent 55%), var(--cartao);
+    border-color: rgba(125, 216, 255, .22);
+}
+/* canvas do raio; o traço precisa poder escapar da caixa */
+.turn-raio {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+}
+.turn-card > *:not(.turn-raio) { position: relative; z-index: 1; }
+
+.turn-top { display: flex; align-items: flex-start; gap: 14px; }
+.turn-headinfo { flex: 1 1 auto; min-width: 0; }
+
+/* posição na fila e o aviso, lado a lado e alinhados pela base */
+.turn-posrow {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/* ── BOTÕES ──────────────────────────────────────────────────
+   Antes os três eram o mesmo bloco roxo, então nada dizia qual
+   era a ação principal e qual era a de desistir. Agora: cheio
+   para o que se espera que a pessoa faça, contorno para o
+   secundário, e vermelho discreto para cancelar. */
+.turn-edit {
+    width: 100%;
+    margin: 0 0 10px;
+    padding: 15px 16px;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    background: linear-gradient(120deg, var(--roxo-escuro), var(--roxo)) !important;
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 8px 22px rgba(168, 85, 247, .3);
+    font-size: 15px; font-weight: 700; color: #fff;
+}
+.turn-edit .ic { stroke: #fff; }
+.turn-edit-note { font-weight: 500; font-size: 12.5px; opacity: .78; }
+
+.turn-actions { display: flex; gap: 10px; }
+.turn-link, .turn-cancel {
+    flex: 1 1 0;
+    width: auto; margin: 0;
+    padding: 13px 12px;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    border-radius: 14px;
+    font-size: 14px; font-weight: 600;
+    box-shadow: none;
+}
+/* secundário: só contorno */
+.turn-link {
+    background: transparent !important;
+    border: 1px solid var(--linha-forte);
+    color: var(--tinta);
+}
+.turn-link .ic { stroke: var(--tinta-fraca); }
+/* desistir: vermelho contido, pra não competir com o principal */
+.turn-cancel {
+    background: rgba(255, 77, 109, .10) !important;
+    border: 1px solid rgba(255, 77, 109, .32);
+    color: #FF8A9E;
+}
 .turn-flash {
     display: inline-block;
     font-size: 11px; font-weight: 700;
