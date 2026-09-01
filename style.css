@@ -238,6 +238,19 @@ button { position: relative; overflow: hidden; }
 }
 
 /* ── TOCANDO AGORA ──────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════
+   ✨ STAR BORDER na borda deste card
+   Porte do componente do ReactBits. São dois borrões radiais bem
+   largos (300% da caixa) correndo nas beiradas de cima e de baixo.
+   Por cima deles fica uma superfície opaca recuada 1,6px — é ela
+   que esconde o miolo e deixa só a beirada brilhar.
+
+   Ordem das camadas dentro do card:
+     0 · os dois borrões que correm
+     1 · ::before  superfície do card (esconde o miolo dos borrões)
+     2 · ::after   clarão roxo do card
+     3 · conteúdo
+   ════════════════════════════════════════════════════════════ */
 .np-card {
     position: relative;
     overflow: hidden;
@@ -246,18 +259,69 @@ button { position: relative; overflow: hidden; }
     gap: 16px;
     padding: 18px 18px 18px 16px;
     margin-bottom: 26px;
+    /* a borda e o fundo passam pro ::before; aqui fica só a moldura */
+    background: transparent !important;
+    border: 0 !important;
 }
+
+/* superfície do card, recuada pela espessura da borda animada */
+.np-card::before {
+    content: '';
+    position: absolute;
+    inset: 1.6px;
+    z-index: 1;
+    border-radius: calc(var(--raio-g) - 1.6px);
+    background: var(--cartao);
+    border: 1px solid var(--linha);
+    pointer-events: none;
+}
+
 /* o clarão roxo que vaza pela direita, no lugar da foto da plateia */
 .np-card::after {
     content: '';
     position: absolute;
-    inset: 0;
+    inset: 1.6px;
+    z-index: 2;
+    border-radius: calc(var(--raio-g) - 1.6px);
     background:
         radial-gradient(80% 120% at 88% 40%, rgba(192, 38, 211, 0.30), transparent 62%),
         radial-gradient(60% 100% at 60% 10%, rgba(124, 58, 237, 0.22), transparent 70%);
     pointer-events: none;
 }
-.np-card > * { position: relative; z-index: 1; }
+
+.np-card > * { position: relative; z-index: 3; }
+
+/* os dois borrões que correm nas beiradas */
+.estrela-topo, .estrela-base {
+    position: absolute;
+    z-index: 0 !important;
+    width: 300%;
+    height: 50%;
+    border-radius: 50%;
+    opacity: .7;
+    pointer-events: none;
+    background: radial-gradient(circle, var(--roxo-claro), transparent 10%);
+}
+.estrela-topo {
+    top: -12px; left: -250%;
+    animation: estrela-topo 6s linear infinite alternate;
+}
+.estrela-base {
+    bottom: -12px; right: -250%;
+    background: radial-gradient(circle, var(--rosa), transparent 10%);
+    animation: estrela-base 6s linear infinite alternate;
+}
+@keyframes estrela-topo {
+    0%   { transform: translate(0%, 0%);   opacity: 1; }
+    100% { transform: translate(100%, 0%); opacity: 0; }
+}
+@keyframes estrela-base {
+    0%   { transform: translate(0%, 0%);    opacity: 1; }
+    100% { transform: translate(-100%, 0%); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .estrela-topo, .estrela-base { animation: none; opacity: .35; }
+}
 
 .np-art {
     width: 92px; height: 92px;
@@ -293,9 +357,44 @@ button { position: relative; overflow: hidden; }
     margin-bottom: 9px;
 }
 .np-singer {
+    display: flex; align-items: center; gap: 7px;
     font-size: 15px; font-weight: 700; color: var(--roxo-claro);
     margin-bottom: 2px;
 }
+.np-singer .ic { stroke: var(--roxo-claro); }
+
+/* Selo da mesa. Ficou sem estilo na reescrita do CSS e voltou a ser
+   texto solto colado no nome — o JS sempre gerou este span. */
+.np-mesa {
+    flex: none;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: .3px;
+    color: var(--tinta-fraca);
+    background: rgba(255, 255, 255, .07);
+    border: 1px solid var(--linha-forte);
+    padding: 3px 9px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+/* Disco de vinil girando (o JS injeta dentro do .np-art) */
+.np-vinil {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(circle at 50% 50%, #6D28D9 0 7%, transparent 7.5%),
+        repeating-radial-gradient(circle at 50% 50%, #17171F 0 2px, #0C0C12 2px 4px);
+    animation: vinil-gira 5.5s linear infinite;
+}
+.np-vinil-luz {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.16) 50%, transparent 62%);
+}
+@keyframes vinil-gira { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .np-vinil { animation: none; } }
 .np-title {
     font-family: 'Outfit', sans-serif;
     font-size: 19px; font-weight: 700; color: #fff;
