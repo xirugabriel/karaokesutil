@@ -111,7 +111,7 @@ function comThrottle(fn) {
         desvioRGB:    0.015,
         forcaPonteiro: 0.5,
         // teto do plasma: o quanto ele pode cobrir o preto do fundo
-        teto:         TELA_PEQUENA ? 0.38 : 0.46
+        teto:         TELA_PEQUENA ? 0.26 : 0.34
     };
 
     const canvas = document.createElement("canvas");

@@ -2183,3 +2183,55 @@ html, body { overflow-x: hidden !important; max-width: 100%; }
     .np-card, .turn-card, .steps-card, .login-card { border-radius: 22px; }
     .bento-card, .cat { border-radius: 20px; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   👁 LEGIBILIDADE SOBRE O TUBO
+   O CRT é bonito mas é fundo BARULHENTO: textura fina, contraste
+   alto e movimento. Texto solto em cima dele briga pra ser lido.
+   Três camadas de defesa, da mais barata pra mais forte.
+   ════════════════════════════════════════════════════════════ */
+
+/* 1. Sombra: separa a letra do chiado do fundo. Custa nada e é o
+      que mais ajuda no texto solto (rótulos de seção, dicas,
+      estados vazios). Em cima de card fica invisível. */
+#client-screen, #login-screen, #bottom-nav {
+    text-shadow: 0 1px 3px rgba(4, 3, 10, 0.9),
+                 0 0 14px rgba(4, 3, 10, 0.55);
+}
+/* números grandes e ícones não precisam — sombra neles só suja */
+.rank-pts, .np-art, .cat i, .cat svg { text-shadow: none; }
+
+/* 2. Cards mais opacos: o plasma atravessava o vidro e passava por
+      trás do texto. Card é onde mora a informação — tem que ser
+      chão firme, não vidro. */
+.np-card, .turn-card, .steps-card, .login-card, .bento-card,
+.search-result, .sr-item, .queue-item, .rank-row, #banido-aviso {
+    background: linear-gradient(165deg,
+        rgba(31, 24, 52, 0.93),
+        rgba(15, 13, 24, 0.96)) !important;
+}
+.cat { background: rgba(20, 18, 32, 0.94) !important; }
+
+/* 3. Barra de navegação: opaca de verdade. Com 96% o conteúdo que
+      rolava por baixo ainda aparecia como texto fantasma atrás dos
+      botões. Ela é chão fixo — não tem por que ser translúcida.
+      (O topo já é protegido pelo #topmask, que é preto sólido.) */
+#bottom-nav {
+    background: #08070F !important;
+    border-top: 1px solid rgba(177, 78, 255, 0.14);
+}
+
+/* 4. Botões de período do ranking: eram quase transparentes
+      (5% de branco), então o plasma passava direto por trás do
+      texto. Ganham chão escuro; o ativo mantém o tingimento roxo
+      POR CIMA desse chão, em vez de ser só um véu translúcido. */
+.rk-opt {
+    background: #14121F !important;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.rk-opt.ativo {
+    background:
+        linear-gradient(rgba(177, 78, 255, 0.26), rgba(177, 78, 255, 0.16)),
+        #14121F !important;
+    border-color: rgba(177, 78, 255, 0.45);
+}
