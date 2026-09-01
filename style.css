@@ -2281,3 +2281,62 @@ html, body { overflow-x: hidden !important; max-width: 100%; }
        que apagou o "#01". Tem que ficar sem. */
     text-shadow: none !important;
 }
+
+/* ════════════════════════════════════════════════════════════
+   🎬 INTRO COM O MESMO FUNDO DA TELA PRINCIPAL
+   O #intro era preto opaco, então tapava o canvas do CRT. Agora
+   ele fica transparente e deixa o tubo aparecer — o mesmo tubo,
+   na mesma intensidade, porque o #intro fica ACIMA do véu.
+   ════════════════════════════════════════════════════════════ */
+
+/* Sobrou do layout antigo: três borrões coloridos em z-index -1,
+   ou seja, NA FRENTE do canvas, sujando a cor do tubo. Cada um com
+   blur(70px) em elemento fixo — dos efeitos mais caros que existe
+   no celular, e agora sem função nenhuma: quem dá cor é o CRT. */
+.mancha { display: none !important; }
+
+/* O preto sai; ficam só os respiros de cor da marca e a vinheta.
+   O que preenche o fundo agora é o CRT lá de trás. */
+#intro {
+    background:
+        radial-gradient(ellipse 70% 55% at 50% 50%, rgba(177, 78, 255, 0.18), transparent 70%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(43, 184, 255, 0.12), transparent 75%),
+        transparent !important;
+}
+
+/* Com a intro transparente, o app apareceria por baixo dela — era o
+   preto que escondia. Some enquanto a intro cobre a tela... */
+html.intro-lock .site-header,
+html.intro-lock #app,
+html.intro-lock #bottom-nav,
+html.intro-lock .footer-badge {
+    visibility: hidden;
+}
+/* ...e volta assim que a intro COMEÇA a sumir, pra ser revelado pelo
+   fade em vez de aparecer de estalo quando ela é removida. */
+#intro.intro-done ~ .site-header,
+#intro.intro-done ~ #app,
+#intro.intro-done ~ #bottom-nav,
+#intro.intro-done ~ .footer-badge {
+    visibility: visible;
+}
+
+/* Saída da intro: agora que o fundo é o MESMO antes e depois, o corte
+   seco do `visibility: hidden` fica exposto — só o nome sumia de
+   estalo. Com o fundo contínuo dá pra fazer a entrega de verdade:
+   o nome desvanece e o app aparece por baixo, sem troca de cenário.
+
+   A intro JÁ tinha uma animação de sumiço (intro-vanish). O que a
+   matava era um `visibility: hidden` adicionado depois: visibilidade
+   não interpola, então o elemento sumia no primeiro quadro e a
+   animação nunca aparecia. Basta devolver a visibilidade e deixar a
+   animação correr — ela é quem leva a opacidade de 1 a 0. */
+@keyframes intro-sai {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+#intro.intro-done {
+    visibility: visible !important;
+    animation: intro-sai 0.55s ease forwards !important;
+    pointer-events: none !important;
+}
