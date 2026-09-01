@@ -2112,138 +2112,53 @@ body::after {
 }
 
 /* ════════════════════════════════════════════════════════════
-   🔮 FUNDO — ORB (esfera de plasma)
-   Só transform/rotate: a GPU faz sozinha, sem redesenhar nada.
-   Não usa canvas, não gasta bateria, não trava a rolagem.
+   📺 FUNDO — CRT WARP
+   Shader WebGL (o desenho todo vive no app.js). Aqui é só o
+   posicionamento do canvas e o véu que segura a legibilidade.
    ════════════════════════════════════════════════════════════ */
-#bg-canvas { display: none !important; }   /* canvas aposentado */
+#bg-canvas { display: none !important; }   /* canvas antigo, aposentado */
 
-#orb-fundo {
+#crt-fundo {
     position: fixed;
-    top: 46%; left: 50%;
-    width: 118vw; aspect-ratio: 1;
-    max-width: 900px;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
     z-index: -2;
     pointer-events: none;
-    border-radius: 50%;
-    overflow: hidden;
-    /* a esfera some suave nas bordas (não vira um círculo duro) */
-    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 38%, rgba(0,0,0,0.55) 62%, transparent 78%);
-            mask-image: radial-gradient(circle at 50% 50%, #000 38%, rgba(0,0,0,0.55) 62%, transparent 78%);
+    /* o canvas é renderizado menor que a tela e esticado aqui.
+       O plasma já é quadriculado no shader, então não borra nada. */
+    image-rendering: auto;
 }
 
-/* o plasma: gradiente cônico girando dentro da esfera */
-.orb-plasma {
-    position: absolute; inset: -25%;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg,
-        rgba(177, 78, 255, 0.85),
-        rgba(43, 184, 255, 0.55) 22%,
-        rgba(255, 77, 157, 0.60) 45%,
-        rgba(120, 60, 220, 0.75) 65%,
-        rgba(43, 184, 255, 0.50) 82%,
-        rgba(177, 78, 255, 0.85));
-    animation: orb-gira 26s linear infinite;
-    will-change: transform;
+/* Véu entre o tubo e o conteúdo. Sem isso o plasma briga com o texto. */
+#dither {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 1 !important;
+    background-color: rgba(7, 6, 13, 0.28);
 }
-.orb-plasma.orb-2 {
-    inset: -10%;
-    background: conic-gradient(from 180deg,
-        rgba(43, 184, 255, 0.55),
-        transparent 30%,
-        rgba(255, 77, 157, 0.45) 55%,
-        transparent 78%,
-        rgba(43, 184, 255, 0.55));
-    animation: orb-gira-inverso 34s linear infinite;
-    mix-blend-mode: screen;
-}
-@keyframes orb-gira        { to { transform: rotate(360deg); } }
-@keyframes orb-gira-inverso{ to { transform: rotate(-360deg); } }
-
-/* brilho central + profundidade da esfera */
-.orb-brilho {
-    position: absolute; inset: 0;
-    border-radius: 50%;
-    background:
-        radial-gradient(circle at 38% 32%, rgba(255,255,255,0.20), transparent 45%),
-        radial-gradient(circle at 50% 50%, transparent 45%, rgba(6,4,14,0.78) 76%);
-    animation: orb-respira 8s ease-in-out infinite;
-}
-@keyframes orb-respira {
-    0%, 100% { opacity: 0.9;  transform: scale(1); }
-    50%      { opacity: 1;    transform: scale(1.04); }
-}
-
-/* fundo geral por trás da esfera */
-body { background-color: #07060D; }
-
-/* 📱 MOBILE PRIMEIRO: sem blend caro, esfera um pouco menor */
 @media (hover: none) {
-    .orb-plasma.orb-2 { mix-blend-mode: normal; opacity: 0.55; }
-    #orb-fundo { width: 130vw; top: 42%; }
-    #dither { opacity: 0.22 !important; }
+    #dither { background-color: rgba(7, 6, 13, 0.32); }
 }
+
+/* camada de fundo antiga: vai pro fim da pilha e vira só o preto base */
+#bg-fill {
+    z-index: -3 !important;
+    background-image: none !important;
+    background-color: #07060D !important;
+}
+
+body { background-color: #07060D; }
 
 /* nunca deixa a página deslizar de lado no celular */
 html, body { overflow-x: hidden !important; max-width: 100%; }
 
-/* ════════════════════════════════════════════════════════════
-   🔧 CORREÇÃO: o Orb estava ESCONDIDO atrás do #bg-fill
-   O #bg-fill é uma camada opaca (z-index:-1) que cobre a tela.
-   O Orb (z-index:-2) ficava atrás dela e não aparecia.
-   Agora: bg-fill vai pro fundo e o Orb sobe pra frente dele.
-   ════════════════════════════════════════════════════════════ */
-#bg-fill {
-    z-index: -3 !important;
-    /* tira as manchas antigas: quem faz a cor agora é o Orb */
-    background-image: none !important;
-    background-color: #07060D !important;
-}
-#orb-fundo { z-index: -2 !important; }
-#dither    { z-index: -1 !important; }
-
-/* o Orb agora é o protagonista do fundo — mais presente */
-.orb-plasma  { opacity: 0.95; }
-.orb-brilho  { opacity: 1; }
-
-/* ── Equilíbrio: Orb visível, mas texto sempre legível ────────
-   Um véu escuro entre a esfera e o conteúdo. O plasma continua
-   aparecendo (colorindo o fundo), sem competir com a leitura. */
-#dither {
-    background-color: rgba(7, 6, 13, 0.20);   /* véu leve */
-    opacity: 1 !important;
-}
-@media (hover: none) {
-    #dither { background-color: rgba(7, 6, 13, 0.24); opacity: 1 !important; }
-}
-.orb-plasma { opacity: 1; }
-.orb-plasma.orb-2 { opacity: 0.8; }
-
-/* A máscara segura o anel de cor até mais longe (senão apaga justo o
-   que o miolo escuro deixou passar) e dissolve bem devagar no fim,
-   pra esfera não virar uma "bola colada" com borda dura. */
-#orb-fundo {
-    -webkit-mask-image: radial-gradient(circle at 50% 50%,
-        #000 0%, #000 46%, rgba(0,0,0,0.88) 62%, rgba(0,0,0,0.55) 76%,
-        rgba(0,0,0,0.22) 88%, transparent 100%) !important;
-            mask-image: radial-gradient(circle at 50% 50%,
-        #000 0%, #000 46%, rgba(0,0,0,0.88) 62%, rgba(0,0,0,0.55) 76%,
-        rgba(0,0,0,0.22) 88%, transparent 100%) !important;
-}
-
-/* Miolo escuro (onde fica o texto) + anel de cor aberto no meio do raio.
-   É assim que o Orb do ReactBits é: borda luminosa, centro fundo. */
-.orb-brilho {
-    background:
-        radial-gradient(circle at 36% 26%, rgba(255,255,255,0.12), transparent 34%),
-        radial-gradient(circle at 50% 50%,
-            rgba(7,6,13,0.93) 0%,
-            rgba(7,6,13,0.82) 20%,
-            rgba(7,6,13,0.34) 40%,
-            rgba(7,6,13,0.00) 60%,
-            rgba(7,6,13,0.00) 100%) !important;
-    animation: orb-respira 8s ease-in-out infinite;
+/* respeita quem pediu menos movimento no sistema */
+@media (prefers-reduced-motion: reduce) {
+    #crt-fundo { opacity: 0.5; }
 }
 
 /* ════════════════════════════════════════════════════════════
