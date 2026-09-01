@@ -846,34 +846,159 @@ button { position: relative; overflow: hidden; }
     .cat.no-centro .cat-holo::after { animation: none; }
 }
 
-/* ── FAIXA DE DESTAQUE ──────────────────────────────────────── */
-.destaque {
-    position: relative;
-    overflow: hidden;
-    display: flex; align-items: center;
-    gap: 12px;
-    padding: 22px 20px;
-    margin: 24px 0 8px;
-    cursor: pointer;
-    background: linear-gradient(105deg, rgba(124,58,237,.30), rgba(168,85,247,.14) 55%, transparent), var(--cartao);
-    transition: transform var(--rapido);
+/* ════════════════════════════════════════════════════════════
+   🪜 TUTORIAL EM PASSOS (Stepper)
+   Porte do componente do ReactBits. Só a trilha e o painel: os
+   estados das bolinhas (tique / ponto / número) e o conector que
+   preenche vêm do app.js.
+   ════════════════════════════════════════════════════════════ */
+.passos {
+    margin: 26px 0 8px;
+    padding: 18px 18px 16px;
+    background: linear-gradient(160deg, rgba(124, 58, 237, .16), transparent 58%), var(--cartao);
+    border: 1px solid var(--linha);
+    border-radius: var(--raio-g);
 }
-.destaque:active { transform: scale(.99); }
-.destaque-txt { flex: 1 1 auto; min-width: 0; }
-.destaque-tit {
+
+.passos-cabeca {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-bottom: 18px;
+}
+.passos-titulo {
     font-family: 'Outfit', sans-serif;
-    font-size: 19px; font-weight: 700; color: #fff;
-    margin-bottom: 6px;
+    font-size: 16px; font-weight: 700; color: #fff;
 }
-.destaque-sub { font-size: 14px; line-height: 1.5; color: var(--tinta-fraca); }
-.destaque-mic {
+.passos-conta {
     flex: none;
-    width: 86px; height: 86px;
+    font-size: 11.5px; font-weight: 600;
+    color: var(--tinta-tenue);
+}
+
+/* ── trilha de indicadores ────────────────────────────────── */
+.passos-trilha {
+    display: flex; align-items: center;
+    margin-bottom: 20px;
+}
+.passo-bola {
+    flex: none;
+    width: 30px; height: 30px;
+    margin: 0; padding: 0;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: var(--cartao-alto) !important;
+    border: 1px solid var(--linha-forte);
+    box-shadow: none;
+    font-size: 13px; font-weight: 700;
+    color: var(--tinta-tenue);
+    transition: background var(--rapido), border-color var(--rapido), color var(--rapido);
+}
+.passo-bola.agora {
+    background: linear-gradient(150deg, var(--roxo-escuro), var(--roxo)) !important;
+    border-color: transparent;
+    box-shadow: 0 0 0 4px rgba(168, 85, 247, .18);
+}
+.passo-bola.feito {
+    background: rgba(168, 85, 247, .22) !important;
+    border-color: rgba(168, 85, 247, .5);
+}
+.passo-ponto {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #fff;
+}
+.passo-tique {
+    width: 15px; height: 15px;
     fill: none; stroke: var(--roxo-claro);
-    stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
-    opacity: .9;
-    filter: drop-shadow(0 0 14px rgba(168, 85, 247, .55));
-    transform: rotate(18deg);
+    stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.passo-linha {
+    flex: 1 1 auto;
+    height: 2px;
+    margin: 0 7px;
+    border-radius: 2px;
+    background: var(--linha-forte);
+    overflow: hidden;
+}
+.passo-linha i {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--roxo-escuro), var(--roxo));
+    transition: width .35s cubic-bezier(.22, 1, .36, 1);
+}
+
+/* ── painel do passo ──────────────────────────────────────── */
+.passos-palco { position: relative; }
+.passo {
+    display: none;
+    animation: passo-entra .3s cubic-bezier(.22, 1, .36, 1);
+}
+.passo.ativo { display: block; }
+@keyframes passo-entra {
+    from { opacity: 0; transform: translateX(10px); }
+    to   { opacity: 1; transform: none; }
+}
+.passo-ic {
+    display: grid; place-items: center;
+    width: 42px; height: 42px;
+    margin-bottom: 12px;
+    border-radius: 13px;
+    background: rgba(168, 85, 247, .14);
+    border: 1px solid rgba(168, 85, 247, .28);
+}
+.passo-ic svg {
+    width: 21px; height: 21px;
+    fill: none; stroke: var(--roxo-claro);
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;
+}
+.passo h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px; font-weight: 700; color: #fff;
+    margin: 0 0 6px;
+}
+.passo p {
+    font-size: 14px; line-height: 1.55;
+    color: var(--tinta-fraca);
+    margin: 0;
+    /* altura fixa evita o card pular de tamanho a cada passo */
+    min-height: 66px;
+}
+.passo p b { color: var(--tinta); }
+
+/* ── rodapé ───────────────────────────────────────────────── */
+.passos-rodape {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-top: 6px;
+}
+.passos-voltar {
+    width: auto; margin: 0; padding: 11px 14px;
+    background: transparent !important;
+    border: 1px solid var(--linha-forte);
+    border-radius: 12px;
+    box-shadow: none;
+    font-size: 14px; font-weight: 600;
+    color: var(--tinta-fraca);
+    transition: opacity var(--rapido);
+}
+.passos-voltar.apagado { opacity: .32; pointer-events: none; }
+
+.passos-seguir {
+    width: auto; margin: 0; padding: 12px 18px;
+    display: inline-flex; align-items: center; gap: 7px;
+    background: linear-gradient(120deg, var(--roxo-escuro), var(--roxo)) !important;
+    border: none; border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(168, 85, 247, .28);
+    font-size: 14.5px; font-weight: 700; color: #fff;
+}
+.passos-seguir .ic { stroke: #fff; }
+/* no último passo o botão vira chamada pra ação */
+.passos-seguir.finalizar {
+    background: linear-gradient(120deg, var(--roxo-escuro), var(--rosa)) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .passo { animation: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════

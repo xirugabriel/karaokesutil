@@ -1117,3 +1117,89 @@ setInterval(pollQueueMembership, 500);
     medir();
     requestAnimationFrame(desenhar);
 })();
+
+
+/* ══════════════════════════════════════════════════════════════
+   🪜 STEPPER — tutorial de como pedir música
+   Porte do componente do ReactBits. A trilha de indicadores é
+   montada a partir dos passos que existem no HTML, então dá pra
+   somar ou tirar um passo lá sem mexer aqui.
+
+   Estados de cada bolinha, como no original:
+     · concluído → tique
+     · atual     → ponto
+     · pendente  → número
+   E o conector entre elas preenche conforme avança.
+══════════════════════════════════════════════════════════════ */
+(function () {
+    const caixa = document.getElementById('tutorial');
+    if (!caixa) return;
+
+    const passos  = [].slice.call(caixa.querySelectorAll('.passo'));
+    const trilha  = document.getElementById('passos-trilha');
+    const conta   = document.getElementById('passos-conta');
+    const voltar  = document.getElementById('passos-voltar');
+    const seguir  = document.getElementById('passos-seguir');
+    const seguirTxt = document.getElementById('passos-seguir-txt');
+    if (!passos.length || !trilha) return;
+
+    const TIQUE = '<svg viewBox="0 0 24 24" class="passo-tique"><path d="M20 6 9 17l-5-5"/></svg>';
+    let atual = 0;
+
+    // monta a trilha: bolinha, conector, bolinha, conector...
+    passos.forEach((_, i) => {
+        const b = document.createElement('button');
+        b.className = 'passo-bola';
+        b.type = 'button';
+        b.setAttribute('aria-label', 'Passo ' + (i + 1));
+        b.addEventListener('click', () => ir(i));
+        trilha.appendChild(b);
+        if (i < passos.length - 1) {
+            const c = document.createElement('span');
+            c.className = 'passo-linha';
+            c.innerHTML = '<i></i>';
+            trilha.appendChild(c);
+        }
+    });
+
+    const bolas  = [].slice.call(trilha.querySelectorAll('.passo-bola'));
+    const linhas = [].slice.call(trilha.querySelectorAll('.passo-linha i'));
+
+    function pintar() {
+        passos.forEach((p, i) => p.classList.toggle('ativo', i === atual));
+
+        bolas.forEach((b, i) => {
+            b.classList.toggle('feito',  i < atual);
+            b.classList.toggle('agora',  i === atual);
+            b.innerHTML = i < atual ? TIQUE
+                        : i === atual ? '<i class="passo-ponto"></i>'
+                        : String(i + 1);
+        });
+        linhas.forEach((l, i) => { l.style.width = i < atual ? '100%' : '0%'; });
+
+        if (conta) conta.textContent = (atual + 1) + ' de ' + passos.length;
+        voltar.classList.toggle('apagado', atual === 0);
+        const ultimo = atual === passos.length - 1;
+        seguirTxt.textContent = ultimo ? 'Pedir música' : 'Continuar';
+        seguir.classList.toggle('finalizar', ultimo);
+    }
+
+    function ir(i) {
+        atual = Math.max(0, Math.min(passos.length - 1, i));
+        pintar();
+    }
+
+    voltar.addEventListener('click', () => ir(atual - 1));
+    seguir.addEventListener('click', () => {
+        if (atual < passos.length - 1) { ir(atual + 1); return; }
+        // no último passo o botão leva pra ação: foca a busca
+        const busca = document.getElementById('yt-search');
+        if (busca) {
+            busca.focus();
+            busca.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        ir(0);   // deixa o tutorial pronto pro próximo cliente
+    });
+
+    pintar();
+})();
