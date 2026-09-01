@@ -2246,3 +2246,38 @@ html, body { overflow-x: hidden !important; max-width: 100%; }
         #14121F !important;
     border-color: rgba(177, 78, 255, 0.45);
 }
+
+/* ════════════════════════════════════════════════════════════
+   🔤 TÍTULO DA TELA PRINCIPAL = TÍTULO DA INTRO
+   Mesmo nome e mesmo tratamento do .intro-nome: contorno roxo,
+   preenchimento no degradê da marca (branco → roxo → azul) e o
+   brilho por trás. Só que na medida da barra de topo.
+   ════════════════════════════════════════════════════════════ */
+.tb-nome {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 23px;
+    letter-spacing: 0.12em;
+    padding-left: 0.12em;          /* compensa o espaçamento da última letra */
+    line-height: 1;
+    white-space: nowrap;
+
+    /* preenchimento recortado — igual ao da intro */
+    background: linear-gradient(180deg,
+        #F6F3FC 0%,
+        var(--primary-light) 55%,
+        var(--secondary) 105%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+
+    /* contorno + brilho roxo por trás */
+    -webkit-text-stroke: 0.6px rgba(205, 139, 255, 0.55);
+    filter: drop-shadow(0 0 14px rgba(177, 78, 255, 0.42));
+
+    /* O glifo é um BURACO (fill transparente). Sombra de texto aqui
+       aparece por dentro da letra e mata o degradê — mesmo problema
+       que apagou o "#01". Tem que ficar sem. */
+    text-shadow: none !important;
+}
