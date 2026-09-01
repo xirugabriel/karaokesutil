@@ -65,7 +65,12 @@
     height: calc(100lvh + var(--sangra) * 2) !important;
     pointer-events: none;
 }
-:root { --sangra: 120px; }
+:root {
+    /* Folga que o fundo transborda pra cada lado. A barra do Safari e o
+       notch somam bem menos que isto — a sobra é de propósito, pra que
+       nem o solavanco das barras recolhendo deixe faixa descoberta. */
+    --sangra: 180px;
+}
 
 #bg-fill {
     z-index: -3 !important;
@@ -2067,4 +2072,16 @@ button { position: relative; overflow: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
     .item-anim { transition: none; opacity: 1; transform: none; }
+}
+
+/* Marcador de versão. Existe por um motivo prático: já perdemos várias
+   rodadas sem saber se o celular estava rodando o arquivo novo ou um
+   em cache. Com isto dá pra conferir em dois segundos. */
+.versao-app {
+    margin: 18px 0 0;
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--tinta-tenue);
+    opacity: .6;
 }
