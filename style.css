@@ -2023,3 +2023,56 @@ body::after {
     .spot-card::before, .bento-card::before { display: none; }
     .titulo-fuzzy { animation: none; text-shadow: none; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   🎨 INTRO — cores da casa (roxo neon → azul elétrico)
+   ════════════════════════════════════════════════════════════ */
+/* fundo preto, mas com um respiro das cores da marca no centro */
+#intro {
+    background:
+        radial-gradient(ellipse 70% 55% at 50% 50%, rgba(177,78,255,0.16), transparent 70%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(43,184,255,0.10), transparent 75%),
+        #000 !important;
+}
+
+/* contorno do nome em roxo neon */
+.intro-nome {
+    -webkit-text-stroke: 1.6px rgba(205, 139, 255, 0.95) !important;
+    filter: drop-shadow(0 0 26px rgba(177, 78, 255, 0.45));
+}
+@keyframes nome-preenche {
+    to { -webkit-text-stroke-color: rgba(205, 139, 255, 0.30); }
+}
+
+/* preenchimento com o degradê da marca (mesmo do resto do app) */
+.intro-nome::after {
+    color: transparent !important;
+    background: linear-gradient(180deg,
+        #F6F3FC 0%,
+        var(--primary-light) 55%,
+        var(--secondary) 105%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* anéis: roxo, azul e magenta (as três cores da casa) */
+.intro-aneis i             { border-color: rgba(177, 78, 255, 0.55); }
+.intro-aneis i:nth-child(2){ border-color: rgba(43, 184, 255, 0.50); }
+.intro-aneis i:nth-child(3){ border-color: rgba(255, 77, 157, 0.38); }
+@keyframes intro-anel {
+    0%   { transform: scale(0.42); opacity: 0; }
+    18%  { opacity: 0.75; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* fio de luz no degradê roxo → azul */
+.intro-linha {
+    background: linear-gradient(90deg,
+        transparent,
+        var(--primary) 25%,
+        var(--secondary-light) 50%,
+        var(--primary) 75%,
+        transparent) !important;
+    box-shadow: 0 0 20px rgba(177, 78, 255, 0.75) !important;
+}
