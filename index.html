@@ -27,7 +27,7 @@
     <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=5">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -100,10 +100,9 @@
             min-height: 100dvh;
             width: 100%;
             max-width: 100%;
-            /* `clip` e não `hidden`: os dois cortam a sobra lateral,
-               mas `hidden` transforma o elemento em caixa de rolagem,
-               que é justamente o que não pode acontecer aqui. */
-            overflow-x: clip;
+            /* Sem overflow aqui: `hidden` faria o body virar caixa de
+               rolagem e `clip` viraria bloco de contenção dos fundos
+               fixos. O corte da sobra lateral mora no #app. */
         }
 
         /* ─── LOGO / HEADER ─────────────────────────────── */
@@ -2453,7 +2452,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=5"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>

@@ -57,7 +57,12 @@
        vence é ele, e o `inset: 0` de lá anulava esta sangra. */
     top: calc(-1 * var(--sangra)) !important;
     bottom: auto !important;
+    /* `100%` num elemento fixo mede o viewport com as barras ABERTAS.
+       Quando o Safari recolhe as barras a área cresce e sobraria uma
+       faixa. `lvh` é a altura com as barras recolhidas — o maior caso.
+       A primeira linha é reserva pra quem não conhece `lvh`. */
     height: calc(100% + var(--sangra) * 2) !important;
+    height: calc(100lvh + var(--sangra) * 2) !important;
     pointer-events: none;
 }
 :root { --sangra: 120px; }
@@ -85,11 +90,19 @@
 }
 
 body { background-color: #000; color: var(--tinta); }
-/* `clip` no lugar de `hidden`: os dois cortam a sobra lateral, mas
-   `hidden` faria o body virar caixa de rolagem — e aí o documento
-   deixa de rolar, o Safari não recolhe as barras e a página não
-   pinta atrás delas. */
-html, body { overflow-x: clip; max-width: 100%; }
+/* NADA de overflow em html/body. Aprendi na marra que os dois valores
+   quebram coisas diferentes aqui:
+     · `hidden` faz o body virar caixa de rolagem — o documento para de
+       rolar, o Safari não recolhe as barras e a página não pinta atrás.
+     · `clip` CRIA BLOCO DE CONTENÇÃO para `position: fixed` (é onde ele
+       difere do hidden) — os fundos deixam de ser presos à tela e
+       passam a rolar junto com a página.
+   A sobra lateral é cortada no CONTEÊUDO (#app), que não é ancestral
+   das camadas de fundo. */
+html, body { max-width: 100%; }
+
+/* recorte da sobra lateral fica aqui, longe dos fundos fixos */
+#app, .site-header, .footer-badge { overflow-x: clip; }
 
 /* sobras de versões anteriores */
 #bg-canvas, .mancha, #intro { display: none !important; }
