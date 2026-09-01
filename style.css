@@ -2187,3 +2187,84 @@ body { background-color: #07060D; }
 
 /* nunca deixa a página deslizar de lado no celular */
 html, body { overflow-x: hidden !important; max-width: 100%; }
+
+/* ════════════════════════════════════════════════════════════
+   🔧 CORREÇÃO: o Orb estava ESCONDIDO atrás do #bg-fill
+   O #bg-fill é uma camada opaca (z-index:-1) que cobre a tela.
+   O Orb (z-index:-2) ficava atrás dela e não aparecia.
+   Agora: bg-fill vai pro fundo e o Orb sobe pra frente dele.
+   ════════════════════════════════════════════════════════════ */
+#bg-fill {
+    z-index: -3 !important;
+    /* tira as manchas antigas: quem faz a cor agora é o Orb */
+    background-image: none !important;
+    background-color: #07060D !important;
+}
+#orb-fundo { z-index: -2 !important; }
+#dither    { z-index: -1 !important; }
+
+/* o Orb agora é o protagonista do fundo — mais presente */
+.orb-plasma  { opacity: 0.95; }
+.orb-brilho  { opacity: 1; }
+
+/* ── Equilíbrio: Orb visível, mas texto sempre legível ────────
+   Um véu escuro entre a esfera e o conteúdo. O plasma continua
+   aparecendo (colorindo o fundo), sem competir com a leitura. */
+#dither {
+    background-color: rgba(7, 6, 13, 0.20);   /* véu leve */
+    opacity: 1 !important;
+}
+@media (hover: none) {
+    #dither { background-color: rgba(7, 6, 13, 0.24); opacity: 1 !important; }
+}
+.orb-plasma { opacity: 1; }
+.orb-plasma.orb-2 { opacity: 0.8; }
+
+/* A máscara segura o anel de cor até mais longe (senão apaga justo o
+   que o miolo escuro deixou passar) e dissolve bem devagar no fim,
+   pra esfera não virar uma "bola colada" com borda dura. */
+#orb-fundo {
+    -webkit-mask-image: radial-gradient(circle at 50% 50%,
+        #000 0%, #000 46%, rgba(0,0,0,0.88) 62%, rgba(0,0,0,0.55) 76%,
+        rgba(0,0,0,0.22) 88%, transparent 100%) !important;
+            mask-image: radial-gradient(circle at 50% 50%,
+        #000 0%, #000 46%, rgba(0,0,0,0.88) 62%, rgba(0,0,0,0.55) 76%,
+        rgba(0,0,0,0.22) 88%, transparent 100%) !important;
+}
+
+/* Miolo escuro (onde fica o texto) + anel de cor aberto no meio do raio.
+   É assim que o Orb do ReactBits é: borda luminosa, centro fundo. */
+.orb-brilho {
+    background:
+        radial-gradient(circle at 36% 26%, rgba(255,255,255,0.12), transparent 34%),
+        radial-gradient(circle at 50% 50%,
+            rgba(7,6,13,0.93) 0%,
+            rgba(7,6,13,0.82) 20%,
+            rgba(7,6,13,0.34) 40%,
+            rgba(7,6,13,0.00) 60%,
+            rgba(7,6,13,0.00) 100%) !important;
+    animation: orb-respira 8s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════════════════════════
+   ▣ SQUIRCLE — cantos de superelipse (iOS-like)
+   Inspirado no Squircle Shift do ReactBits (o código deles é pago,
+   então esta é implementação própria). Aprimoramento progressivo:
+   onde `corner-shape` não existe, fica o border-radius normal.
+   Custo de performance: zero — é só geometria de canto.
+   ════════════════════════════════════════════════════════════ */
+@supports (corner-shape: squircle) {
+    .np-card, .turn-card, .steps-card, .login-card,
+    .bento-card, .cat, .queue-item, #banido-aviso,
+    .search-result, .sr-item, .rank-row, .rank-card,
+    .tab-btn, .periodo-btn, .btn, button.primary {
+        corner-shape: squircle;
+    }
+    /* pílulas continuam pílulas — squircle em raio 20px vira quadrado */
+    .me-badge, .dj-chip, .sr-time, .sr-pronta-chip {
+        corner-shape: round;
+    }
+    /* cantos ficam um pouco maiores: o squircle "come" menos que o círculo */
+    .np-card, .turn-card, .steps-card, .login-card { border-radius: 22px; }
+    .bento-card, .cat { border-radius: 20px; }
+}
