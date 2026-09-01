@@ -1561,3 +1561,33 @@ input {
 /* Toggle do ranking mais tátil */
 .rk-opt { transition: transform 0.15s ease, background 0.2s, color 0.2s, border-color 0.2s; }
 .rk-opt:active { transform: scale(0.97); }
+
+/* ── 🚫 CONTA BANIDA ─────────────────────────────────────── */
+#banido-aviso {
+    text-align: center;
+    padding: 26px 22px;
+    margin-bottom: 18px;
+    border-radius: 18px;
+    background: linear-gradient(165deg, rgba(120,20,40,0.30), var(--panel-bg) 65%);
+    border: 1px solid rgba(255,77,109,0.45);
+    box-shadow: 0 0 30px rgba(255,77,109,0.12);
+}
+#banido-aviso .ic-lg { stroke: #FF6B85; display: block; margin: 0 auto 14px; }
+.ban-titulo {
+    font-family: 'Outfit', sans-serif;
+    font-size: 19px; font-weight: 700; color: #FF8A9E;
+    letter-spacing: 0.5px; margin-bottom: 6px;
+}
+.ban-texto { font-size: 13.5px; color: var(--text-muted); margin-bottom: 18px; }
+.ban-motivo-rotulo {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 6px;
+}
+.ban-motivo {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    background: rgba(0,0,0,0.30);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 12px 14px;
+    line-height: 1.45;
+}
+.ban-rodape { font-size: 12px; color: var(--text-muted); margin-top: 16px; line-height: 1.5; }

@@ -861,6 +861,16 @@
                 </div>
             </section>
 
+            <!-- 🚫 conta banida -->
+            <div id="banido-aviso" class="hidden">
+                <svg class="ic ic-lg" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                <div class="ban-titulo">Sua conta está bloqueada</div>
+                <div class="ban-texto">Você não pode pedir músicas no momento.</div>
+                <div class="ban-motivo-rotulo">Motivo</div>
+                <div class="ban-motivo" id="ban-motivo"></div>
+                <div class="ban-rodape">Fale com o DJ ou com a equipe da casa para resolver.</div>
+            </div>
+
             <!-- fila fechada (sem pedido) -->
             <div id="queue-closed-message" class="hidden">
                 <svg class="ic ic-lg" viewBox="0 0 24 24" style="stroke:#FF8A9E; display:block; margin:0 auto 12px;"><circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/></svg>
@@ -1076,6 +1086,7 @@
     let isAdmin = false;
     let localQueue = [];
     let espelhoQueue = null; // fila completa espelhada pelo app (site + DJ)
+    let meuBanimento = null; // {nome, motivo, quando} se a conta estiver banida
     let isQueueOpen = true;
     let localNowPlaying = null;
     let currentTab = 'pedir';
@@ -1139,6 +1150,12 @@
             localNowPlaying = snapshot.val();
             updateUI();
         });
+
+        // 🚫 O usuário foi banido? (o app do bar grava em banidos/{uid})
+        db.ref('banidos/' + currentUID).on('value', (snapshot) => {
+            meuBanimento = snapshot.val();
+            updateUI();
+        }, () => { meuBanimento = null; });
 
         // 🪞 Fila COMPLETA publicada pelo app do bar (inclui os pedidos
         // feitos pelo operador/DJ, que não existem em fila_karaoke).
@@ -1593,6 +1610,13 @@
     }
 
     function confirmRequest() {
+        if (meuBanimento) {
+            alert('Sua conta está bloqueada para pedidos.\n\nMotivo: ' +
+                  (meuBanimento.motivo || 'descumprimento das regras da casa') +
+                  '\n\nFale com o DJ ou com a equipe da casa.');
+            closeRequestSheet();
+            return;
+        }
         const mine = localQueue.find(r => r.uid === currentUID);
         if (!isQueueOpen && !mine) { alert('A fila está fechada para novos pedidos!'); return; }
         const table = document.getElementById('rq-table').value.trim();
@@ -1885,8 +1909,18 @@
         renderYourTurn();
 
         const mine = localQueue.find(r => r.uid === currentUID);
-        document.getElementById('queue-closed-message').classList.toggle('hidden', !(!isQueueOpen && !mine));
-        document.getElementById('search-area').classList.toggle('hidden', (!isQueueOpen && !mine));
+
+        // 🚫 Conta banida: mostra o aviso com o motivo e some com o pedido
+        const banido = !!meuBanimento;
+        const avisoBan = document.getElementById('banido-aviso');
+        avisoBan.classList.toggle('hidden', !banido);
+        if (banido) {
+            document.getElementById('ban-motivo').textContent =
+                meuBanimento.motivo || 'Descumprimento das regras da casa.';
+        }
+
+        document.getElementById('queue-closed-message').classList.toggle('hidden', banido || !(!isQueueOpen && !mine));
+        document.getElementById('search-area').classList.toggle('hidden', banido || (!isQueueOpen && !mine));
 
         renderClientQueue();
     }
