@@ -4,123 +4,121 @@
  */
 
 /* ══════════════════════════════════════════════════════════════
-   0. INTRO — theatrical curtain reveal
+   0. INTRO — nome se desenhando sobre preto (sem cortina)
 ══════════════════════════════════════════════════════════════ */
 (function () {
     const intro = document.getElementById('intro');
     if (!intro) return;
-
-    // Trava qualquer rolagem enquanto a intro está na tela
     document.documentElement.classList.add('intro-lock');
 
-    // Garante que a cortina cubra a tela TODA, inclusive atrás da barra do
-    // Safari (à prova de falhas — usa a altura física da tela do aparelho).
-    function fillScreen() {
-        const h = Math.max(
-            window.innerHeight || 0,
-            (window.screen && window.screen.height) || 0,
-            document.documentElement.clientHeight || 0
-        ) + 80; // folga pra cobrir a barra do navegador
-        intro.style.height = h + 'px';
-        // o "palco" (logo/título) centraliza na área VISÍVEL
-        const stage = intro.querySelector('.intro-stage');
-        if (stage) stage.style.height = (window.innerHeight || document.documentElement.clientHeight) + 'px';
-    }
-    fillScreen();
-    window.addEventListener('resize', fillScreen);
-
-    // Partículas de luz subindo atrás do nome (particle-text)
-    const palco = intro.querySelector('.intro-stage');
-    if (palco && !palco.querySelector('.intro-particulas')) {
-        const camada = document.createElement('div');
-        camada.className = 'intro-particulas';
-        for (let i = 0; i < 26; i++) {
-            const p = document.createElement('i');
-            p.style.left = (Math.random() * 100).toFixed(1) + '%';
-            p.style.setProperty('--d', (3 + Math.random() * 3).toFixed(1) + 's');
-            p.style.setProperty('--atraso', (Math.random() * 3).toFixed(1) + 's');
-            const t = 2 + Math.random() * 2.5;
-            p.style.width = p.style.height = t.toFixed(1) + 'px';
-            camada.appendChild(p);
-        }
-        palco.insertBefore(camada, palco.firstChild);
-    }
-
-    // Build the equalizer bars under the title
-    const eq = document.getElementById('intro-eq');
-    if (eq) {
-        [40, 70, 100, 55, 85, 48, 95, 62].forEach((h, i) => {
-            const b = document.createElement('i');
-            b.style.height = h + '%';
-            b.style.animationDelay = (i * 0.09).toFixed(2) + 's';
-            b.style.animationDuration = (0.40 + Math.random() * 0.40).toFixed(2) + 's';
-            eq.appendChild(b);
-        });
-    }
-
-    let opened = false;
-    function openCurtains() {
-        if (opened) return;
-        opened = true;
-        if (navigator.vibrate) navigator.vibrate(18);
-        intro.classList.add('intro-open');           // curtains slide apart
-        setTimeout(() => intro.classList.add('intro-done'), 900);  // fade overlay (overlaps a abertura)
+    let saiu = false;
+    function sair() {
+        if (saiu) return;
+        saiu = true;
+        if (navigator.vibrate) navigator.vibrate(14);
+        intro.classList.add('intro-done');
         setTimeout(() => {
-            intro.remove();                          // free the DOM
-            document.documentElement.classList.remove('intro-lock'); // libera a rolagem
-        }, 1700);
+            intro.remove();
+            document.documentElement.classList.remove('intro-lock');
+        }, 850);
     }
-
-    const auto = setTimeout(openCurtains, 2300);      // auto reveal
-    intro.addEventListener('click', () => { clearTimeout(auto); openCurtains(); });
+    const auto = setTimeout(sair, 3000);
+    intro.addEventListener('click', () => { clearTimeout(auto); sair(); });
 })();
 
 
 /* ══════════════════════════════════════════════════════════════
-   1. CANVAS BACKGROUND — ORB (aurora de luz que respira e deriva)
-   Desenhado em BAIXA resolução e esticado via CSS: os gradientes
-   saem macios de graça e o celular nem sente o custo.
+   1. FUNDO — AERO SHARDS + DITHER
+   Cacos de vidro colorido girando devagar, com uma trama de
+   pontos (dither) por cima. Canvas único, leve no celular.
 ══════════════════════════════════════════════════════════════ */
 (function () {
     const canvas = document.createElement('canvas');
     canvas.id = 'bg-canvas';
     document.body.insertBefore(canvas, document.body.firstChild);
-
     const ctx = canvas.getContext('2d');
-    const W = 240; // resolução interna (o CSS estica pra tela toda)
-    let H = 420;
 
+    let W = 0, H = 0, DPR = 1;
     function resize() {
-        H = Math.round(W * (window.innerHeight / Math.max(1, window.innerWidth)));
-        canvas.width = W;
-        canvas.height = H;
+        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        W = canvas.width = Math.floor(window.innerWidth * DPR);
+        H = canvas.height = Math.floor(window.innerHeight * DPR);
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
     }
     resize();
     window.addEventListener('resize', resize);
 
-    // três orbes de luz nas cores da casa
-    const ORBS = [
-        { c: '177,78,255',  r: 150, ax: 0.30, ay: 0.24, sx: 0.00023, sy: 0.00031, ph: 0.0, a: 0.34 },
-        { c: '43,184,255',  r: 120, ax: 0.34, ay: 0.30, sx: 0.00029, sy: 0.00021, ph: 2.1, a: 0.26 },
-        { c: '255,77,157',  r:  95, ax: 0.26, ay: 0.20, sx: 0.00019, sy: 0.00027, ph: 4.2, a: 0.18 },
+    const CORES = [
+        [177, 78, 255],   // roxo
+        [43, 184, 255],   // azul
+        [255, 77, 157],   // magenta
+        [140, 110, 255],  // violeta
     ];
+
+    // cada caco: polígono irregular que gira e deriva
+    const CACOS = Array.from({ length: 11 }, (_, i) => {
+        const lados = 3 + Math.floor(Math.random() * 3); // 3 a 5 lados
+        const pontos = Array.from({ length: lados }, (_, k) => {
+            const a = (k / lados) * Math.PI * 2 + Math.random() * 0.5;
+            const r = 0.55 + Math.random() * 0.45;
+            return [Math.cos(a) * r, Math.sin(a) * r];
+        });
+        return {
+            pontos,
+            x: Math.random(), y: Math.random(),
+            tam: 110 + Math.random() * 260,
+            cor: CORES[i % CORES.length],
+            giro: Math.random() * Math.PI * 2,
+            vGiro: (Math.random() - 0.5) * 0.00022,
+            vx: (Math.random() - 0.5) * 0.000035,
+            vy: (Math.random() - 0.5) * 0.000028,
+            alpha: 0.22 + Math.random() * 0.26,
+        };
+    });
+
+    function desenharCaco(c, t) {
+        const x = ((c.x + c.vx * t) % 1.25 + 1.25) % 1.25 - 0.12;
+        const y = ((c.y + c.vy * t) % 1.25 + 1.25) % 1.25 - 0.12;
+        const px = x * W, py = y * H;
+        const s = c.tam * DPR;
+        const ang = c.giro + c.vGiro * t;
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(ang);
+        ctx.beginPath();
+        c.pontos.forEach(([ax, ay], i) => {
+            const vx = ax * s, vy = ay * s;
+            i ? ctx.lineTo(vx, vy) : ctx.moveTo(vx, vy);
+        });
+        ctx.closePath();
+
+        const [r, g, b] = c.cor;
+        const rgb = r + ',' + g + ',' + b;
+        const grad = ctx.createLinearGradient(-s, -s, s, s);
+        grad.addColorStop(0, 'rgba(' + rgb + ',' + c.alpha + ')');
+        grad.addColorStop(1, 'rgba(' + rgb + ',0)');
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(' + rgb + ',' + (c.alpha * 1.6) + ')';
+        ctx.lineWidth = 1.2 * DPR;
+        ctx.stroke();
+        ctx.restore();
+    }
 
     (function tick(t) {
         ctx.clearRect(0, 0, W, H);
         ctx.globalCompositeOperation = 'lighter';
-        for (const o of ORBS) {
-            const x = W * 0.5 + Math.sin(t * o.sx + o.ph) * W * o.ax;
-            const y = H * 0.42 + Math.cos(t * o.sy + o.ph) * H * o.ay;
-            const pulso = 1 + Math.sin(t * 0.0006 + o.ph) * 0.12; // respira
-            const g = ctx.createRadialGradient(x, y, 0, x, y, o.r * pulso);
-            g.addColorStop(0, `rgba(${o.c},${o.a})`);
-            g.addColorStop(0.55, `rgba(${o.c},${o.a * 0.35})`);
-            g.addColorStop(1, `rgba(${o.c},0)`);
-            ctx.fillStyle = g;
-            ctx.fillRect(0, 0, W, H);
-        }
+        for (const c of CACOS) desenharCaco(c, t);
         requestAnimationFrame(tick);
     })(0);
+
+    // DITHER: trama de pontos por cima dos cacos
+    const dither = document.createElement('div');
+    dither.id = 'dither';
+    document.body.insertBefore(dither, canvas.nextSibling);
 })();
 
 

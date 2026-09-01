@@ -6,16 +6,27 @@
 ══════════════════════════════════════════════════════════════ */
 
 /* ── CANVAS BG ──────────────────────────────────────────────── */
+/* AERO SHARDS — cacos de vidro desenhados no canvas */
 #bg-canvas {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    /* -1 = fica ATRÁS de todo o conteúdo (é fundo, não véu) */
-    z-index: -1;
+    z-index: -2;              /* fundo de tudo */
     pointer-events: none;
-    /* desenhado pequeno e esticado: os gradientes ficam macios de graça */
-    filter: blur(28px) saturate(115%);
-    opacity: 0.85;
+    filter: blur(1.5px) saturate(125%);
+    opacity: 0.95;
+}
+/* DITHER — trama de pontos por cima dos cacos (textura retrô) */
+#dither {
+    position: fixed; inset: 0;
+    z-index: -1; pointer-events: none;
+    opacity: 0.5;
+    background-image:
+        radial-gradient(rgba(255,255,255,0.14) 0.6px, transparent 0.7px),
+        radial-gradient(rgba(177,78,255,0.10) 0.6px, transparent 0.7px);
+    background-size: 4px 4px, 7px 7px;
+    background-position: 0 0, 2px 3px;
+    mix-blend-mode: overlay;
 }
 
 /* Máscaras pretas que cobrem as safe areas (notch no topo, indicador na base)
@@ -1602,9 +1613,9 @@ input {
 
 /* ── DITHER/NOISE: grão fino por cima de tudo (tira o "liso digital") ── */
 body::after {
-    content: '';
+    content: none;   /* aposentado: quem faz a textura agora é o #dither */
     position: fixed; inset: -50%;
-    pointer-events: none; z-index: -1;   /* fica no fundo, junto do orb */
+    pointer-events: none; z-index: -1;
     opacity: 0.05;
     background-image:
         repeating-conic-gradient(#fff 0% 25%, transparent 0% 50%);
@@ -1882,3 +1893,64 @@ body::after {
     0%,100% { transform: translate(0,0) scale(1); }
     50%     { transform: translate(4vw,-5vh) scale(1.18); }
 }
+
+/* ════════════════════════════════════════════════════════════
+   🎬 INTRO NOVA — preto puro + STROKE TEXT (sem cortina)
+   Sobrescreve tudo que veio antes.
+   ════════════════════════════════════════════════════════════ */
+#intro {
+    position: fixed; inset: 0; z-index: 3000;
+    background: #000 !important;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.75s ease, visibility 0.75s;
+}
+#intro.intro-done { opacity: 0; visibility: hidden; pointer-events: none; }
+#intro::after, #intro::before { display: none !important; }
+.curtain, .curtain-left, .curtain-right, .curtain-valance,
+#intro .intro-spotlight, #intro .intro-logo, #intro .intro-eq,
+#intro .intro-sub, #intro .intro-brand { display: none !important; }
+
+#intro .intro-stage {
+    position: relative; height: auto !important;
+    display: flex; flex-direction: column; align-items: center; gap: 22px;
+    background: none; opacity: 1 !important; transform: none !important;
+}
+
+/* o nome: contorno que se desenha e depois preenche */
+.intro-nome {
+    position: relative;
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(42px, 13vw, 130px);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    padding-left: 0.12em;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 1.6px rgba(255, 255, 255, 0.92);
+    animation: nome-preenche 1.5s cubic-bezier(0.22, 1, 0.36, 1) 0.85s forwards;
+}
+/* camada de preenchimento que "sobe" por dentro das letras */
+.intro-nome::after {
+    content: attr(data-texto);
+    position: absolute; inset: 0;
+    color: #fff;
+    -webkit-text-stroke: 0;
+    clip-path: inset(100% 0 0 0);
+    animation: nome-enche 1.35s cubic-bezier(0.22, 1, 0.36, 1) 0.75s forwards;
+}
+@keyframes nome-enche {
+    to { clip-path: inset(0 0 0 0); }
+}
+@keyframes nome-preenche {
+    to { -webkit-text-stroke-color: rgba(255,255,255,0.22); }
+}
+
+/* fio de luz que abre embaixo do nome */
+.intro-linha {
+    display: block; height: 2px; width: 0;
+    background: linear-gradient(90deg, transparent, #fff, transparent);
+    box-shadow: 0 0 18px rgba(255,255,255,0.8);
+    animation: linha-abre 0.9s cubic-bezier(0.22, 1, 0.36, 1) 1.5s forwards;
+}
+@keyframes linha-abre { to { width: min(74vw, 520px); } }
