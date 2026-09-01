@@ -110,8 +110,10 @@ function comThrottle(fn) {
         exposicao:    TELA_PEQUENA ? 0.85 : 0.95,
         desvioRGB:    0.015,
         forcaPonteiro: 0.5,
-        // teto do plasma: o quanto ele pode cobrir o preto do fundo
-        teto:         TELA_PEQUENA ? 0.26 : 0.34
+        /* Teto do plasma: o quanto ele pode cobrir o preto do fundo.
+           Baixo de propósito — o tubo é textura, não protagonista.
+           A página tem que ser preta com um chiado roxo por baixo. */
+        teto:         TELA_PEQUENA ? 0.17 : 0.22
     };
 
     const canvas = document.createElement("canvas");

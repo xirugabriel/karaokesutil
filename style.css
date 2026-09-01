@@ -2138,10 +2138,13 @@ body::after {
     z-index: -1;
     pointer-events: none;
     opacity: 1 !important;
-    background-color: rgba(7, 6, 13, 0.28);
+    /* Véu leve: quem escurece agora é o próprio teto do shader.
+       Empilhar véu pesado em cima de um tubo já escuro só achata
+       a textura e deixa a tela com cara de cinza sujo. */
+    background-color: rgba(7, 6, 13, 0.16);
 }
 @media (hover: none) {
-    #dither { background-color: rgba(7, 6, 13, 0.32); }
+    #dither { background-color: rgba(7, 6, 13, 0.18); }
 }
 
 /* camada de fundo antiga: vai pro fim da pilha e vira só o preto base */
@@ -2198,6 +2201,14 @@ html, body { overflow-x: hidden !important; max-width: 100%; }
     text-shadow: 0 1px 3px rgba(4, 3, 10, 0.9),
                  0 0 14px rgba(4, 3, 10, 0.55);
 }
+/* Exceções obrigatórias: texto com GRADIENTE RECORTADO (background-clip
+   com preenchimento transparente). Nesses o glifo é um buraco — a sombra
+   aparece POR DENTRO da letra e mata o degradê, deixando o número com
+   cara de contorno apagado. Aqui a sombra tem que sair.
+   (.position-badge e .intro-nome também são recortados, mas já têm
+   sombra PRÓPRIA de brilho que venceu a minha — ficam de fora.) */
+.turn-pos { text-shadow: none !important; }
+
 /* números grandes e ícones não precisam — sombra neles só suja */
 .rank-pts, .np-art, .cat i, .cat svg { text-shadow: none; }
 
