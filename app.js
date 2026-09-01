@@ -754,7 +754,7 @@ setInterval(pollQueueMembership, 500);
 
     let passo = 0, total = 0, meia = 0;
     let alvo = 0, atual = 0;
-    let rodando = false, arrastando = false, partiuX = 0, partiuAlvo = 0;
+    let rodando = false;   // arrasto e afins são declarados no bloco de gestos
 
     const ESPACO = 11;   // mesmo gap que a esteira usava no CSS
 
@@ -822,23 +822,94 @@ setInterval(pollQueueMembership, 500);
         requestAnimationFrame(laco);
     }
 
-    // ---- arrastar ----
-    function pegar(x) { arrastando = true; partiuX = x; partiuAlvo = alvo; esteira.classList.add('cg-pegando'); }
-    function mover(x) { if (arrastando) { alvo = partiuAlvo - (x - partiuX); acordar(); } }
-    function soltar()  {
+    /* ── ARRASTO ─────────────────────────────────────────────
+       Quatro cuidados que faltavam e deixavam o gesto errático:
+
+       1. TRAVA DE EIXO. Antes eu movia a esteira em qualquer
+          touchmove. Rolando a página com o dedo em cima das
+          categorias, a tremida horizontal natural sacudia tudo
+          junto. Agora o primeiro movimento decide: se for mais
+          vertical que horizontal, o arrasto é abandonado e a
+          página rola limpa.
+       2. touchcancel. Se o sistema interrompe o toque (chamada,
+          notificação), sem isto o arrasto ficava preso ligado.
+       3. MOUSE FANTASMA. O celular dispara eventos de mouse
+          depois do toque. Sem ignorar, cada gesto era processado
+          duas vezes e a esteira pulava.
+       4. INÉRCIA. Sem ela, um deslize rápido andava um card só.
+          Agora a velocidade do dedo projeta o destino.            */
+    let arrastando = false, eixo = null;
+    let partiuX = 0, partiuY = 0, partiuAlvo = 0;
+    let ultimoX = 0, ultimoT = 0, velocidade = 0;
+    let houveToque = false;
+
+    function inicio(x, y) {
+        arrastando = true;
+        eixo = null;
+        partiuX = x; partiuY = y; partiuAlvo = alvo;
+        ultimoX = x; ultimoT = performance.now(); velocidade = 0;
+        esteira.classList.add('cg-pegando');
+    }
+
+    function anda(x, y) {
         if (!arrastando) return;
-        arrastando = false;
-        esteira.classList.remove('cg-pegando');
-        alvo = Math.round(alvo / passo) * passo;   // encaixa no item mais próximo
+        if (eixo === null) {
+            const dx = Math.abs(x - partiuX), dy = Math.abs(y - partiuY);
+            if (dx < 5 && dy < 5) return;         // ainda não dá pra saber
+            eixo = dx > dy ? 'x' : 'y';
+            if (eixo === 'y') {                   // é rolagem da página
+                arrastando = false;
+                esteira.classList.remove('cg-pegando');
+                return;
+            }
+        }
+        const agora = performance.now();
+        const dt = agora - ultimoT;
+        /* Com dois movimentos quase no mesmo instante, dt tende a zero
+           e a divisão estoura — a inércia jogaria a esteira longe. Piso
+           de 4ms no tempo e teto de 2,5px/ms na velocidade (mais rápido
+           que isso nenhum dedo faz) seguram o resultado. */
+        if (dt >= 4) {
+            const v = (x - ultimoX) / dt;
+            velocidade = Math.max(-2.5, Math.min(2.5, v));
+            ultimoX = x; ultimoT = agora;
+        }
+        alvo = partiuAlvo - (x - partiuX);
         acordar();
     }
 
-    esteira.addEventListener('touchstart', (e) => pegar(e.touches[0].clientX), { passive: true });
-    esteira.addEventListener('touchmove',  (e) => { mover(e.touches[0].clientX); }, { passive: true });
-    esteira.addEventListener('touchend', soltar);
-    esteira.addEventListener('mousedown', (e) => { pegar(e.clientX); e.preventDefault(); });
-    window.addEventListener('mousemove', (e) => mover(e.clientX));
-    window.addEventListener('mouseup', soltar);
+    function fim() {
+        if (!arrastando) return;
+        arrastando = false;
+        esteira.classList.remove('cg-pegando');
+        // projeta onde pararia com a inércia e encaixa no card mais próximo
+        const projecao = -velocidade * 230;
+        alvo = Math.round((alvo + projecao) / passo) * passo;
+        acordar();
+    }
+
+    esteira.addEventListener('touchstart', (e) => {
+        houveToque = true;
+        inicio(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    esteira.addEventListener('touchmove', (e) => {
+        anda(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    esteira.addEventListener('touchend', fim);
+    esteira.addEventListener('touchcancel', fim);
+
+    // mouse só entra se o aparelho não for de toque
+    esteira.addEventListener('mousedown', (e) => {
+        if (houveToque) return;
+        inicio(e.clientX, e.clientY);
+        e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (houveToque) return;
+        anda(e.clientX, e.clientY);
+    });
+    window.addEventListener('mouseup', () => { if (!houveToque) fim(); });
+
     esteira.addEventListener('wheel', (e) => {
         alvo += (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * RODA;
         acordar();
@@ -848,11 +919,12 @@ setInterval(pollQueueMembership, 500);
        dispararia a busca da categoria que ficou embaixo do dedo. */
     itens.forEach((el) => {
         el.addEventListener('click', (ev) => {
-            if (Math.abs(alvo - partiuAlvo) > 6) { ev.preventDefault(); ev.stopPropagation(); }
+            if (eixo === 'x' && Math.abs(alvo - partiuAlvo) > 6) {
+                ev.preventDefault(); ev.stopPropagation();
+            }
         }, true);
     });
 
-    // só desenha quando já dá pra medir (a aba pode estar oculta ainda)
     function reiniciar() { if (medir()) desenhar(); }
     reiniciar();
     window.addEventListener('resize', reiniciar, { passive: true });
