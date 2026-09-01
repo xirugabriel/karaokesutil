@@ -1006,26 +1006,29 @@ setInterval(pollQueueMembership, 500);
            só de 1px fica parecendo um contorno desenhado.
            Custo: três traçados de um caminho pronto, que é barato
            perto do ruído que já foi calculado. */
-        ctx.shadowColor = COR;
-
-        ctx.globalAlpha = 0.16;
+        /* SEM ctx.shadowBlur: ele é das operações mais caras do canvas,
+           e três traços com sombra num canvas de ~820x850 estouravam o
+           tempo de composição (o preview nem conseguia tirar print).
+           O halo sai de graça dos próprios traços: um bem largo e quase
+           transparente por baixo, um médio, e o núcleo fino por cima. */
         ctx.strokeStyle = COR;
-        ctx.lineWidth = 6;
-        ctx.shadowBlur = 16;
+
+        ctx.globalAlpha = 0.09;
+        ctx.lineWidth = 9;
         ctx.stroke();
 
-        ctx.globalAlpha = 0.42;
-        ctx.lineWidth = 2.6;
-        ctx.shadowBlur = 10;
+        ctx.globalAlpha = 0.20;
+        ctx.lineWidth = 5;
+        ctx.stroke();
+
+        ctx.globalAlpha = 0.5;
+        ctx.lineWidth = 2.4;
         ctx.stroke();
 
         ctx.globalAlpha = 1;
         ctx.strokeStyle = NUCLEO;
         ctx.lineWidth = 1.1;
-        ctx.shadowBlur = 6;
         ctx.stroke();
-
-        ctx.globalAlpha = 1;
     }
 
     if (window.ResizeObserver) new ResizeObserver(medir).observe(card);

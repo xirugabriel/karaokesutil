@@ -521,45 +521,116 @@ button { position: relative; overflow: hidden; }
 }
 .section-link .ic { width: 15px; height: 15px; stroke: var(--roxo-claro); }
 
-/* ── CAMPO DE BUSCA ─────────────────────────────────────────── */
-.search-wrap { position: relative; line-height: 0; }
+/* ── CAMPO DE BUSCA ──────────────────────────────────────────
+   É a ação principal da tela, então ganha presença: campo alto,
+   anel de brilho por trás e um foco que responde de verdade.
+   ════════════════════════════════════════════════════════════ */
+
+/* rótulo acima do campo */
+#search-area > label {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px; font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--tinta);
+    margin: 22px 0 12px;
+}
+
+.search-wrap {
+    position: relative;
+    line-height: 0;
+    margin-bottom: 14px !important;
+}
+
+/* anel de brilho por trás do campo — acende quando o campo recebe foco */
+.search-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -7px;
+    border-radius: 22px;
+    background: linear-gradient(115deg,
+        rgba(168, 85, 247, .55), rgba(236, 72, 153, .35) 45%, rgba(56, 189, 248, .45));
+    filter: blur(13px);
+    opacity: .30;
+    transition: opacity .25s ease;
+    pointer-events: none;
+}
+.search-wrap:focus-within::before { opacity: .75; }
+
 .search-wrap input {
     /* `block` é obrigatório: como inline, o input criava uma caixa de
-       linha 14px mais alta que ele, e os ícones — que se apoiam no
-       wrapper — desciam 7px do centro do campo. */
+       linha mais alta que ele e os ícones — que se apoiam no wrapper —
+       desciam do centro do campo. */
     display: block;
+    position: relative;
     width: 100%;
-    height: 56px;
-    padding: 0 48px 0 48px;
-    font-size: 15.5px;
+    height: 62px;
+    padding: 0 54px 0 58px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px; font-weight: 500;
     color: var(--tinta);
-    background: rgba(21, 21, 31, 0.9);
-    border: 1.5px solid rgba(168, 85, 247, 0.55);
-    border-radius: 15px;
-    transition: border-color var(--rapido), box-shadow var(--rapido);
+    background: rgba(16, 15, 24, .94);
+    border: 1.5px solid rgba(168, 85, 247, .45);
+    border-radius: 17px;
+    transition: border-color .2s ease, background .2s ease;
 }
-.search-wrap input::placeholder { color: var(--tinta-tenue); }
+.search-wrap input::placeholder { color: var(--tinta-tenue); font-weight: 400; }
 .search-wrap input:focus {
     outline: none;
     border-color: var(--roxo);
-    box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.14);
+    background: rgba(20, 18, 30, .97);
 }
+
+/* a lupa mora num círculo, pra virar âncora visual do campo */
 .search-ic, .search-mic {
-    position: absolute; top: 50%;
-    width: 21px; height: 21px;
+    position: absolute;
+    top: 50%;
     transform: translateY(-50%);
     fill: none; stroke-width: 2;
     stroke-linecap: round; stroke-linejoin: round;
     pointer-events: none;
+    z-index: 1;
 }
-.search-ic  { left: 17px;  stroke: var(--roxo); }
-.search-mic { right: 17px; stroke: var(--roxo); opacity: .85; }
+.search-ic {
+    left: 12px;
+    width: 36px; height: 36px;
+    padding: 8px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: linear-gradient(150deg, var(--roxo-escuro), var(--roxo));
+    stroke: #fff;
+}
+.search-mic {
+    right: 18px;
+    width: 21px; height: 21px;
+    stroke: var(--tinta-tenue);
+}
 
+/* dica: virou uma faixa discreta, no lugar de texto solto centralizado */
 .yt-note {
-    font-size: 13px; line-height: 1.55;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 0 0 4px;
+    padding: 11px 13px;
+    border-radius: 13px;
+    background: rgba(255, 255, 255, .035);
+    border: 1px solid var(--linha);
+    font-size: 12.5px; line-height: 1.5;
     color: var(--tinta-tenue);
-    text-align: center;
-    margin: 14px 4px 4px;
+    text-align: left;
+}
+
+/* título da seção: o ícone ganha um selo */
+.queue-section-title .title-ic {
+    width: 34px; height: 34px;
+    padding: 8px;
+    box-sizing: border-box;
+    border-radius: 11px;
+    background: rgba(168, 85, 247, .14);
+    border: 1px solid rgba(168, 85, 247, .28);
+    stroke: var(--roxo-claro);
 }
 
 .cats-scroll {
