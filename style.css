@@ -722,7 +722,10 @@ button { position: relative; overflow: hidden; }
     inset: 0;
     z-index: 2;
     pointer-events: none;
-    overflow: hidden;              /* recorta a camada que anda */
+    overflow: hidden;
+    /* sem isto o recorte é um retângulo DURO: o brilho invadia os
+       cantos arredondados e o card parecia emoldurado */
+    border-radius: inherit;
     opacity: .28;
     mix-blend-mode: color-dodge;
 
@@ -779,8 +782,15 @@ button { position: relative; overflow: hidden; }
 .cat.no-centro .cat-holo {
     opacity: .40;
 }
+/* `alternate`: o padrão vai e VOLTA em vez de reiniciar. Antes eu
+   deslocava exatamente um período e confiava na conta pra emendar —
+   a conta estava certa, mas qualquer arredondamento do navegador
+   aparecia como um solavanco. Indo e voltando não existe salto
+   possível, e o `ease-in-out` suaviza os pontos de retorno.
+   É também o que um cartão holográfico faz de verdade: você inclina
+   pra um lado e pro outro. */
 .cat.no-centro .cat-holo::before {
-    animation: holo 11s linear infinite;
+    animation: holo 13s ease-in-out infinite alternate;
 }
 .cat.no-centro .cat-holo::after {
     opacity: .38;
@@ -822,11 +832,11 @@ button { position: relative; overflow: hidden; }
 .cat.no-centro { border-color: rgba(255, 255, 255, .22) !important; }
 
 /* ── cores por gênero ─────────────────────────────────────── */
-.cat-roxo.no-centro  { box-shadow: 0 0 0 1px rgba(168,85,247,.5), 0 8px 26px rgba(168,85,247,.35) !important; }
-.cat-rosa.no-centro  { box-shadow: 0 0 0 1px rgba(236,72,153,.5), 0 8px 26px rgba(236,72,153,.35) !important; }
-.cat-azul.no-centro  { box-shadow: 0 0 0 1px rgba(56,189,248,.5), 0 8px 26px rgba(56,189,248,.35) !important; }
-.cat-verde.no-centro { box-shadow: 0 0 0 1px rgba(52,211,153,.5), 0 8px 26px rgba(52,211,153,.35) !important; }
-.cat-ambar.no-centro { box-shadow: 0 0 0 1px rgba(251,191,36,.5), 0 8px 26px rgba(251,191,36,.35) !important; }
+.cat-roxo.no-centro  { box-shadow: 0 6px 20px rgba(168,85,247,.28) !important; }
+.cat-rosa.no-centro  { box-shadow: 0 6px 20px rgba(236,72,153,.28) !important; }
+.cat-azul.no-centro  { box-shadow: 0 6px 20px rgba(56,189,248,.28) !important; }
+.cat-verde.no-centro { box-shadow: 0 6px 20px rgba(52,211,153,.28) !important; }
+.cat-ambar.no-centro { box-shadow: 0 6px 20px rgba(251,191,36,.28) !important; }
 
 .cat-roxo::after  { background: linear-gradient(90deg, transparent, var(--roxo),  transparent); }
 .cat-rosa::after  { background: linear-gradient(90deg, transparent, var(--rosa),  transparent); }
