@@ -735,7 +735,13 @@ setInterval(pollQueueMembership, 500);
    Custo: o laço PARA sozinho quando a esteira assenta. Parado, zero.
 ══════════════════════════════════════════════════════════════ */
 (function () {
-    const CURVA = 36;      // quanto o item da ponta desce, em pixels
+    const CURVA = 30;      // quanto o item da ponta desce, em pixels
+    /* Quanto do tombo o card leva. O original inclina o ângulo cheio
+       (uns 21° na ponta), o que numa imagem larga fica elegante mas em
+       card pequeno e em pé lê como "torto". Aqui fica suave: o arco
+       continua marcando a curva, o tombo só acompanha de leve.
+       Para o tombo do original, é só pôr 1. */
+    const INCLINA = 0.32;
     const SUAVE = 0.085;   // quanto o movimento persegue o alvo por quadro
     const RODA  = 1.6;     // sensibilidade do scroll do mouse
 
@@ -747,8 +753,7 @@ setInterval(pollQueueMembership, 500);
     esteira.classList.add('cg-palco');
 
     let passo = 0, total = 0, meia = 0;
-    const extra = new Array(itens.length).fill(0);
-    let alvo = 0, atual = 0, ultimo = 0;
+    let alvo = 0, atual = 0;
     let rodando = false, arrastando = false, partiuX = 0, partiuAlvo = 0;
 
     const ESPACO = 11;   // mesmo gap que a esteira usava no CSS
@@ -769,28 +774,28 @@ setInterval(pollQueueMembership, 500);
     }
 
     function desenhar() {
-        const dir = atual > ultimo ? 'direita' : 'esquerda';
         const b = CURVA;
         const R = (meia * meia + b * b) / (2 * b);
+        const metade = total / 2;
 
         itens.forEach((el, i) => {
-            let x = i * passo - atual + extra[i];
-
-            /* Rodízio infinito: quem sai por um lado reentra pelo outro.
-               É o mesmo "extra" do original. */
-            const meiaLargura = passo / 2;
-            if (dir === 'direita' && x + meiaLargura < -meia) { extra[i] += total; x += total; }
-            if (dir === 'esquerda' && x - meiaLargura >  meia) { extra[i] -= total; x -= total; }
+            /* Rodízio por RESTO, não por acúmulo. O original vai somando
+               um "extra" a cada volta, comparando com a direção do
+               movimento — e numa rolagem longa isso sai de sincronia e
+               os cards empilham. Com o resto, a posição de cada item é
+               calculada do zero a cada quadro: não acumula erro, não
+               depende da direção e aguenta qualquer distância. */
+            let x = (i * passo - atual) % total;
+            if (x < 0) x += total;          // 0 .. total
+            if (x > metade) x -= total;     // -total/2 .. total/2
 
             const xr = Math.min(Math.abs(x), meia);
             const arco = R - Math.sqrt(Math.max(0, R * R - xr * xr));
-            const giro = -Math.sign(x) * Math.asin(xr / R) * (180 / Math.PI);
+            const giro = -Math.sign(x) * Math.asin(xr / R) * (180 / Math.PI) * INCLINA;
 
             el.style.transform =
-                `translate(-50%, 0) translate(${x}px, ${arco}px) rotate(${giro}deg)`;
+                `translate(-50%, 0) translate(${x.toFixed(1)}px, ${arco.toFixed(1)}px) rotate(${giro.toFixed(2)}deg)`;
         });
-
-        ultimo = atual;
     }
 
     function laco() {
