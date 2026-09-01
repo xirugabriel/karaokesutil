@@ -795,6 +795,14 @@ setInterval(pollQueueMembership, 500);
 
             el.style.transform =
                 `translate(-50%, 0) translate(${x.toFixed(1)}px, ${arco.toFixed(1)}px) rotate(${giro.toFixed(2)}deg)`;
+
+            /* Marca quem está no meio. É esse card — e só ele — que
+               acende o brilho holográfico. Sete blends animando ao
+               mesmo tempo sobre o CRT seria carga demais. */
+            const meio = Math.abs(x) < passo / 2;
+            if (meio !== el.classList.contains('no-centro')) {
+                el.classList.toggle('no-centro', meio);
+            }
         });
     }
 

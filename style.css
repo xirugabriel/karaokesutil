@@ -408,7 +408,6 @@ button { position: relative; overflow: hidden; }
     margin: 14px 4px 4px;
 }
 
-/* ── CATEGORIAS ─────────────────────────────────────────────── */
 .cats-scroll {
     display: flex; gap: 11px;
     overflow-x: auto;
@@ -420,44 +419,137 @@ button { position: relative; overflow: hidden; }
 }
 .cats-scroll::-webkit-scrollbar { display: none; }
 
+/* ════════════════════════════════════════════════════════════
+   🎴 CARDS DE CATEGORIA — foto do cantor + brilho holográfico
+   Referência: o ProfileCard do ReactBits. O que veio de lá é o
+   brilho de arco-íris com color-dodge e o degradê interno.
 
+   ⚠ O brilho animado roda SÓ no card do centro (.no-centro).
+   Sete camadas com blend animando ao mesmo tempo, por cima do CRT,
+   é exatamente o tipo de carga que travou a página antes. Assim
+   fica barato e ainda cria foco em quem está no meio.
+
+   A foto é opcional: se o PNG não existir, o onerror tira a tag e
+   o card fica com o degradê da cor do gênero. Nada quebra.
+   ════════════════════════════════════════════════════════════ */
 .cat {
     position: relative;
     overflow: hidden;
+    isolation: isolate;          /* prende o blend dentro do card */
     flex: 0 0 auto;
     width: 108px; height: 140px;
-    margin: 0; padding: 18px 8px 16px;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 12px;
-    background: var(--cartao) !important;
+    margin: 0; padding: 0;
+    display: block;
     border: 1px solid var(--linha) !important;
     border-radius: var(--raio);
     box-shadow: none !important;
-    font-size: 14px; font-weight: 600;
-    color: var(--tinta);
-    transition: transform var(--rapido), border-color var(--rapido);
+    text-align: left;
+    transition: border-color var(--rapido);
 }
-.cat:active { transform: scale(.96); }
-.cat-ic { display: block; line-height: 0; }
-.cat-ic svg {
-    width: 44px; height: 44px;
-    fill: none; stroke-width: 1.7;
+
+/* foto do cantor */
+.cat-foto {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center 22%;
+    z-index: 0;
+    /* leve dessaturada pra cor do gênero mandar na leitura */
+    filter: saturate(.75) contrast(1.05);
+}
+
+/* véu: escurece de baixo pra cima pro nome ficar legível */
+.cat-veu {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg,
+        rgba(8, 6, 16, .10) 0%,
+        rgba(8, 6, 16, .45) 46%,
+        rgba(6, 4, 12, .92) 100%);
+}
+
+/* brilho holográfico (do ProfileCard) — parado por padrão */
+.cat-holo {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    mix-blend-mode: color-dodge;
+    background-size: 300% 300%;
+    background-image: repeating-linear-gradient(
+        -18deg,
+        hsl(2, 100%, 73%)   calc(5% * 1),
+        hsl(53, 100%, 69%)  calc(5% * 2),
+        hsl(93, 100%, 69%)  calc(5% * 3),
+        hsl(176, 100%, 76%) calc(5% * 4),
+        hsl(228, 100%, 74%) calc(5% * 5),
+        hsl(283, 100%, 73%) calc(5% * 6),
+        hsl(2, 100%, 73%)   calc(5% * 7));
+    filter: brightness(.5) contrast(1.4) saturate(.7);
+}
+/* só o card do meio acende e move o arco-íris */
+.cat.no-centro .cat-holo {
+    opacity: .5;
+    animation: holo 7s linear infinite;
+}
+@keyframes holo {
+    0%   { background-position:   0% 50%; }
+    100% { background-position: 300% 50%; }
+}
+
+/* selo do gênero, no alto */
+.cat-selo {
+    position: absolute;
+    top: 9px; left: 9px;
+    z-index: 3;
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+    border-radius: 11px;
+    background: rgba(10, 8, 18, .62);
+    border: 1px solid rgba(255, 255, 255, .14);
+    backdrop-filter: blur(3px);
+}
+.cat-selo svg {
+    width: 19px; height: 19px;
+    fill: none; stroke-width: 1.8;
     stroke-linecap: round; stroke-linejoin: round;
 }
-/* o tracinho de cor no pé do cartão */
+
+/* nome do gênero, no pé */
+.cat-nome {
+    position: absolute;
+    left: 11px; right: 11px; bottom: 13px;
+    z-index: 3;
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px; font-weight: 700;
+    color: #fff;
+    line-height: 1.15;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, .85);
+}
+
+/* tracinho de cor no pé */
 .cat::after {
     content: '';
     position: absolute;
-    left: 26%; right: 26%; bottom: 9px;
+    left: 11px; right: 11px; bottom: 6px;
+    z-index: 3;
     height: 2.5px;
     border-radius: 2px;
 }
 
-.cat-roxo  .cat-ic svg { stroke: var(--roxo);  filter: drop-shadow(0 0 7px rgba(168,85,247,.55)); }
-.cat-rosa  .cat-ic svg { stroke: var(--rosa);  filter: drop-shadow(0 0 7px rgba(236,72,153,.55)); }
-.cat-azul  .cat-ic svg { stroke: var(--azul);  filter: drop-shadow(0 0 7px rgba(56,189,248,.55)); }
-.cat-verde .cat-ic svg { stroke: var(--verde); filter: drop-shadow(0 0 7px rgba(52,211,153,.55)); }
-.cat-ambar .cat-ic svg { stroke: var(--ambar); filter: drop-shadow(0 0 7px rgba(251,191,36,.55)); }
+/* o card do meio ganha destaque */
+.cat.no-centro { border-color: rgba(255, 255, 255, .22) !important; }
+
+/* ── cores por gênero ─────────────────────────────────────── */
+.cat-roxo  .cat-selo svg { stroke: var(--roxo); }
+.cat-rosa  .cat-selo svg { stroke: var(--rosa); }
+.cat-azul  .cat-selo svg { stroke: var(--azul); }
+.cat-verde .cat-selo svg { stroke: var(--verde); }
+.cat-ambar .cat-selo svg { stroke: var(--ambar); }
 
 .cat-roxo::after  { background: linear-gradient(90deg, transparent, var(--roxo),  transparent); }
 .cat-rosa::after  { background: linear-gradient(90deg, transparent, var(--rosa),  transparent); }
@@ -465,11 +557,16 @@ button { position: relative; overflow: hidden; }
 .cat-verde::after { background: linear-gradient(90deg, transparent, var(--verde), transparent); }
 .cat-ambar::after { background: linear-gradient(90deg, transparent, var(--ambar), transparent); }
 
-.cat-roxo  { background: linear-gradient(170deg, rgba(168,85,247,.11), transparent 62%), var(--cartao) !important; }
-.cat-rosa  { background: linear-gradient(170deg, rgba(236,72,153,.11), transparent 62%), var(--cartao) !important; }
-.cat-azul  { background: linear-gradient(170deg, rgba(56,189,248,.11), transparent 62%), var(--cartao) !important; }
-.cat-verde { background: linear-gradient(170deg, rgba(52,211,153,.11), transparent 62%), var(--cartao) !important; }
-.cat-ambar { background: linear-gradient(170deg, rgba(251,191,36,.11), transparent 62%), var(--cartao) !important; }
+/* fundo de reserva: aparece quando ainda não há foto */
+.cat-roxo  { background: linear-gradient(165deg, rgba(168,85,247,.30), rgba(20,18,32,.98) 68%) !important; }
+.cat-rosa  { background: linear-gradient(165deg, rgba(236,72,153,.30), rgba(20,18,32,.98) 68%) !important; }
+.cat-azul  { background: linear-gradient(165deg, rgba(56,189,248,.30), rgba(20,18,32,.98) 68%) !important; }
+.cat-verde { background: linear-gradient(165deg, rgba(52,211,153,.30), rgba(20,18,32,.98) 68%) !important; }
+.cat-ambar { background: linear-gradient(165deg, rgba(251,191,36,.30), rgba(20,18,32,.98) 68%) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+    .cat.no-centro .cat-holo { animation: none; }
+}
 
 /* ── FAIXA DE DESTAQUE ──────────────────────────────────────── */
 .destaque {
