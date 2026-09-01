@@ -2031,3 +2031,27 @@ button { position: relative; overflow: hidden; }
     transform-origin: 50% 92%;
     will-change: transform;
 }
+
+/* ════════════════════════════════════════════════════════════
+   📜 ANIMATED LIST — itens entram ao aparecer na tela
+   Porte do componente do ReactBits. O app.js marca `.na-vista`
+   quando metade do item está visível; aqui só descrevemos os
+   dois estados. Só opacidade e transform, que a GPU resolve sem
+   repintar layout — importante porque isto roda enquanto a
+   pessoa rola a página.
+   ════════════════════════════════════════════════════════════ */
+.item-anim {
+    opacity: 0;
+    transform: scale(.7);
+    transition: opacity .2s ease var(--atraso, 0ms),
+                transform .2s ease var(--atraso, 0ms);
+    will-change: opacity, transform;
+}
+.item-anim.na-vista {
+    opacity: 1;
+    transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .item-anim { transition: none; opacity: 1; transform: none; }
+}

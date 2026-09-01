@@ -1214,3 +1214,70 @@ setInterval(pollQueueMembership, 500);
 
     pintar();
 })();
+
+
+/* ══════════════════════════════════════════════════════════════
+   📜 ANIMATED LIST — itens entram ao aparecer na tela
+   Porte do componente do ReactBits, aplicado às três listas:
+   ranking, resultados da busca e fila.
+
+   No original cada item nasce em scale(0.7) com opacidade 0 e vai
+   a scale(1) quando METADE dele está visível. E como lá o gatilho
+   é `triggerOnce: false`, ele encolhe de novo ao sair — mantive
+   esse comportamento, é o que dá o efeito de lista "respirando".
+
+   Diferença de contexto: no ReactBits a lista vive numa caixa de
+   rolagem própria, com desbotado no topo e no pé. Aqui as listas
+   rolam junto com a página, então esses degradês não existem —
+   eles pertencem ao rolador interno, que não temos.
+
+   Um IntersectionObserver só, para todas as listas. As listas são
+   redesenhadas por innerHTML a cada atualização, então um
+   MutationObserver reinscreve os itens novos.
+══════════════════════════════════════════════════════════════ */
+(function () {
+    const LISTAS = ['.rk-list', '#search-results', '.queue-list'];
+    const PASSO = 45;      // ms de atraso entre um item e o seguinte
+    const TETO  = 8;       // a partir daqui não aumenta mais o atraso
+
+    if (!window.IntersectionObserver) return;
+
+    const olho = new IntersectionObserver((entradas) => {
+        entradas.forEach((e) => {
+            e.target.classList.toggle('na-vista', e.isIntersecting);
+        });
+    }, { threshold: 0.5 });
+
+    function inscrever(lista) {
+        const itens = [].slice.call(lista.children);
+        itens.forEach((el, i) => {
+            if (el.dataset.animado) return;
+            el.dataset.animado = '1';
+            el.classList.add('item-anim');
+            // escalona a entrada, mas sem deixar o fim da lista lento demais
+            el.style.setProperty('--atraso', (Math.min(i, TETO) * PASSO) + 'ms');
+            olho.observe(el);
+
+            /* REDE DE SEGURANÇA. O item começa invisível e só aparece
+               quando o observador avisa. Se esse aviso não vier — aba
+               oculta na hora do desenho, item mais alto que a tela, ou
+               qualquer caso que eu não previ — o cliente ficaria olhando
+               uma lista vazia. Conteúdo não pode sumir por causa de
+               animação: passado o prazo, aparece de qualquer jeito. */
+            setTimeout(() => el.classList.add('na-vista'), 1200);
+        });
+    }
+
+    function varrer() {
+        LISTAS.forEach((sel) => {
+            document.querySelectorAll(sel).forEach(inscrever);
+        });
+    }
+
+    varrer();
+    // as listas são reescritas por innerHTML: pega os itens novos
+    if (window.MutationObserver) {
+        const raiz = document.getElementById('app') || document.body;
+        new MutationObserver(varrer).observe(raiz, { childList: true, subtree: true });
+    }
+})();
