@@ -813,6 +813,9 @@
                 <!-- Star Border: dois borrões que correm nas beiradas -->
                 <span class="estrela-base"></span>
                 <span class="estrela-topo"></span>
+                <!-- Foto da plateia ao fundo. Se o arquivo não existir,
+                     o onerror tira a tag e ficam só as luzes de palco. -->
+                <img class="np-plateia" src="plateia.jpg" alt="" loading="lazy" decoding="async" onerror="this.remove()">
                 <div class="np-art" id="np-art"></div>
                 <div class="np-body">
                     <span class="np-label">Tocando Agora</span>

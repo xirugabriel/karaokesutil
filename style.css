@@ -276,20 +276,41 @@ button { position: relative; overflow: hidden; }
     pointer-events: none;
 }
 
-/* o clarão roxo que vaza pela direita, no lugar da foto da plateia */
+/* foto da plateia (opcional) */
+.np-plateia {
+    position: absolute;
+    inset: 1.6px;
+    z-index: 2;
+    width: calc(100% - 3.2px);
+    height: calc(100% - 3.2px);
+    object-fit: cover;
+    object-position: center 40%;
+    border-radius: calc(var(--raio-g) - 1.6px);
+    /* a foto é cenário, não assunto: fica escura e puxada pro roxo */
+    filter: saturate(.55) brightness(.42) contrast(1.1);
+    pointer-events: none;
+}
+
+/* luzes de palco por cima (e sozinhas, quando não há foto) */
 .np-card::after {
     content: '';
     position: absolute;
     inset: 1.6px;
-    z-index: 2;
+    z-index: 3;
     border-radius: calc(var(--raio-g) - 1.6px);
     background:
-        radial-gradient(80% 120% at 88% 40%, rgba(192, 38, 211, 0.30), transparent 62%),
-        radial-gradient(60% 100% at 60% 10%, rgba(124, 58, 237, 0.22), transparent 70%);
+        radial-gradient(56% 90% at 86% 30%, rgba(217, 70, 239, .34), transparent 64%),
+        radial-gradient(44% 80% at 62% 4%,  rgba(124, 58, 237, .30), transparent 70%),
+        radial-gradient(38% 70% at 32% 0%,  rgba(56, 189, 248, .16), transparent 72%),
+        linear-gradient(180deg, transparent 42%, rgba(6, 4, 12, .55) 100%);
     pointer-events: none;
 }
 
-.np-card > * { position: relative; z-index: 3; }
+/* Só o conteúdo sobe. Já usei `> *:not(...)` aqui e o seletor ficou
+   mais específico que o das estrelas, que viraram `relative`, entraram
+   no flex e espremeram o texto. Listar quem sobe evita isso. */
+.np-card > .np-art,
+.np-card > .np-body { position: relative; z-index: 4; }
 
 /* os dois borrões que correm nas beiradas */
 .estrela-topo, .estrela-base {
@@ -324,20 +345,21 @@ button { position: relative; overflow: hidden; }
 }
 
 .np-art {
-    width: 92px; height: 92px;
+    width: 96px; height: 96px;
     flex: none;
-    border-radius: 15px;
-    background:
-        radial-gradient(circle at 50% 50%, #6D28D9 0 8%, transparent 8.5%),
-        repeating-radial-gradient(circle at 50% 50%, #17171F 0 2px, #0C0C12 2px 4px);
-    border: 1px solid var(--linha-forte);
     position: relative;
+    border-radius: 50%;
+    background: none;
+    border: 0;
+    /* sombra de contato, pra parecer apoiado e não colado */
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .6));
 }
 /* pontinho verde de "no ar" */
 .np-art::after {
     content: '';
     position: absolute;
-    top: 6px; right: 6px;
+    top: 4px; right: 4px;
+    z-index: 2;
     width: 11px; height: 11px;
     border-radius: 50%;
     background: var(--verde);
@@ -377,24 +399,57 @@ button { position: relative; overflow: hidden; }
     white-space: nowrap;
 }
 
-/* Disco de vinil girando (o JS injeta dentro do .np-art) */
+/* ── DISCO DE VINIL ──────────────────────────────────────────
+   Antes ele herdava o border-radius do quadrado do card, então
+   era um quadrado arredondado com anéis — não um disco. Agora é
+   redondo de verdade, com sulcos finos, etiqueta central e furo.
+   As camadas, de fora pra dentro:
+     · borda e brilho da beirada do bolacha
+     · sulcos: anéis de 3px que só variam o brilho
+     · etiqueta colorida com a marca
+     · furo do eixo */
 .np-vinil {
     position: absolute;
     inset: 0;
-    border-radius: inherit;
+    border-radius: 50%;
     background:
-        radial-gradient(circle at 50% 50%, #6D28D9 0 7%, transparent 7.5%),
-        repeating-radial-gradient(circle at 50% 50%, #17171F 0 2px, #0C0C12 2px 4px);
-    animation: vinil-gira 5.5s linear infinite;
+        /* furo do eixo */
+        radial-gradient(circle at 50% 50%, #05040A 0 2.2%, transparent 2.4%),
+        /* etiqueta */
+        radial-gradient(circle at 50% 50%,
+            #A855F7 2.4%, #7C3AED 17%, #4C1D95 25.5%, transparent 26%),
+        /* área lisa entre a etiqueta e os sulcos */
+        radial-gradient(circle at 50% 50%, transparent 26%, #0B0A10 27%, #0B0A10 30%, transparent 30.5%),
+        /* sulcos finos */
+        repeating-radial-gradient(circle at 50% 50%,
+            #131218 30.5%, #0A090E 31.4%, #131218 32.3%),
+        /* beirada do disco */
+        radial-gradient(circle at 50% 50%, #16151C 0 97%, #2A2833 98%, #0A090E 100%);
+    box-shadow: inset 0 0 12px rgba(0, 0, 0, .9);
+    animation: vinil-gira 4.5s linear infinite;
 }
+
+/* O reflexo NÃO gira junto: ele contra-gira na mesma velocidade,
+   então fica parado na tela. É assim que lê como luz batendo no
+   disco, e não como um risco pintado nele. */
 .np-vinil-luz {
     position: absolute;
     inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.16) 50%, transparent 62%);
+    border-radius: 50%;
+    background:
+        linear-gradient(122deg,
+            transparent 30%,
+            rgba(255, 255, 255, .13) 43%,
+            rgba(214, 236, 255, .22) 49%,
+            rgba(255, 255, 255, .10) 55%,
+            transparent 68%),
+        radial-gradient(circle at 34% 26%, rgba(255, 255, 255, .10), transparent 46%);
+    animation: vinil-gira 4.5s linear infinite reverse;
 }
 @keyframes vinil-gira { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .np-vinil { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+    .np-vinil, .np-vinil-luz { animation: none; }
+}
 .np-title {
     font-family: 'Outfit', sans-serif;
     font-size: 19px; font-weight: 700; color: #fff;
