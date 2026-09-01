@@ -37,22 +37,47 @@
 /* ── FUNDO ────────────────────────────────────────────────────
    Um respiro roxo no topo e o resto chapado. É pintado uma vez
    e nunca mais — não custa nada por quadro. */
+/* Empilhamento: preto no fundo → tubo → véu → conteúdo.
+   O véu é leve de propósito; quem segura a intensidade é a cor
+   escura do fósforo, não uma camada cinza por cima. */
+/* O !important não é preguiça: o <style> embutido no index.html crava
+   z-index -1 aqui, e como essa camada é PRETA OPACA, com -1 ela fica
+   na frente do canvas (-2) e tapa o tubo por completo. */
 #bg-fill {
     position: fixed;
     inset: 0;
-    z-index: -1;
-    background:
-        radial-gradient(120% 55% at 50% -8%, rgba(124, 58, 237, 0.20), transparent 62%),
-        var(--fundo) !important;
-    background-image:
-        radial-gradient(120% 55% at 50% -8%, rgba(124, 58, 237, 0.20), transparent 62%) !important;
-    background-color: var(--fundo) !important;
+    z-index: -3 !important;
+    background-image: none !important;
+    background-color: #000 !important;
 }
-body { background-color: var(--fundo); color: var(--tinta); }
+#crt-fundo {
+    position: fixed;
+    inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+    z-index: -2;
+    pointer-events: none;
+}
+#dither {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 1 !important;
+    background-color: rgba(0, 0, 0, 0.18);
+}
+@media (hover: none) {
+    #dither { background-color: rgba(0, 0, 0, 0.22); }
+}
+@media (prefers-reduced-motion: reduce) {
+    #crt-fundo { opacity: .45; }
+}
+
+body { background-color: #000; color: var(--tinta); }
 html, body { overflow-x: hidden !important; max-width: 100%; }
 
 /* sobras de versões anteriores */
-#bg-canvas, #crt-fundo, #dither, .mancha, #intro { display: none !important; }
+#bg-canvas, .mancha, #intro { display: none !important; }
 
 .container, #app { position: relative; z-index: 1; }
 
@@ -138,8 +163,8 @@ html, body { overflow-x: hidden !important; max-width: 100%; }
 .tb-logo img {
     display: block;
     width: auto;
-    height: 30px;
-    max-width: 190px;
+    height: 46px;
+    max-width: 235px;
     object-fit: contain;
 }
 .tb-titulo {
