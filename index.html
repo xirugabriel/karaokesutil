@@ -938,18 +938,46 @@
                     </button>
                 </div>
 
-                <!-- Faixa de destaque (mesmo lugar do antigo bento) -->
-                <div class="destaque" onclick="document.getElementById('yt-search').focus()">
-                    <div class="destaque-txt">
-                        <div class="destaque-tit">Sua voz, seu momento!</div>
-                        <div class="destaque-sub">Peça sua música e aproveite<br>o show do seu jeito.</div>
+                <!-- Tutorial em passos (no lugar da antiga faixa) -->
+                <div class="passos" id="tutorial">
+                    <div class="passos-cabeca">
+                        <span class="passos-titulo">Como pedir sua música</span>
+                        <span class="passos-conta" id="passos-conta">1 de 4</span>
                     </div>
-                    <svg class="destaque-mic" viewBox="0 0 24 24" aria-hidden="true">
-                        <rect x="9" y="2" width="6" height="11" rx="3"/>
-                        <path d="M5 10a7 7 0 0 0 14 0"/>
-                        <line x1="12" y1="17" x2="12" y2="21"/>
-                        <line x1="8" y1="21" x2="16" y2="21"/>
-                    </svg>
+
+                    <!-- trilha de indicadores: montada pelo app.js -->
+                    <div class="passos-trilha" id="passos-trilha"></div>
+
+                    <div class="passos-palco">
+                        <div class="passo ativo">
+                            <span class="passo-ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+                            <h4>Digite a música</h4>
+                            <p>Escreva o nome da música ou do cantor no campo de busca aqui em cima.</p>
+                        </div>
+                        <div class="passo">
+                            <span class="passo-ic"><svg viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="3"/><polygon points="10 9 15.5 12 10 15"/></svg></span>
+                            <h4>Escolha a versão</h4>
+                            <p>Toque na sugestão que tiver a capa certa. É exatamente esse vídeo que vai tocar no telão.</p>
+                        </div>
+                        <div class="passo">
+                            <span class="passo-ic"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>
+                            <h4>Informe sua mesa</h4>
+                            <p>Digite o número da mesa e confirme. É por ele que a equipe te encontra na hora de cantar.</p>
+                        </div>
+                        <div class="passo">
+                            <span class="passo-ic"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg></span>
+                            <h4>Aguarde sua vez</h4>
+                            <p>Acompanhe sua posição na aba <b>Minha Fila</b>. Quando chegar a hora, o telão chama seu nome.</p>
+                        </div>
+                    </div>
+
+                    <div class="passos-rodape">
+                        <button class="passos-voltar" id="passos-voltar">Voltar</button>
+                        <button class="passos-seguir" id="passos-seguir">
+                            <span id="passos-seguir-txt">Continuar</span>
+                            <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="steps-card hidden">
