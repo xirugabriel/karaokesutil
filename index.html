@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- Tela cheia no iOS. Sem estes dois, adicionar à tela inicial abre
+         numa moldura com barras e o `env(safe-area-inset-*)` fica zerado —
+         era por isso que o app não alcançava o notch.
+         `black-translucent` faz a barra de status ficar POR CIMA da página,
+         então o fundo sobe até o topo do aparelho. -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <!-- SEM theme-color de propósito: assim o iOS deixa as barras translúcidas,
          desfocando o conteúdo (efeito da Apple) em vez de pintar uma cor sólida.
          color-scheme:dark mantém o cromo do navegador escuro (ajuda no Android). -->
@@ -44,7 +52,9 @@
         html, body { height: 100%; }
 
         /* Cor base sólida na raiz (cobre overscroll/safe-area como fallback). */
-        html { background: var(--bg-dark); }
+        /* Casa com o preto do CRT: é esta cor que aparece nas áreas
+           que a página não pinta (chrome do Safari, overscroll). */
+        html { background: #000; }
 
         /* Camada de fundo FIXA que cobre a tela inteira — inclusive atrás do
            notch e da barra do Safari (graças ao viewport-fit=cover). É o que
@@ -689,10 +699,6 @@
 
 <!-- Camada de fundo que cobre a tela inteira (atrás do notch e da barra) -->
 <div id="bg-fill"></div>
-
-<!-- Máscaras pretas que cobrem o notch (topo) e o indicador (base) em todas as telas -->
-<div id="topmask"></div>
-<div id="bottommask"></div>
 
 <!-- ── MODAL DJ ──────────────────────────────────────────── -->
 <div id="dj-modal" class="modal-overlay hidden">
