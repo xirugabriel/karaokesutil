@@ -1301,3 +1301,114 @@ button { position: relative; overflow: hidden; }
 .rk-premio.ouro   b { color: var(--roxo-claro); }
 .rk-premio.prata  b { color: #D5D5E2; }
 .rk-premio.bronze b { color: #E2A464; }
+
+/* ════════════════════════════════════════════════════════════
+   🫧 GOOEY NAV — bolha escorrida + estouro de partículas
+   Porte do componente do ReactBits.
+
+   O truque: blur() borra as bordas, contrast(100) devolve elas
+   duras. Onde dois borrões se tocam, viram um só — daí o
+   escorrido. O ::before preto é o substrato que o contraste
+   precisa; o lighten apaga esse preto ao compor.
+
+   ⚠ ADAPTAÇÃO IMPORTANTE: aqui o filtro só existe ENQUANTO a
+   animação roda (.acesa). Ligado o tempo todo, como no original,
+   o navegador teria que refazer blur+contrast+blend a cada quadro
+   do CRT que anima atrás — isso travou a página no primeiro teste.
+   Em repouso a camada não tem filtro, não tem blend e é invisível:
+   custo zero. Quem marca o item ativo continua sendo o fundo dele.
+   ════════════════════════════════════════════════════════════ */
+.goo-caixa { position: relative; isolation: isolate; }
+/* os itens têm que ficar ACIMA da bolha */
+.goo-caixa > button, .goo-caixa > .rk-opt { position: relative; z-index: 2; }
+
+.goo-camada {
+    position: absolute;
+    left: 0; top: 0;
+    width: 0; height: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: left .32s cubic-bezier(.22,1,.36,1),
+                top  .32s cubic-bezier(.22,1,.36,1),
+                width .32s cubic-bezier(.22,1,.36,1);
+}
+/* só enquanto anima é que o filtro caro entra em cena */
+.goo-camada.acesa {
+    opacity: .62;
+    filter: blur(7px) contrast(100) blur(0);
+    mix-blend-mode: lighten;
+}
+/* substrato preto: o contraste precisa dele, o lighten o descarta */
+.goo-camada.acesa::before {
+    content: '';
+    position: absolute;
+    inset: -48px;
+    z-index: -2;
+    background: #000;
+}
+/* a pílula que escorre */
+.goo-camada.acesa::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 100vw;
+    /* contrast(100) satura cada canal: esta cor vira magenta */
+    background: rgb(190, 60, 240);
+    animation: goo-pilula .3s ease both;
+}
+@keyframes goo-pilula {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+/* botão solto: a camada fica no meio e só estoura */
+.goo-camada.goo-centro { left: 50%; top: 50%; transition: none; }
+.goo-camada.goo-centro.acesa::after { display: none; }
+/* precisa deixar a partícula sair do botão */
+.goo-solo { overflow: visible; }
+.goo-solo .ripple { display: none; }   /* o estouro substitui a ondinha */
+
+.goo-particula, .goo-ponto {
+    display: block;
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    opacity: 0;
+    transform-origin: center;
+}
+.goo-particula {
+    position: absolute;
+    top: calc(50% - 8.5px);
+    left: calc(50% - 8.5px);
+    animation: goo-voa var(--t) ease 1 -340ms;
+}
+.goo-ponto {
+    background: rgb(190, 60, 240);
+    opacity: 1;
+    animation: goo-incha var(--t) ease 1 -340ms;
+}
+
+@keyframes goo-voa {
+    0%   { transform: rotate(0deg) translate(var(--ix), var(--iy));
+           opacity: 1; animation-timing-function: cubic-bezier(.55,0,1,.45); }
+    70%  { transform: rotate(calc(var(--giro) * .5)) translate(calc(var(--fx) * 1.2), calc(var(--fy) * 1.2));
+           opacity: 1; animation-timing-function: ease; }
+    85%  { transform: rotate(calc(var(--giro) * .66)) translate(var(--fx), var(--fy)); opacity: 1; }
+    100% { transform: rotate(calc(var(--giro) * 1.2)) translate(calc(var(--fx) * .5), calc(var(--fy) * .5)); opacity: 1; }
+}
+@keyframes goo-incha {
+    0%   { transform: scale(0); opacity: 0; animation-timing-function: cubic-bezier(.55,0,1,.45); }
+    25%  { transform: scale(calc(var(--escala) * .25)); }
+    38%  { opacity: 1; }
+    65%  { transform: scale(var(--escala)); opacity: 1; animation-timing-function: ease; }
+    85%  { transform: scale(var(--escala)); opacity: 1; }
+    100% { transform: scale(0); opacity: 0; }
+}
+
+/* quem pediu menos movimento não leva bolha nem estouro */
+@media (prefers-reduced-motion: reduce) {
+    .goo-camada { display: none; }
+}

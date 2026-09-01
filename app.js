@@ -568,3 +568,149 @@ setInterval(pollQueueMembership, 500);
    foram removidas junto com a reforma visual. A pílula, em especial,
    injetava um <span> como primeiro filho do #bottom-nav — um 5º item
    flex que roubava espaço e espremia os botões, cortando "Pedir Música". */
+
+
+/* ══════════════════════════════════════════════════════════════
+   🫧 GOOEY NAV — bolha que escorre entre os itens + estouro
+   Porte do componente do ReactBits para JS puro.
+
+   Como o efeito funciona: as formas são desenhadas dentro de uma
+   camada que leva blur() e depois contrast(100). O blur borra as
+   bordas e o contraste devolve elas duras — onde dois borrões se
+   tocam, viram um só. É daí que vem o escorrido. O ::before preto
+   é o substrato que o contraste precisa, e o mix-blend-mode:lighten
+   apaga esse preto na hora de compor.
+
+   ADAPTAÇÃO DE COR: contrast(100) joga cada canal para 0 ou 255,
+   então branco sairia branco. Para cair no roxo da casa a cor de
+   origem precisa ter R e B altos e G baixo — daí o rgb(190,60,240),
+   que o filtro leva para magenta.
+══════════════════════════════════════════════════════════════ */
+(function () {
+    const QTD = MOBILE_UI ? 10 : 14;   // menos partículas no celular
+    const DIST = [76, 10];
+    const GIRO = 100;
+    const TEMPO = 560;
+    const VARIA = 280;
+
+    const ruido = (n) => n / 2 - Math.random() * n;
+
+    function pontoNoCirculo(raio, i, total) {
+        const ang = ((360 + ruido(8)) / total) * i * (Math.PI / 180);
+        return [raio * Math.cos(ang), raio * Math.sin(ang)];
+    }
+
+    function estourar(camada) {
+        for (let i = 0; i < QTD; i++) {
+            const t = TEMPO * 2 + ruido(VARIA * 2);
+            const ini = pontoNoCirculo(DIST[0], QTD - i, QTD);
+            const fim = pontoNoCirculo(DIST[1] + ruido(7), QTD - i, QTD);
+            let giro = ruido(GIRO / 10);
+            giro = giro > 0 ? (giro + GIRO / 20) * 10 : (giro - GIRO / 20) * 10;
+
+            const p = document.createElement('span');
+            p.className = 'goo-particula';
+            p.style.setProperty('--ix', ini[0] + 'px');
+            p.style.setProperty('--iy', ini[1] + 'px');
+            p.style.setProperty('--fx', fim[0] + 'px');
+            p.style.setProperty('--fy', fim[1] + 'px');
+            p.style.setProperty('--t', t + 'ms');
+            p.style.setProperty('--escala', (1 + ruido(0.2)).toFixed(2));
+            p.style.setProperty('--giro', giro + 'deg');
+
+            const ponto = document.createElement('span');
+            ponto.className = 'goo-ponto';
+            p.appendChild(ponto);
+            camada.appendChild(p);
+            setTimeout(() => p.remove(), t);
+        }
+    }
+
+    /* ---- barras com vários itens: a bolha viaja até o ativo ---- */
+    function ligarBarra(seletorCaixa, seletorItem, seletorAtivo) {
+        const caixa = document.querySelector(seletorCaixa);
+        if (!caixa || caixa.querySelector('.goo-camada')) return;
+
+        const camada = document.createElement('span');
+        camada.className = 'goo-camada';
+        caixa.appendChild(camada);
+        caixa.classList.add('goo-caixa');
+
+        let apagar = null;
+
+        function posicionar(item, comEstouro) {
+            if (!item) return;
+            const rc = caixa.getBoundingClientRect();
+            const ri = item.getBoundingClientRect();
+            camada.style.left   = (ri.x - rc.x) + 'px';
+            camada.style.top    = (ri.y - rc.y) + 'px';
+            camada.style.width  = ri.width + 'px';
+            camada.style.height = ri.height + 'px';
+            if (!comEstouro) return;   // só reposiciona, sem acender
+
+            /* O filtro (blur + contrast + blend) é caro e SÓ existe
+               enquanto a animação roda. Deixá-lo ligado o tempo todo
+               obrigaria o navegador a refazê-lo a cada quadro do CRT
+               que anima atrás — foi o que travou a página no teste. */
+            camada.classList.add('acesa');
+            camada.querySelectorAll('.goo-particula').forEach((p) => p.remove());
+            estourar(camada);
+            clearTimeout(apagar);
+            apagar = setTimeout(() => camada.classList.remove('acesa'), 1200);
+        }
+
+        const ativo = () => caixa.querySelector(seletorAtivo);
+
+        caixa.addEventListener('click', (e) => {
+            const item = e.target.closest(seletorItem);
+            if (!item || item.matches(seletorAtivo)) return;
+            // o app troca a classe no mesmo clique; espera o quadro seguinte
+            requestAnimationFrame(() => posicionar(ativo() || item, true));
+        });
+
+        /* O item ativo não existe ainda quando este código roda: quem
+           marca a classe é o updateUI, bem depois do login. Por isso
+           um observador de classe — ele pega tanto a marcação inicial
+           quanto qualquer troca feita por fora do clique. */
+        if (window.MutationObserver) {
+            new MutationObserver(() => posicionar(ativo(), false))
+                .observe(caixa, { attributes: true, subtree: true, attributeFilter: ['class'] });
+        }
+        requestAnimationFrame(() => posicionar(ativo(), false));
+        if (window.ResizeObserver) {
+            new ResizeObserver(() => posicionar(ativo(), false)).observe(caixa);
+        }
+    }
+
+    /* ---- botão solto: só o estouro, sem bolha viajante ---- */
+    function ligarBotao(seletor) {
+        document.querySelectorAll(seletor).forEach((btn) => {
+            if (btn.querySelector('.goo-camada')) return;
+            btn.classList.add('goo-solo');
+            const camada = document.createElement('span');
+            camada.className = 'goo-camada goo-centro';
+            btn.appendChild(camada);
+            let apagar = null;
+            btn.addEventListener('click', () => {
+                camada.classList.add('acesa');
+                camada.querySelectorAll('.goo-particula').forEach((p) => p.remove());
+                estourar(camada);
+                clearTimeout(apagar);
+                apagar = setTimeout(() => camada.classList.remove('acesa'), 1200);
+            });
+        });
+    }
+
+    function ligarTudo() {
+        ligarBarra('#bottom-nav', 'button', 'button.active');
+        ligarBarra('.rk-toggle', '.rk-opt', '.rk-opt.ativo');
+        ligarBotao('.rk-cta-btn');
+        ligarBotao('.rk-hero-btn');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ligarTudo);
+    } else {
+        ligarTudo();
+    }
+})();
