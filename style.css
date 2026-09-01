@@ -2076,3 +2076,37 @@ body::after {
         transparent) !important;
     box-shadow: 0 0 20px rgba(177, 78, 255, 0.75) !important;
 }
+
+/* ════════════════════════════════════════════════════════════
+   🎯 INTRO — centralização à prova de iPhone (webapp standalone)
+   O palco é posicionado pelo CENTRO exato, sem depender de
+   flex + altura da viewport (que o iOS calcula diferente
+   quando o site está salvo na tela inicial).
+   ════════════════════════════════════════════════════════════ */
+#intro { display: block !important; }
+
+#intro .intro-stage {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* a linha fica logo abaixo do nome, no fluxo — o conjunto
+   (nome + fio de luz) é que fica centrado na tela */
+#intro .intro-linha {
+    position: relative;
+    margin-top: 18px;
+}
+/* os anéis ficam centrados no NOME (não no conjunto) */
+#intro .intro-aneis {
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+}

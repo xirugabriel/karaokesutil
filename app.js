@@ -32,6 +32,26 @@ function comThrottle(fn) {
         palco.insertBefore(a, palco.firstChild);
     }
 
+    // 🎯 Centralização à prova de iPhone: no webapp salvo na tela
+    // inicial, 100vh/100dvh não batem com a área realmente visível.
+    // Medimos a altura de verdade (visualViewport) e fixamos.
+    function centralizar() {
+        const vv = window.visualViewport;
+        const h = (vv && vv.height) || window.innerHeight ||
+                  document.documentElement.clientHeight;
+        const topo = (vv && vv.offsetTop) || 0;
+        intro.style.height = h + 'px';
+        intro.style.top = topo + 'px';
+        intro.style.bottom = 'auto';
+    }
+    centralizar();
+    window.addEventListener('resize', centralizar);
+    window.addEventListener('orientationchange', centralizar);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', centralizar);
+        window.visualViewport.addEventListener('scroll', centralizar);
+    }
+
     let saiu = false;
     function sair() {
         if (saiu) return;
