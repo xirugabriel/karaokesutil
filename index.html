@@ -886,8 +886,8 @@
 
                 <div class="section-head">
                     <span>Navegar por categorias</span>
-                    <button class="section-link" onclick="document.getElementById('yt-search').focus()">
-                        Ver todas
+                    <button class="section-link" id="btn-cats" onclick="verTodasCategorias()">
+                        <span id="btn-cats-txt">Ver todas</span>
                         <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
                     </button>
                 </div>
@@ -1343,6 +1343,21 @@
     function toggleQueueStatus() { settingsRef.set(!isQueueOpen); }
 
     /* ════════ NAVEGAÇÃO POR ABAS ════════ */
+    /* "Ver todas": as categorias vivem numa esteira horizontal e as
+       últimas ficam escondidas fora da tela. Antes este botão só dava
+       foco na busca — não mostrava categoria nenhuma. Agora ele abre a
+       esteira em grade, com todas visíveis de uma vez, e volta ao
+       normal no segundo toque. */
+    function verTodasCategorias() {
+        const esteira = document.querySelector('.cats-scroll');
+        const rotulo  = document.getElementById('btn-cats-txt');
+        const botao   = document.getElementById('btn-cats');
+        if (!esteira) return;
+        const aberto = esteira.classList.toggle('em-grade');
+        if (rotulo) rotulo.textContent = aberto ? 'Ver menos' : 'Ver todas';
+        if (botao)  botao.classList.toggle('aberto', aberto);
+    }
+
     function goTab(tab) {
         currentTab = tab;
         updateUI();
@@ -1451,7 +1466,7 @@
         box.innerHTML = `
             <div class="rk-me-card">
                 <span class="rk-me-pos${temPos ? '' : ' sem'}">${temPos ? '#' + d.posicao : ic('mic','ic-sm')}</span>
-                <span class="rk-face rk-face-eu">${inicialDe(nome)}</span>
+                <span class="rk-face rk-face-eu"${perfilFoto ? ` style="background-image:url('${perfilFoto}')"` : ''}>${perfilFoto ? '' : inicialDe(nome)}</span>
                 <div class="rk-info">
                     <span class="rk-nome"><span class="rk-nome-txt">${nome}</span><span class="me-badge">Você</span></span>
                     <span class="rk-sub">${sub}</span>
@@ -1530,6 +1545,37 @@
         return esc(n.charAt(0).toUpperCase() || '?');
     }
 
+    /* ── FOTOS DO RANKING ──────────────────────────────────────
+       O nó /ranking guarda só nome e notas — a foto mora em
+       perfis/{uid}/foto. Buscamos DEPOIS de desenhar a lista: a
+       inicial aparece na hora e a foto entra por cima quando chega,
+       então o placar nunca fica esperando a rede.
+       O cache evita rebuscar a mesma pessoa a cada troca de aba. */
+    const fotosCache = new Map();
+
+    async function pintarFotos(uids) {
+        const faltando = uids.filter((u) => u && !fotosCache.has(u));
+        await Promise.all(faltando.map(async (uid) => {
+            try {
+                const s = await db.ref('perfis/' + uid + '/foto').once('value');
+                fotosCache.set(uid, s.val() || '');
+            } catch (e) {
+                // Sem permissão = as regras ainda não liberam perfis/$uid/foto.
+                // Não é erro fatal: a lista continua com a inicial.
+                fotosCache.set(uid, '');
+            }
+        }));
+        uids.forEach((uid) => {
+            const foto = fotosCache.get(uid);
+            if (!foto) return;
+            document.querySelectorAll('.rk-face[data-uid="' + uid + '"]').forEach((el) => {
+                el.style.backgroundImage = `url('${foto}')`;
+                el.classList.add('com-foto');
+                el.textContent = '';
+            });
+        });
+    }
+
     // Linha de detalhe: mostra o critério de desempate (2ª maior nota)
     function subDoRanking(r, meu) {
         const musicas = r.musicas || 0;
@@ -1560,7 +1606,7 @@
             return `
                 <li class="rk-item pos-${i + 1}${me ? ' is-me' : ''}">
                     <span class="rk-pos">${i + 1}</span>
-                    <span class="rk-face">${inicialDe(r.name)}</span>
+                    <span class="rk-face" data-uid="${esc(r.id)}">${inicialDe(r.name)}</span>
                     <div class="rk-info">
                         <span class="rk-nome"><span class="rk-nome-txt">${esc(r.name || 'Cantor')}</span>${me ? '<span class="me-badge">Você</span>' : ''}</span>
                         <span class="rk-sub">${subDoRanking(r, false)}</span>
@@ -1568,6 +1614,7 @@
                     <span class="rk-pontos">${r.melhorNota || 0}<small>pts</small></span>
                 </li>`;
         }).join('');
+        pintarFotos(linhas.map((r) => r.id));
     }
 
     /* ════════ BUSCA NO YOUTUBE ════════ */
