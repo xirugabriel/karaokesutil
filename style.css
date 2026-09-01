@@ -109,8 +109,9 @@ html, body { max-width: 100%; }
 /* recorte da sobra lateral fica aqui, longe dos fundos fixos */
 #app, .site-header, .footer-badge { overflow-x: clip; }
 
-/* sobras de versões anteriores */
-#bg-canvas, .mancha, #intro { display: none !important; }
+/* sobras de versões anteriores. O #intro saiu desta lista: ele existe
+   de novo, e a regra escondia a intro nova. */
+#bg-canvas, .mancha { display: none !important; }
 
 .container, #app { position: relative; z-index: 1; }
 
@@ -2084,4 +2085,54 @@ button { position: relative; overflow: hidden; }
     letter-spacing: 1px;
     color: var(--tinta-tenue);
     opacity: .6;
+}
+
+/* ════════════════════════════════════════════════════════════
+   🎬 INTRO — letreiro de neon acendendo
+   Preto, logo no meio, e o efeito de placa de neon dando partida:
+   pisca algumas vezes, hesita e firma. Combina com bar de karaokê
+   e não custa nada — é só opacidade e filtro num elemento só.
+
+   `inset` negativo pra cobrir notch e barras: assim a intro é
+   preta de borda a borda em qualquer aparelho.
+   ════════════════════════════════════════════════════════════ */
+#intro {
+    position: fixed;
+    inset: -200px;
+    z-index: 12000;
+    display: grid;
+    place-items: center;
+    background: #000;
+    transition: opacity .55s ease;
+}
+#intro.saindo { opacity: 0; }
+
+#intro-logo {
+    width: min(72vw, 420px);
+    height: auto;
+    display: block;
+    animation: neon-liga 1.5s ease-out both,
+               neon-respira 2.6s ease-in-out 1.5s infinite;
+}
+
+/* a partida: pisca, hesita, firma */
+@keyframes neon-liga {
+    0%        { opacity: 0;   filter: brightness(.35) drop-shadow(0 0 0 transparent); }
+    7%        { opacity: 1;   filter: brightness(1.7) drop-shadow(0 0 20px rgba(168, 85, 247, .95)); }
+    11%       { opacity: .18; filter: brightness(.4); }
+    16%       { opacity: 1;   filter: brightness(1.55) drop-shadow(0 0 24px rgba(168, 85, 247, .9)); }
+    21%       { opacity: .3;  filter: brightness(.55); }
+    27%       { opacity: 1;   filter: brightness(1.4) drop-shadow(0 0 28px rgba(168, 85, 247, .85)); }
+    32%       { opacity: .65; filter: brightness(.85); }
+    40%, 100% { opacity: 1;   filter: brightness(1) drop-shadow(0 0 26px rgba(168, 85, 247, .6)); }
+}
+/* depois de acesa, respira de leve como neon de verdade */
+@keyframes neon-respira {
+    0%, 100% { filter: brightness(1)    drop-shadow(0 0 26px rgba(168, 85, 247, .60)); }
+    50%      { filter: brightness(1.08) drop-shadow(0 0 34px rgba(168, 85, 247, .78)); }
+}
+
+/* quem pediu menos movimento vê a logo acesa, sem piscar */
+@media (prefers-reduced-motion: reduce) {
+    #intro-logo { animation: none; filter: drop-shadow(0 0 24px rgba(168, 85, 247, .6)); }
 }

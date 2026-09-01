@@ -1281,3 +1281,28 @@ setInterval(pollQueueMembership, 500);
         new MutationObserver(varrer).observe(raiz, { childList: true, subtree: true });
     }
 })();
+
+
+/* ══════════════════════════════════════════════════════════════
+   🎬 INTRO — sai sozinha e entrega a tela
+   Some em 2,2s, ou no primeiro toque pra quem não quer esperar.
+
+   O prazo NÃO depende da imagem carregar: se a logo falhar, a
+   intro sai do mesmo jeito. Tela preta presa é o pior desfecho
+   possível numa tela de abertura.
+══════════════════════════════════════════════════════════════ */
+(function () {
+    const intro = document.getElementById('intro');
+    if (!intro) return;
+
+    let saiu = false;
+    function sair() {
+        if (saiu) return;
+        saiu = true;
+        intro.classList.add('saindo');
+        setTimeout(() => intro.remove(), 650);
+    }
+
+    const prazo = setTimeout(sair, 2200);
+    intro.addEventListener('click', () => { clearTimeout(prazo); sair(); });
+})();
