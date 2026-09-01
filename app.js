@@ -883,13 +883,17 @@ setInterval(pollQueueMembership, 500);
     if (!card) return;
 
     const COR      = '#7DD8FF';
-    const VELOC    = 1;
-    const CAOS     = 0.11;
+    const NUCLEO   = '#EAF9FF';   // o miolo do arco é quase branco
+    const VELOC    = 1.25;
+    const CAOS     = 0.13;
     const RAIO     = 22;
-    const MARGEM   = 26;    // folga em volta pro traço poder escapar
-    const OITAVAS  = MOBILE_UI ? 5 : 8;
+    const MARGEM   = 34;    // folga em volta pro traço poder escapar
+    const OITAVAS  = MOBILE_UI ? 6 : 9;
     const QUADROS  = 30;
-    const DESLOC   = 26;
+    /* Estava em 26 e o resultado era um contorno quase reto. O
+       componente original usa 60; 46 dá a tremida de fio elétrico
+       sem o traço fugir demais da borda do card. */
+    const DESLOC   = 46;
 
     const tela = document.createElement('canvas');
     tela.className = 'turn-raio';
@@ -978,12 +982,8 @@ setInterval(pollQueueMembership, 500);
 
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx.clearRect(0, 0, larg, alt);
-        ctx.strokeStyle = COR;
-        ctx.lineWidth = 1.4;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.shadowColor = COR;
-        ctx.shadowBlur = 7;
 
         const bw = larg - 2 * MARGEM, bh = alt - 2 * MARGEM;
         const r = Math.min(RAIO, Math.min(bw, bh) / 2);
@@ -999,7 +999,33 @@ setInterval(pollQueueMembership, 500);
             if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
         ctx.closePath();
+
+        /* O caminho é calculado UMA vez e pintado três: halo largo e
+           fraco, halo médio, e o núcleo fino quase branco. É essa
+           sobreposição que faz ler como descarga elétrica — um traço
+           só de 1px fica parecendo um contorno desenhado.
+           Custo: três traçados de um caminho pronto, que é barato
+           perto do ruído que já foi calculado. */
+        ctx.shadowColor = COR;
+
+        ctx.globalAlpha = 0.16;
+        ctx.strokeStyle = COR;
+        ctx.lineWidth = 6;
+        ctx.shadowBlur = 16;
         ctx.stroke();
+
+        ctx.globalAlpha = 0.42;
+        ctx.lineWidth = 2.6;
+        ctx.shadowBlur = 10;
+        ctx.stroke();
+
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = NUCLEO;
+        ctx.lineWidth = 1.1;
+        ctx.shadowBlur = 6;
+        ctx.stroke();
+
+        ctx.globalAlpha = 1;
     }
 
     if (window.ResizeObserver) new ResizeObserver(medir).observe(card);
