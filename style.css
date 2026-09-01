@@ -1136,3 +1136,168 @@ button { position: relative; overflow: hidden; }
 }
 
 .footer-badge { color: var(--tinta-tenue); font-size: 10.5px; letter-spacing: 1.4px; }
+
+/* ════════════════════════════════════════════════════════════
+   ✂️ AJUSTAR A FOTO DE PERFIL
+   Palco quadrado com máscara redonda: o que aparece dentro do
+   círculo é exatamente o que vira o avatar.
+   ════════════════════════════════════════════════════════════ */
+#crop-sheet { z-index: 1100; }   /* acima da folha de perfil */
+
+.crop-stage {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 1;
+    margin: 6px auto 16px;
+    overflow: hidden;
+    border-radius: var(--raio);
+    background: #000;
+    /* o dedo arrasta a imagem; a página não rola junto */
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+}
+.crop-stage:active { cursor: grabbing; }
+
+#crop-img {
+    position: absolute;
+    top: 0; left: 0;
+    transform-origin: 0 0;   /* o cálculo do recorte conta com isto */
+    max-width: none;         /* senão o CSS global encolhe a imagem */
+    max-height: none;
+    -webkit-user-drag: none;
+    user-select: none;
+    pointer-events: none;
+}
+
+/* escurece fora do círculo, sem bloquear o toque */
+.crop-mask {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: 0 0 0 999px rgba(6, 6, 11, 0.72);
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+}
+
+.crop-zoom {
+    display: flex; align-items: center; gap: 12px;
+    margin: 0 auto 18px;
+    max-width: 300px;
+}
+.crop-zoom .ic { stroke: var(--tinta-fraca); flex: none; }
+.crop-zoom input[type="range"] {
+    flex: 1 1 auto;
+    width: auto; height: 4px; margin: 0; padding: 0;
+    -webkit-appearance: none; appearance: none;
+    background: var(--cartao-alto);
+    border: none;
+    border-radius: 3px;
+}
+.crop-zoom input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(150deg, var(--roxo-escuro), var(--roxo));
+    border: 2px solid #fff;
+    cursor: pointer;
+}
+.crop-zoom input[type="range"]::-moz-range-thumb {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--roxo);
+    border: 2px solid #fff;
+    cursor: pointer;
+}
+
+/* ════════════════════════════════════════════════════════════
+   🏆 TROFÉU DO RANKING
+   Inclinado e flutuando, com sombra no chão que respira junto —
+   é o que dá a leitura de "solto no ar" sem render 3D.
+   ════════════════════════════════════════════════════════════ */
+.rk-arte {
+    flex: none;
+    width: 118px;
+    display: grid;
+    place-items: center;
+}
+.rk-trofeu-img {
+    width: 100%; height: auto;
+    display: block;
+    filter: drop-shadow(0 10px 22px rgba(168, 85, 247, .45));
+    animation: flutua 3.4s ease-in-out infinite;
+    transform-origin: 50% 90%;
+}
+/* quando existe trofeu.png, o desenho sai de cena */
+.rk-arte.tem-imagem .rk-hero-trofeu { display: none; }
+
+.rk-hero-trofeu {
+    width: 118px; height: 118px;
+    overflow: visible;
+    filter: drop-shadow(0 8px 20px rgba(168, 85, 247, .42));
+}
+/* só o corpo balança; a sombra fica no chão e apenas pulsa */
+.rk-hero-trofeu .tr-corpo {
+    transform-origin: 50% 88%;
+    animation: flutua 3.4s ease-in-out infinite;
+}
+.rk-hero-trofeu .tr-sombra {
+    transform-origin: 50% 92%;
+    animation: sombra-respira 3.4s ease-in-out infinite;
+}
+@keyframes flutua {
+    0%, 100% { transform: translateY(0)     rotate(-8deg); }
+    50%      { transform: translateY(-7px)  rotate(-5deg); }
+}
+@keyframes sombra-respira {
+    0%, 100% { transform: scaleX(1);    opacity: .85; }
+    50%      { transform: scaleX(.82);  opacity: .5; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .rk-trofeu-img, .rk-hero-trofeu .tr-corpo { animation: none; transform: rotate(-8deg); }
+    .rk-hero-trofeu .tr-sombra { animation: none; }
+}
+
+/* o cartão precisa de mais ar pro troféu maior */
+.rk-hero { gap: 14px; padding: 22px 18px; }
+
+/* ── COMO FUNCIONA O RANKING ─────────────────────────────── */
+.rk-regras {
+    list-style: none;
+    margin: 4px 0 20px;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+    text-align: left;
+}
+.rk-regras li { display: flex; align-items: flex-start; gap: 12px; }
+.rk-regra-n {
+    flex: none;
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(150deg, var(--roxo-escuro), var(--roxo));
+    font-size: 13px; font-weight: 700; color: #fff;
+}
+.rk-regras li div {
+    font-size: 13.5px; line-height: 1.5;
+    color: var(--tinta-fraca);
+}
+.rk-regras li b { display: block; color: var(--tinta); margin-bottom: 3px; }
+
+.rk-premios { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+.rk-premio {
+    display: inline-flex; align-items: baseline; gap: 5px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12.5px; font-weight: 600;
+    background: var(--cartao-alto);
+    border: 1px solid var(--linha-forte);
+    color: var(--tinta);
+}
+.rk-premio b { display: inline; margin: 0; }
+.rk-premio.ouro   { border-color: rgba(199, 155, 255, .5); }
+.rk-premio.ouro   b { color: var(--roxo-claro); }
+.rk-premio.prata  b { color: #D5D5E2; }
+.rk-premio.bronze b { color: #E2A464; }
