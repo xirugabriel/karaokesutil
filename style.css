@@ -1866,6 +1866,167 @@ html {
     color: var(--tinta-tenue);
 }
 
+/* ════════════════════════════════════════════════════════════
+   🏆 TOP 5 — porte do ACCORDION GALLERY do ReactBits
+   https://reactbits.dev/components/accordion-gallery
+
+   O original anima com GSAP. Aqui quem anima é o `flex-grow` numa
+   transição CSS: um número só por painel, o navegador resolve o
+   resto do reparto sozinho, e não entra biblioteca nenhuma.
+
+   DECISÃO CONTRA O ORIGINAL: o CSS dele tem um `@media (max-width:
+   520px)` que vira a galeria numa PILHA VERTICAL. No iPhone, que é
+   onde este site vive, a referência não pareceria a demo — viraria
+   uma lista de 5 blocos de 84px, quase 500px de altura no fim da
+   home. Mantive o acordeão horizontal e ajustei para largura
+   estreita. É um atalho, tem que ser compacto.
+
+   O gatilho também mudou: o padrão do componente é `hover`, que no
+   celular não existe. Aqui é toque — e o toque tem dois estágios,
+   igual ao original: painel fechado ABRE, painel já aberto LEVA
+   para o ranking.
+   ════════════════════════════════════════════════════════════ */
+#top5 { margin-top: 26px; }
+
+.ag {
+    --cresce: 4.33;          /* o JS recalcula conforme quantos couberem */
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    height: 186px;
+    perspective: 1200px;
+}
+
+.ag-painel {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--cartao-alto);
+    border: 1px solid var(--linha);
+    cursor: pointer;
+    display: block;
+    transform-style: preserve-3d;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 10px 26px -16px rgba(0, 0, 0, .9);
+    transition: flex-grow var(--suave), transform var(--suave), border-color var(--rapido);
+}
+.ag-painel.ativo {
+    flex-grow: var(--cresce);
+    border-color: rgba(168, 85, 247, .45);
+}
+
+.ag-moldura { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+
+/* A mídia é MAIS LARGA que o painel fechado e fica centrada. É esse
+   truque que faz o painel estreito mostrar o MEIO da foto (o rosto)
+   em vez de uma beirada. Sem ele, 40px de painel pegariam a orelha. */
+.ag-media {
+    --cinza: 1;
+    position: absolute;
+    top: 50%; left: 50%;
+    width: var(--tam-media, 210px);
+    height: 100%;
+    transform: translate(-50%, -50%);
+    filter: grayscale(var(--cinza));
+    transition: transform var(--suave), filter var(--suave);
+}
+.ag-media img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center 22%;  /* rosto costuma ficar no terço de cima */
+    display: block;
+    user-select: none; -webkit-user-drag: none;
+}
+/* `--escurece` mora AQUI, não na mídia: as duas são irmãs, então o véu
+   não herdaria nada de lá. */
+.ag-veu {
+    --escurece: .42;
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, transparent 42%, rgba(6, 4, 14, .88) 100%),
+        rgba(6, 4, 14, var(--escurece));
+    transition: background var(--suave);
+}
+.ag-painel.ativo .ag-veu { --escurece: 0; }
+
+/* quem ainda não tem foto entra com a inicial, para não abrir buraco */
+.ag-inicial {
+    width: 100%; height: 100%;
+    display: grid; place-items: center;
+    background: linear-gradient(150deg, var(--roxo-escuro), var(--roxo));
+    font-family: 'Outfit', sans-serif;
+    font-size: 40px; font-weight: 700; color: #fff;
+}
+
+/* medalha da posição — o componente não tem isto, mas aqui é um
+   PLACAR: sem o número, cinco rostos não dizem quem ganhou */
+.ag-pos {
+    position: absolute; top: 8px; left: 8px;
+    z-index: 3;
+    width: 22px; height: 22px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px; font-weight: 700;
+    color: #2A1345;
+    background: linear-gradient(140deg, #E9D5FF, #A855F7);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .5);
+}
+.ag-painel:nth-child(2) .ag-pos { background: linear-gradient(140deg, #E7E7EF, #9C9CB0); color: #26262E; }
+.ag-painel:nth-child(3) .ag-pos { background: linear-gradient(140deg, #F0C08A, #B9793C); color: #33200C; }
+.ag-painel:nth-child(n+4) .ag-pos { background: rgba(20, 20, 30, .85); color: var(--tinta-fraca); }
+
+/* nome e pontos só no painel aberto: no fechado não caberiam */
+.ag-rotulo {
+    position: absolute;
+    left: 13px; right: 13px; bottom: 12px;
+    z-index: 2;
+    display: flex; align-items: center; gap: 9px;
+    pointer-events: none;
+}
+.ag-barra {
+    flex: none;
+    width: 3px; height: 30px;
+    border-radius: 3px;
+    background: var(--roxo-claro);
+    box-shadow: 0 0 12px rgba(199, 155, 255, .6);
+    opacity: 0;
+    transition: opacity var(--suave);
+}
+.ag-texto {
+    min-width: 0;
+    opacity: 0; transform: translateX(-14px);
+    transition: opacity var(--suave), transform var(--suave);
+    text-shadow: 0 2px 14px rgba(0, 0, 0, .75);
+}
+.ag-nome {
+    display: block;
+    font-size: 14px; font-weight: 700; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ag-pts { display: block; font-size: 11.5px; font-weight: 600; color: var(--roxo-claro); }
+.ag-painel.ativo .ag-barra { opacity: 1; }
+.ag-painel.ativo .ag-texto { opacity: 1; transform: none; }
+
+.top5-cta {
+    width: 100%;
+    margin-top: 11px;
+    padding: 12px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--cartao) !important;
+    border: 1px solid var(--linha-forte);
+    border-radius: var(--raio);
+    font-size: 13.5px; font-weight: 700;
+    color: var(--tinta);
+}
+.top5-cta .ic { stroke: var(--roxo-claro); }
+
+@media (prefers-reduced-motion: reduce) {
+    .ag-painel, .ag-media, .ag-texto, .ag-barra, .ag-veu { transition: none; }
+}
+
 .footer-badge { color: var(--tinta-tenue); font-size: 10.5px; letter-spacing: 1.4px; }
 
 /* ════════════════════════════════════════════════════════════

@@ -35,7 +35,7 @@
     <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=22">
+    <link rel="stylesheet" href="style.css?v=24">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -929,6 +929,23 @@
                     </div>
                 </div>
 
+                <!-- ── TOP 5 · atalho para o ranking ──────────────────
+                     Nasce escondida: só aparece quando o Firebase devolve
+                     gente. Placar vazio no fim da home não convida ninguém
+                     a cantar, e bloqueio de regra não vira erro na cara
+                     do cliente — a seção simplesmente não existe. -->
+                <section id="top5" class="hidden">
+                    <p class="queue-section-title">
+                        <svg class="title-ic" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3"/></svg>
+                        <span id="top5-titulo">Melhores pontuadores</span>
+                    </p>
+                    <div class="ag" id="top5-galeria" role="list" aria-label="Cinco primeiros do ranking"></div>
+                    <button class="top5-cta" onclick="goTab('ranking')">
+                        Ver ranking completo
+                        <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                    </button>
+                </section>
+
                 <div class="steps-card hidden">
                     <div class="steps-title">Pedir música é fácil!</div>
                     <div class="steps">
@@ -1063,7 +1080,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 22</p>
+            <p class="versao-app">versão 24</p>
 
         </div>
     </div>
@@ -1370,6 +1387,7 @@
             currentUID = user.uid;
             attachDataListeners();
             carregarPerfil();
+            carregarTop5(true);   // a tela inicial já abre na aba "pedir"
         } else {
             currentUser = null;
             currentUID = null;
@@ -1473,6 +1491,7 @@
         updateUI();
         tituloDaAba(tab);
         if (tab === 'ranking') carregarRanking();
+        if (tab === 'pedir') carregarTop5();
         /* Quem rola aqui é o <body> (o CSS fixa html/body em 100% de
            altura), não a janela — window.scrollTo não tinha efeito.
            Mando nos dois pra funcionar de qualquer jeito. */
@@ -1639,6 +1658,129 @@
     // Classificação: 1) maior nota  2) DESEMPATE pela 2ª maior nota
     //                3) ainda empatado → quem tem menos músicas (fez
     //                   a mesma marca com menos tentativas)
+    /* ════════ TOP 5 · atalho para o ranking na tela inicial ════════
+       Porte do ACCORDION GALLERY do ReactBits. O original anima com
+       GSAP; aqui quem anima é o `flex-grow` numa transição CSS.
+       Detalhes da adaptação estão no bloco de CSS. */
+    let top5Quando = 0;
+
+    /* A foto do Google chega em 96px (`=s96-c`). Num painel de 186px de
+       altura isso fica borrado — e a própria URL aceita outro tamanho.
+       Foto enviada pelo site já sai em 200px e passa direto. */
+    function fotoGrande(url) {
+        return /googleusercontent\.com/.test(url)
+            ? url.replace(/=s\d+(-c)?$/, '=s400-c')
+            : url;
+    }
+
+    async function carregarTop5(forcar) {
+        const secao = document.getElementById('top5');
+        if (!currentUID) { secao.classList.add('hidden'); return; }
+        if (!forcar && Date.now() - top5Quando < 60000) return;   // não martela o Firebase a cada troca de aba
+        top5Quando = Date.now();
+
+        async function topDe(ref) {
+            const snap = await ref.orderByChild('melhorNota').limitToLast(5).once('value');
+            const linhas = [];
+            snap.forEach((c) => { linhas.push({ id: c.key, ...c.val() }); });
+            return linhas.sort(compararRanking).slice(0, 5);
+        }
+
+        /* Placar GERAL, não o do dia: é o hall da fama da casa. Some
+           duas vantagens — está sempre cheio (o atalho nunca some no
+           começo da noite) e as notas são as maiores já feitas, que é
+           o que dá vontade de tentar bater. */
+        let linhas = [];
+        try {
+            linhas = await topDe(db.ref('ranking/geral'));
+        } catch (e) {
+            secao.classList.add('hidden');   // regra bloqueada não vira erro na home
+            return;
+        }
+        if (!linhas.length) { secao.classList.add('hidden'); return; }
+
+        await pintarFotos(linhas.map((r) => r.id));   // só para encher o cache de fotos
+        montarTop5(linhas);
+        secao.classList.remove('hidden');
+    }
+
+    function montarTop5(linhas) {
+        const galeria = document.getElementById('top5-galeria');
+        galeria.innerHTML = linhas.map((r, i) => {
+            const foto = fotosCache.get(r.id);
+            const miolo = foto
+                ? `<img src="${esc(fotoGrande(foto))}" alt="" draggable="false" loading="lazy">`
+                : `<span class="ag-inicial">${inicialDe(r.name)}</span>`;
+            return `
+                <a class="ag-painel${i === 0 ? ' ativo' : ''}" data-uid="${esc(r.id)}" role="listitem"
+                   aria-label="${esc(r.name || 'Cantor')}, ${r.melhorNota || 0} pontos">
+                    <span class="ag-moldura">
+                        <span class="ag-media">${miolo}</span>
+                        <span class="ag-veu"></span>
+                    </span>
+                    <span class="ag-pos">${i + 1}</span>
+                    <span class="ag-rotulo">
+                        <span class="ag-barra"></span>
+                        <span class="ag-texto">
+                            <span class="ag-nome">${esc(r.name || 'Cantor')}</span>
+                            <span class="ag-pts">${r.melhorNota || 0} pts</span>
+                        </span>
+                    </span>
+                </a>`;
+        }).join('');
+        ligarAcordeao(galeria, linhas.length);
+    }
+
+    function ligarAcordeao(galeria, quantos) {
+        const paineis = [...galeria.querySelectorAll('.ag-painel')];
+        if (!paineis.length) return;
+        const ABRE = 0.52, INCLINA = 6, PARALAXE = 0.5, VAO = 6;
+
+        /* Conta do componente: para o painel aberto ocupar `ABRE` da
+           largura, ele cresce ABRE*(n-1)/(1-ABRE) vezes mais que os
+           outros. Com 5 painéis dá 4,33. Calculado e não fixo porque
+           numa noite fraca podem existir só 2 ou 3 pessoas. */
+        galeria.style.setProperty('--cresce',
+            quantos > 1 ? (ABRE * (quantos - 1) / (1 - ABRE)).toFixed(2) : '1');
+
+        function medir() {
+            const util = Math.max(galeria.clientWidth - VAO * (quantos - 1), 120);
+            galeria.style.setProperty('--tam-media',
+                Math.max(140, Math.round(util * ABRE * 1.22)) + 'px');
+        }
+        medir();
+        if (window.ResizeObserver) new ResizeObserver(medir).observe(galeria);
+
+        let indice = 0;
+        function aplicar() {
+            const tam = parseFloat(galeria.style.getPropertyValue('--tam-media')) || 210;
+            paineis.forEach((p, i) => {
+                const ativo = i === indice;
+                p.classList.toggle('ativo', ativo);
+                p.style.transform = `rotateY(${ativo ? 0 : (i < indice ? INCLINA : -INCLINA)}deg)`;
+                const media = p.querySelector('.ag-media');
+                const deriva = Math.max(-1.5, Math.min(1.5, indice - i));
+                const desloca = ativo ? 0 : deriva * PARALAXE * tam * 0.06;
+                media.style.transform = `translate(-50%, -50%) translateX(${desloca}px)`;
+                media.style.setProperty('--cinza', ativo ? 0 : 1);
+            });
+        }
+        aplicar();
+
+        paineis.forEach((p, i) => {
+            /* Dois estágios, igual ao original: painel fechado ABRE;
+               painel já aberto LEVA para o ranking. Assim um toque
+               errado nunca tira a pessoa da tela sem querer. */
+            p.addEventListener('click', () => {
+                if (i === indice) goTab('ranking');
+                else { indice = i; aplicar(); }
+            });
+            p.addEventListener('pointerenter', (ev) => {
+                if (ev.pointerType === 'mouse' && i !== indice) { indice = i; aplicar(); }
+            });
+        });
+    }
+
     function compararRanking(a, b) {
         return (b.melhorNota || 0) - (a.melhorNota || 0)
             || (b.segundaNota || 0) - (a.segundaNota || 0)
@@ -2404,7 +2546,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=22"></script>
+<script src="app.js?v=24"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
