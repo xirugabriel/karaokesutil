@@ -1115,18 +1115,89 @@ setInterval(pollQueueMembership, 500);
 
 
 /* ══════════════════════════════════════════════════════════════
-   🎬 INTRO — sai sozinha e entrega a tela
-   Some em 2,2s, ou no primeiro toque pra quem não quer esperar.
+   🔢 COUNT UP — porte do componente do ReactBits
+   https://reactbits.dev/text-animations/count-up
 
-   O prazo NÃO depende da imagem carregar: se a logo falhar, a
-   intro sai do mesmo jeito. Tela preta presa é o pior desfecho
-   possível numa tela de abertura.
+   O original anima com `useSpring` do Motion. Aqui a mola é
+   integrada na mão — mesma equação, constantes diferentes, e a
+   troca foi MEDIDA, não chutada.
+
+   O `duration` do componente NÃO é a duração da animação: é só um
+   botão que define rigidez e amortecimento, por
+
+       rigidez = 100/d      amortece = 20 + 40/d
+
+   Disso sai ζ = √d + 2/√d, cujo MÍNIMO é 2,83 — a mola é sempre
+   muito sobreamortecida, para qualquer `duration`. Medindo: com
+   d=1,6 o número leva 5,6s para fechar em 1000, e com o padrão
+   d=2 leva 6,1s. Os últimos dígitos se arrastam.
+
+   Numa página isso passa, porque o número fica lá. Numa abertura
+   de 2,8s, não: a tela apagaria com o placar em 975, e a contagem
+   nunca fecharia na frente do cliente.
+
+   Por isso as constantes abaixo são escolhidas direto: ζ = 1,05,
+   logo acima do crítico. Assenta em 1,35s (medido) e continua sem
+   ultrapassar o alvo — numa nota de karaokê, passar de 1000 e
+   voltar pareceria erro de cálculo, não estilo.
+══════════════════════════════════════════════════════════════ */
+function contarAte(el, alvo, aoTerminar) {
+    const rigidez = 120, amortece = 23;   /* ζ = 1,05 · fecha em ~1,35s */
+    const semAnimacao = window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const escrever = (v) => { el.textContent = Math.round(v).toLocaleString('pt-BR'); };
+
+    if (semAnimacao) { escrever(alvo); if (aoTerminar) aoTerminar(); return; }
+
+    let valor = 0, velocidade = 0, anterior = null;
+
+    function passo(agora) {
+        if (anterior === null) anterior = agora;
+        /* Trava em 64ms: se o aparelho engasgar, um dt grande faria a
+           mola explodir em vez de só atrasar. */
+        let dt = Math.min((agora - anterior) / 1000, 0.064);
+        anterior = agora;
+
+        /* Integra em fatias pequenas. Um passo por quadro basta para
+           animar posição, mas mola rígida com dt de 16ms acumula erro
+           e vira tremor no número. */
+        const fatia = 1 / 240;
+        while (dt > 0) {
+            const h = Math.min(fatia, dt);
+            velocidade += (-rigidez * (valor - alvo) - amortece * velocidade) * h;
+            valor += velocidade * h;
+            dt -= h;
+        }
+
+        if (Math.abs(alvo - valor) < 0.5 && Math.abs(velocidade) < 0.5) {
+            escrever(alvo);
+            if (aoTerminar) aoTerminar();
+            return;
+        }
+        escrever(valor);
+        requestAnimationFrame(passo);
+    }
+    requestAnimationFrame(passo);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   🎬 INTRO — sai sozinha e entrega a tela
+   A logo acende e o placar apura a nota, como a máquina de karaokê
+   fechando a pontuação.
+
+   O prazo NÃO depende da imagem carregar nem da contagem terminar:
+   se a logo falhar ou o número travar, a intro sai do mesmo jeito.
+   Tela preta presa é o pior desfecho possível numa abertura.
 ══════════════════════════════════════════════════════════════ */
 (function () {
     const intro = document.getElementById('intro');
     /* Sem intro no DOM, a página não pode ficar escondida esperando
        a trava de 4s do CSS. Devolve na hora. */
     if (!intro) { document.documentElement.classList.remove('intro-ativa'); return; }
+
+    const NOTA = 1000;   /* acima dos 950 da roleta: nota de quem ganhou */
 
     let saiu = false;
     function sair() {
@@ -1140,6 +1211,13 @@ setInterval(pollQueueMembership, 500);
         setTimeout(() => intro.remove(), 650);
     }
 
-    const prazo = setTimeout(sair, 2200);
+    const nota = document.getElementById('intro-nota');
+    /* 600ms: a contagem entra depois de a logo firmar o neon, senão as
+       duas animações competem e nenhuma é vista direito. */
+    if (nota) setTimeout(() => contarAte(nota, NOTA), 600);
+
+    /* 2,6s = 600ms de espera + 1,35s de contagem (medido) + meio
+       segundo para a nota cheia respirar antes do fade. */
+    const prazo = setTimeout(sair, 2600);
     intro.addEventListener('click', () => { clearTimeout(prazo); sair(); });
 })();

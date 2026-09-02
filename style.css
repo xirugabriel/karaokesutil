@@ -2431,6 +2431,46 @@ html {
 }
 #intro.saindo { opacity: 0; }
 
+/* ── PLACAR DA ABERTURA · porte do COUNT UP do ReactBits ─────
+   https://reactbits.dev/text-animations/count-up
+   A física da mola está no app.js; aqui é só a aparência.
+
+   O `tabular-nums` é o detalhe que faz a diferença: sem ele cada
+   algarismo tem largura própria e o número TREME enquanto sobe,
+   empurrando os vizinhos a cada quadro. Com ele todos ocupam a
+   mesma caixa e a contagem fica firme, como painel de placar. */
+#intro-miolo { display: grid; justify-items: center; gap: 18px; }
+
+#intro-placar {
+    display: grid; justify-items: center; gap: 2px;
+    opacity: 0;
+    animation: placar-entra .5s ease-out .55s forwards;
+}
+#intro-nota {
+    font-family: 'Outfit', sans-serif;
+    font-size: clamp(44px, 15vw, 76px);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    background: linear-gradient(180deg, #FFFFFF 30%, #C79BFF 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 18px rgba(168, 85, 247, .55));
+}
+#intro-pts {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 3.5px; text-transform: uppercase;
+    color: var(--tinta-tenue);
+}
+@keyframes placar-entra {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #intro-placar { animation: none; opacity: 1; }
+}
+
 /* ── A LOGO BAIXA NO APP DA TELA INICIAL ─────────────────────
    Medido num print do iPhone (1170×2532, 3×): a logo caía 72px =
    24pt abaixo do centro. A barra de status desse aparelho tem 47pt,
