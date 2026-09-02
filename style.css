@@ -1113,6 +1113,15 @@ html {
         0 16px 44px rgba(0, 0, 0, .9),          /* descola do fundo */
         0 0 30px rgba(168, 85, 247, .12),       /* brilho da marca */
         inset 0 1px 0 rgba(255, 255, 255, .10); /* aresta de cima acesa */
+    transition: transform .22s ease, opacity .22s ease;
+}
+/* Com o teclado aberto a barra desce e sai de cena. Ver o bloco do
+   teclado no app.js: no iOS ela ficaria presa no meio da tela, bem
+   onde o sistema desenha a régua do próprio teclado. */
+.teclado-aberto #bottom-nav {
+    transform: translateY(calc(100% + 24px));
+    opacity: 0;
+    pointer-events: none;
 }
 /* a camada de vidro; o fundo chapado é a reserva de quem não tem
    backdrop-filter nenhum, senão a barra nasceria invisível */
@@ -2151,7 +2160,26 @@ html {
     border: 1px solid var(--linha-forte);
     transition: border-color var(--rapido);
 }
-.lead-campo:focus-within { border-color: rgba(168, 85, 247, .55); }
+/* O FOCO É DA CAIXA, NÃO DO INPUT.
+   O <style> embutido no index.html tem um `input:focus` global que
+   devolve borda, fundo e um anel de 3px ao campo. Ele tem a MESMA
+   especificidade que `.lead-campo input` e vem depois no <head>, então
+   vencia: o anel do navegador aparecia DENTRO da minha caixa, e o
+   campo ficava com contorno duplo ao ser tocado.
+
+   Aqui o input não desenha nada quando focado; quem acende é a caixa
+   que o envolve. Uma indicação só, e continua bem visível — não é
+   remover o foco, é mudar quem o mostra. */
+.lead-campo input:focus {
+    outline: none;
+    border: none;
+    background: none;
+    box-shadow: none;
+}
+.lead-campo:focus-within {
+    border-color: rgba(168, 85, 247, .55);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, .13);
+}
 .lead-campo .ic { flex: none; stroke: var(--tinta-tenue); }
 .lead-campo input {
     flex: 1 1 auto;

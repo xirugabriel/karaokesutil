@@ -1028,6 +1028,43 @@ setInterval(pollQueueMembership, 500);
 
 
 /* ══════════════════════════════════════════════════════════════
+   ⌨️ TECLADO ABERTO — a barra inferior sai de cena
+
+   No iOS o teclado encolhe a viewport VISUAL, mas um `position:fixed`
+   segue ancorado na viewport de LAYOUT. A barra não fica embaixo do
+   teclado: ela fica presa no meio da tela, exatamente onde o iOS
+   desenha a própria régua (as setas e o "ok") — e as duas se
+   sobrepõem.
+
+   Não dá para mandar o iOS mover a régua. Dá para tirar a barra do
+   caminho, e é o certo mesmo: ninguém troca de aba enquanto digita.
+══════════════════════════════════════════════════════════════ */
+(function () {
+    const digitavel = (el) => !!el && (
+        el.tagName === 'TEXTAREA' ||
+        (el.tagName === 'INPUT' &&
+         !/^(button|submit|checkbox|radio|range|file|reset|image)$/i.test(el.type))
+    );
+
+    document.addEventListener('focusin', (e) => {
+        if (digitavel(e.target)) document.documentElement.classList.add('teclado-aberto');
+    });
+
+    document.addEventListener('focusout', (e) => {
+        if (!digitavel(e.target)) return;
+        /* Ao pular de um campo para o outro, o `focusout` chega ANTES do
+           `focusin` do próximo. Sem esta espera a barra reapareceria
+           por um quadro no meio do preenchimento. */
+        setTimeout(() => {
+            if (!digitavel(document.activeElement)) {
+                document.documentElement.classList.remove('teclado-aberto');
+            }
+        }, 80);
+    });
+})();
+
+
+/* ══════════════════════════════════════════════════════════════
    🔒 SEM ZOOM
    O Safari do iOS ignora `user-scalable=no` na meta viewport desde o
    iOS 10 — foi uma decisão de acessibilidade da Apple, não um bug, e
