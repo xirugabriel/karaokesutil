@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=33">
+    <link rel="stylesheet" href="style.css?v=35">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -779,9 +779,12 @@
 
         <!-- TOP APP BAR -->
         <div class="app-topbar">
-            <button class="tb-icon" onclick="toggleAdmin()" aria-label="Painel DJ">
-                <svg class="ic" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="2" y1="14" x2="6" y2="14"/><line x1="10" y1="8" x2="14" y2="8"/><line x1="18" y1="16" x2="22" y2="16"/></svg>
-            </button>
+            <!-- Era o atalho do painel do DJ, que a implantação do Painel
+                 do Operador tornou inútil. Vira a marca da casa: não é
+                 botão, é só imagem — sem clique, sem foco, sem leitor de
+                 tela anunciando algo em que não dá para tocar. O tamanho
+                 é o mesmo de antes para não descentralizar o título. -->
+            <img class="tb-marca" src="logo.png" alt="" aria-hidden="true" decoding="async">
             <div class="tb-brand">
                 <!-- Título muda por aba (veja tituloDaAba no script) -->
                 <span class="tb-logo" id="tb-logo">
@@ -1124,7 +1127,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 33</p>
+            <p class="versao-app">versão 35</p>
 
         </div>
     </div>
@@ -2624,7 +2627,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=33"></script>
+<script src="app.js?v=35"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>

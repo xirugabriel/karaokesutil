@@ -142,13 +142,23 @@ button { position: relative; overflow: hidden; }
 /* ══════════════════════════════════════════════════════════════
    BARRA DE TOPO
 ══════════════════════════════════════════════════════════════ */
+/* GRID, e não flex com space-between. Os slots das pontas têm larguras
+   diferentes (marca 44px à esquerda, "Perfil" + avatar 84px à direita),
+   e com space-between o miolo ficava 20px fora do centro — exatamente
+   metade da diferença. Passava batido com um ícone genérico à esquerda;
+   com a marca da casa ali, salta aos olhos.
+
+   `1fr auto 1fr` força as colunas das pontas a serem IGUAIS, então o
+   miolo fica centrado na barra, não no espaço que sobrou. */
 .app-topbar {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     gap: 10px;
     padding: 6px 0 16px;
 }
+.tb-marca, .tb-icon { justify-self: start; }
+.tb-profile { justify-self: end; }
 
 .tb-icon {
     width: 44px; height: 44px;
@@ -163,6 +173,18 @@ button { position: relative; overflow: hidden; }
 }
 .tb-icon:active { background: var(--cartao-alto) !important; }
 .tb-icon .ic { width: 19px; height: 19px; stroke: var(--roxo-claro); }
+
+/* A marca no lugar do antigo botão do DJ. Ocupa os MESMOS 44px do
+   botão: a topbar é `space-between` com o miolo em `flex: 1`, então
+   qualquer largura diferente aqui empurraria o título para fora do
+   centro. `contain` para a logo não distorcer se um dia trocar de
+   proporção. */
+.tb-marca {
+    width: 44px; height: 44px;
+    flex: none;
+    object-fit: contain;
+    display: block;
+}
 
 /* miolo: logo OU nome da seção, com o subtítulo embaixo */
 .tb-brand {
@@ -179,7 +201,13 @@ button { position: relative; overflow: hidden; }
     display: block;
     width: auto;
     height: 46px;
-    max-width: 235px;
+    /* O `100%` não é redundante com os 235px. No flex antigo o miolo já
+       vinha limitado pelo espaço que sobrava; no grid a coluna `auto`
+       pede a largura NATURAL da imagem e espreme as pontas — a logo
+       encostava no "Perfil". O `min()` prende ao menor dos dois. */
+    /* 88% e não 100%: preenchendo a coluna inteira a logo encostava no
+       "Perfil". A sobra vira respiro dos dois lados. */
+    max-width: min(235px, 88%);
     object-fit: contain;
 }
 .tb-titulo {
