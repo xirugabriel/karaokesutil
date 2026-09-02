@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=42">
+    <link rel="stylesheet" href="style.css?v=43">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -997,6 +997,49 @@
                     </button>
                 </section>
 
+                <!-- ── CAPTAÇÃO DE INTERESSADOS ────────────────────────
+                     Fecha a tela inicial: quem gostou do sistema deixa
+                     o contato aqui. Só nome e WhatsApp — cada campo a
+                     mais numa tela de bar derruba o preenchimento. -->
+                <section id="lead" class="lead-card">
+                    <div class="lead-selo">
+                        <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18"/><path d="M12 8S9.5 3.5 7 5s1 3 5 3M12 8s2.5-4.5 5-3-1 3-5 3"/></svg>
+                    </div>
+                    <h3 class="lead-titulo">Quer o <b>Sutil-Okê</b> no seu bar?</h3>
+                    <p class="lead-texto">Deixe seu contato e a gente explica como levar o sistema para o seu espaço ou evento.</p>
+
+                    <form id="lead-form" onsubmit="enviarLead(event)" novalidate>
+                        <label class="lead-campo">
+                            <svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                            <input id="lead-nome" type="text" placeholder="Seu nome"
+                                   autocomplete="name" maxlength="60" required>
+                        </label>
+                        <label class="lead-campo">
+                            <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-12.6 7.3L3 20.5l1.8-5.2A8.5 8.5 0 1 1 21 11.5z"/></svg>
+                            <!-- `tel` + inputmode numérico abre o teclado de números
+                                 direto; o cliente não caça o dígito no meio das letras -->
+                            <input id="lead-zap" type="tel" placeholder="WhatsApp com DDD"
+                                   inputmode="numeric" autocomplete="tel" maxlength="16" required>
+                        </label>
+                        <button type="submit" class="lead-btn" id="lead-btn">
+                            <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4Z"/></svg>
+                            Quero mais informações
+                        </button>
+                    </form>
+
+                    <!-- estado de sucesso; troca o formulário depois do envio -->
+                    <div id="lead-obrigado" class="lead-obrigado hidden">
+                        <svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+                        <b>Contato enviado!</b>
+                        <span>A gente chama você no WhatsApp.</span>
+                    </div>
+
+                    <p class="lead-nota">
+                        <svg class="ic ic-xs" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                        Seus dados ficam só com a casa. Sem spam.
+                    </p>
+                </section>
+
                 <div class="steps-card hidden">
                     <div class="steps-title">Pedir música é fácil!</div>
                     <div class="steps">
@@ -1134,7 +1177,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 42</p>
+            <p class="versao-app">versão 43</p>
 
         </div>
     </div>
@@ -1712,6 +1755,86 @@
     // Classificação: 1) maior nota  2) DESEMPATE pela 2ª maior nota
     //                3) ainda empatado → quem tem menos músicas (fez
     //                   a mesma marca com menos tentativas)
+    /* ════════ CAPTAÇÃO DE INTERESSADOS ════════
+       Grava em `leads/{id}`. As regras deixam CRIAR mas não LER: um
+       cliente não pode listar os contatos dos outros. Você lê no
+       console do Firebase. */
+
+    /* Máscara conforme digita. Guardo só os dígitos e formato na tela,
+       porque é o número que importa — não como ele foi digitado. */
+    function mascaraZap(bruto) {
+        const d = String(bruto).replace(/\D/g, '').slice(0, 11);
+        if (d.length <= 2)  return d.length ? '(' + d : '';
+        if (d.length <= 6)  return '(' + d.slice(0, 2) + ') ' + d.slice(2);
+        if (d.length <= 10) return '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6);
+        return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
+    }
+
+    (function ligarMascaraZap() {
+        const campo = document.getElementById('lead-zap');
+        if (!campo) return;
+        campo.addEventListener('input', () => { campo.value = mascaraZap(campo.value); });
+    })();
+
+    function marcarErro(campo) {
+        const caixa = campo.closest('.lead-campo');
+        caixa.classList.add('erro');
+        campo.focus();
+        setTimeout(() => caixa.classList.remove('erro'), 2200);
+    }
+
+    /* Quem já mandou não vê o formulário de novo. Fica no aparelho: é
+       lembrete de conveniência, não controle de acesso — e o nó de
+       leads não é legível pelo cliente, então nem daria para conferir
+       lá. Se falhar (navegador privado), o pior caso é a pessoa poder
+       mandar duas vezes, o que não quebra nada. */
+    function lembrarLeadEnviado() {
+        try { localStorage.setItem('leadEnviado', '1'); } catch (e) {}
+    }
+    (function conferirLeadEnviado() {
+        let jaMandou = false;
+        try { jaMandou = localStorage.getItem('leadEnviado') === '1'; } catch (e) {}
+        if (!jaMandou) return;
+        const f = document.getElementById('lead-form');
+        const ok = document.getElementById('lead-obrigado');
+        if (f && ok) { f.classList.add('hidden'); ok.classList.remove('hidden'); }
+    })();
+
+    function enviarLead(ev) {
+        ev.preventDefault();
+        const elNome = document.getElementById('lead-nome');
+        const elZap  = document.getElementById('lead-zap');
+        const botao  = document.getElementById('lead-btn');
+
+        const nome = elNome.value.trim();
+        const digitos = elZap.value.replace(/\D/g, '');
+
+        if (nome.length < 2) { showToast('Digite seu nome.', 'error'); marcarErro(elNome); return; }
+        /* 10 dígitos = fixo com DDD, 11 = celular. Menos que isso não
+           é telefone brasileiro completo e o contato se perde. */
+        if (digitos.length < 10) { showToast('Digite o WhatsApp com DDD.', 'error'); marcarErro(elZap); return; }
+
+        botao.disabled = true;
+        db.ref('leads').push({
+            nome: nome,
+            whatsapp: digitos,
+            uid: currentUID || '',
+            quando: Date.now(),
+        }).then(() => {
+            document.getElementById('lead-form').classList.add('hidden');
+            document.getElementById('lead-obrigado').classList.remove('hidden');
+            lembrarLeadEnviado();
+            showToast('Contato enviado! Falamos com você em breve.', 'success');
+        }).catch((e) => {
+            botao.disabled = false;
+            const semPermissao = e && (e.code === 'PERMISSION_DENIED' ||
+                                       /permission/i.test(e.message || ''));
+            showToast(semPermissao
+                ? 'Bloqueado pelas regras do Firebase — republique o database.rules.json (nó leads).'
+                : 'Não consegui enviar agora. Tente de novo.', 'error');
+        });
+    }
+
     /* ════════ TOP 5 · atalho para o ranking na tela inicial ════════
        Porte do ACCORDION GALLERY do ReactBits. O original anima com
        GSAP; aqui quem anima é o `flex-grow` numa transição CSS.
@@ -2650,7 +2773,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=42"></script>
+<script src="app.js?v=43"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
