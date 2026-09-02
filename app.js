@@ -937,6 +937,28 @@ setInterval(pollQueueMembership, 500);
 
 
 /* ══════════════════════════════════════════════════════════════
+   🔒 SEM ZOOM
+   O Safari do iOS ignora `user-scalable=no` na meta viewport desde o
+   iOS 10 — foi uma decisão de acessibilidade da Apple, não um bug, e
+   não há flag que reverta. Lá o zoom só morre por dois caminhos:
+
+     · CSS `touch-action: pan-x pan-y` (está no style.css) mata a
+       pinça e o toque duplo;
+     · os eventos `gesture*`, que são exclusivos do WebKit, cobrem o
+       resto — inclusive a pinça que começa fora de qualquer elemento
+       com touch-action próprio.
+
+   O corte de foto NÃO é afetado: ele lê `touchmove` com dois dedos e
+   nunca escuta `gesture*`.
+══════════════════════════════════════════════════════════════ */
+(function () {
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (evento) {
+        document.addEventListener(evento, function (e) { e.preventDefault(); }, { passive: false });
+    });
+})();
+
+
+/* ══════════════════════════════════════════════════════════════
    🫧 GLASS SURFACE — porte do componente do ReactBits
    https://reactbits.dev/components/glass-surface
 

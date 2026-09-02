@@ -6,7 +6,11 @@
 <html lang="pt-BR" class="intro-ativa">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- `user-scalable=no` e `maximum-scale=1` resolvem o zoom no Android.
+         O SAFARI DO iOS IGNORA OS DOIS desde o iOS 10, de propósito — lá o
+         bloqueio real vem do CSS (`touch-action`) e do JS (eventos
+         `gesture*`), no app.js. A meta fica pelos outros navegadores. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <!-- Tela cheia no iOS. Sem estes dois, adicionar à tela inicial abre
          numa moldura com barras e o `env(safe-area-inset-*)` fica zerado —
          era por isso que o app não alcançava o notch.
@@ -31,7 +35,7 @@
     <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css?v=20">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -1057,7 +1061,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 19</p>
+            <p class="versao-app">versão 20</p>
 
         </div>
     </div>
@@ -2398,7 +2402,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=19"></script>
+<script src="app.js?v=20"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>

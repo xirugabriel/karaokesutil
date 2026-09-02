@@ -629,6 +629,29 @@ button { position: relative; overflow: hidden; }
 .cats-scroll::-webkit-scrollbar { display: none; }
 
 /* ════════════════════════════════════════════════════════════
+   SEM ZOOM E SEM BARRA DE ROLAGEM
+   ════════════════════════════════════════════════════════════ */
+
+/* `pan-x pan-y` deixa rolar, mas tira da tabela as duas formas de dar
+   zoom: a pinça e o toque duplo. Diferente da meta tag, isto o Safari
+   do iOS OBEDECE. */
+html, body { touch-action: pan-x pan-y; }
+
+/* O corte de foto tem pinça PRÓPRIA (aproximar o rosto). `none` entrega
+   os gestos inteiros para o JS dele — sem isto, herdaria o pan e a
+   pinça de ajuste morreria junto com a da página. */
+#crop-stage { touch-action: none; }
+
+/* Barra de rolagem invisível. A rolagem continua igual, por gesto e por
+   roda do mouse; some só o indicador. Mesmo par de regras que a
+   .cats-scroll já usava. */
+html {
+    scrollbar-width: none;       /* Firefox */
+    -ms-overflow-style: none;    /* Edge antigo */
+}
+::-webkit-scrollbar { width: 0; height: 0; }
+
+/* ════════════════════════════════════════════════════════════
    🎴 CARDS DE CATEGORIA — foto do cantor + brilho holográfico
    Referência: o ProfileCard do ReactBits. O que veio de lá é o
    brilho de arco-íris com color-dodge e o degradê interno.
