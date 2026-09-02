@@ -27,7 +27,7 @@
     <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=12">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -64,7 +64,18 @@
         /* Cor base sólida na raiz (cobre overscroll/safe-area como fallback). */
         /* Casa com o preto do CRT: é esta cor que aparece nas áreas
            que a página não pinta (chrome do Safari, overscroll). */
-        html { background: #000; }
+        html {
+            background: #000;
+            /* TRAVA A INFLAÇÃO DE TEXTO DO iOS. Sem isto o Safari decide
+               sozinho aumentar a fonte de blocos que ele julga estreitos —
+               e o gatilho costuma ser um `transform: scale` no elemento,
+               que é justamente o que a animação das listas faz. O título
+               da fila inchava, a linha estourava a largura e o layout
+               virava uma pilha. Nunca queremos esse ajuste automático:
+               os tamanhos aqui são escolhidos. */
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
 
         /* Camada de fundo FIXA que cobre a tela inteira — inclusive atrás do
            notch e da barra do Safari (graças ao viewport-fit=cover). É o que
@@ -1143,7 +1154,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 9</p>
+            <p class="versao-app">versão 12</p>
 
         </div>
     </div>
@@ -2465,7 +2476,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=9"></script>
+<script src="app.js?v=12"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
