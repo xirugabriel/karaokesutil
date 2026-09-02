@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=26">
+    <link rel="stylesheet" href="style.css?v=27">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -1095,7 +1095,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 26</p>
+            <p class="versao-app">versão 27</p>
 
         </div>
     </div>
@@ -1777,11 +1777,22 @@
             paineis.forEach((p, i) => {
                 const ativo = i === indice;
                 p.classList.toggle('ativo', ativo);
-                p.style.transform = `rotateY(${ativo ? 0 : (i < indice ? INCLINA : -INCLINA)}deg)`;
+                /* `none`, e não `rotateY(0deg)`: transformação declarada,
+                   mesmo neutra, faz o iOS promover o painel a camada
+                   composta e reamostrar a foto. O painel aberto é o
+                   único que a pessoa olha de perto — ele fica sem
+                   transformação nenhuma. */
+                p.style.transform = ativo
+                    ? 'none'
+                    : `rotateY(${i < indice ? INCLINA : -INCLINA}deg)`;
                 const media = p.querySelector('.ag-media');
                 const deriva = Math.max(-1.5, Math.min(1.5, indice - i));
                 const desloca = ativo ? 0 : deriva * PARALAXE * tam * 0.06;
-                media.style.transform = `translate(-50%, -50%) translateX(${desloca}px)`;
+                /* No ativo o deslocamento é zero, então some também o
+                   `translateX`, que somava fração de pixel e borrava. */
+                media.style.transform = ativo
+                    ? 'translate(-50%, -50%)'
+                    : `translate(-50%, -50%) translateX(${desloca}px)`;
                 media.style.setProperty('--cinza', ativo ? 0 : 1);
             });
         }
@@ -2584,7 +2595,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=26"></script>
+<script src="app.js?v=27"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>

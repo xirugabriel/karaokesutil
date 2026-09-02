@@ -1907,7 +1907,11 @@ html {
     border: 1px solid var(--linha);
     cursor: pointer;
     display: block;
-    transform-style: preserve-3d;
+    /* SEM `transform-style: preserve-3d`. Ele abre um contexto 3D, e no
+       iOS isso obriga o painel a virar camada composta — que é
+       rasterizada numa resolução menor e depois esticada. A foto
+       chegava em 512px (medido) e mesmo assim saía borrada. O
+       `rotateY` não precisa dele: a perspectiva do contêiner basta. */
     -webkit-tap-highlight-color: transparent;
     box-shadow: 0 10px 26px -16px rgba(0, 0, 0, .9);
     transition: flex-grow var(--suave), transform var(--suave), border-color var(--rapido);
@@ -1950,6 +1954,15 @@ html {
     transition: background var(--suave);
 }
 .ag-painel.ativo .ag-veu { --escurece: 0; }
+
+/* NITIDEZ DO PAINEL ABERTO. `filter` — mesmo `grayscale(0)`, que não
+   muda pixel nenhum — cria superfície de composição própria e faz o
+   iOS reamostrar a imagem. No painel aberto, que é o único que a
+   pessoa realmente olha, o filtro sai de cena por completo em vez de
+   ficar zerado. Idem para a transformação: ver o `aplicar()` no
+   index.html, que põe `transform: none` no ativo em vez de
+   `rotateY(0deg)`. */
+.ag-painel.ativo .ag-media { filter: none; }
 
 /* quem ainda não tem foto entra com a inicial, para não abrir buraco */
 .ag-inicial {
