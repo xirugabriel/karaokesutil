@@ -2241,18 +2241,16 @@ html {
                 width .32s cubic-bezier(.22,1,.36,1);
 }
 /* só enquanto anima é que o filtro caro entra em cena */
+/* A fusão vem do filtro SVG injetado pelo app.js, que gruda os blobs
+   pelo canal ALFA. Antes era `blur + contrast(100)` sobre um substrato
+   preto mais `mix-blend-mode: lighten` para descartar esse preto — e
+   o `backdrop-filter` do vidro do hub matava a mistura, sumindo com o
+   efeito inteiro. Pelo alfa não há substrato nem mistura, então os
+   dois convivem. Bônus: a cor agora é a cor de verdade, sem depender
+   do contraste saturar o canal. */
 .goo-camada.acesa {
     opacity: .62;
-    filter: blur(7px) contrast(100) blur(0);
-    mix-blend-mode: lighten;
-}
-/* substrato preto: o contraste precisa dele, o lighten o descarta */
-.goo-camada.acesa::before {
-    content: '';
-    position: absolute;
-    inset: -48px;
-    z-index: -2;
-    background: #000;
+    filter: url(#goo-filtro);
 }
 /* a pílula que escorre */
 .goo-camada.acesa::after {
@@ -2261,8 +2259,7 @@ html {
     inset: 0;
     z-index: -1;
     border-radius: 100vw;
-    /* contrast(100) satura cada canal: esta cor vira magenta */
-    background: rgb(190, 60, 240);
+    background: var(--roxo);
     animation: goo-pilula .3s ease both;
 }
 @keyframes goo-pilula {
@@ -2291,7 +2288,9 @@ html {
     animation: goo-voa var(--t) ease 1 -340ms;
 }
 .goo-ponto {
-    background: rgb(190, 60, 240);
+    /* mesma cor da pílula: sem o contrast(100) saturando os canais, a
+       cor pintada é a cor que aparece */
+    background: var(--roxo);
     opacity: 1;
     animation: goo-incha var(--t) ease 1 -340ms;
 }

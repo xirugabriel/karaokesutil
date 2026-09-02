@@ -251,6 +251,36 @@ setInterval(pollQueueMembership, 500);
    que o filtro leva para magenta.
 ══════════════════════════════════════════════════════════════ */
 (function () {
+    /* ── A FUSÃO AGORA É UM FILTRO SVG, NÃO contrast() + blend ──
+       O jeito clássico é `blur + contrast(100)` sobre um substrato
+       PRETO, e depois `mix-blend-mode: lighten` para descartar esse
+       preto. Funcionava — até o hub ganhar o Glass Surface.
+
+       `backdrop-filter` transforma o hub em raiz de composição, e o
+       `lighten` do filho passa a misturar com um grupo vazio em vez
+       do fundo do hub: o efeito sumia por completo. Confirmado por
+       teste — tirando um dos dois, ele reaparece.
+
+       Este filtro faz a fusão pelo CANAL ALFA: borra e depois joga o
+       alfa para 0 ou 1 (`0 0 0 20 -9`). Não precisa de substrato
+       preto nem de mistura, então compõe limpo sobre o vidro. E o
+       Safari aceita SVG em `filter` — só em `backdrop-filter` é que
+       não aceita. */
+    (function injetarFiltro() {
+        if (document.getElementById('goo-filtro')) return;
+        const NS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.style.cssText = 'position:absolute;width:0;height:0;pointer-events:none';
+        svg.innerHTML =
+            '<defs><filter id="goo-filtro" color-interpolation-filters="sRGB">' +
+              '<feGaussianBlur in="SourceGraphic" stdDeviation="7" result="borrado"/>' +
+              '<feColorMatrix in="borrado" type="matrix" ' +
+                'values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"/>' +
+            '</filter></defs>';
+        document.body.appendChild(svg);
+    })();
+
     const QTD = MOBILE_UI ? 10 : 14;   // menos partículas no celular
     const DIST = [76, 10];
     const GIRO = 100;
