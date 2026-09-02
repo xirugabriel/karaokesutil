@@ -35,7 +35,22 @@
     <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=25">
+    <!-- APP INSTALADO NA TELA INICIAL.
+         Tem que rodar no <head>: se entrasse com o app.js, a intro já
+         teria pintado e a logo daria um pulo na frente do cliente.
+
+         Por que não `@media (display-mode: standalone)`: essa media
+         query reflete o `display` do WEB MANIFEST, e este projeto não
+         tem manifest — usa o caminho legado do `apple-mobile-web-app-
+         capable`. No iPhone ela simplesmente nunca casa, e foi por
+         isso que a correção da v21 não teve efeito nenhum. O que o
+         iOS responde de verdade é `navigator.standalone`. -->
+    <script>
+        if (navigator.standalone === true) {
+            document.documentElement.classList.add('app-instalado');
+        }
+    </script>
+    <link rel="stylesheet" href="style.css?v=26">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -1080,7 +1095,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 25</p>
+            <p class="versao-app">versão 26</p>
 
         </div>
     </div>
@@ -2569,7 +2584,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=25"></script>
+<script src="app.js?v=26"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>

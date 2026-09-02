@@ -2435,9 +2435,31 @@ html {
    a valer, esta regra se desliga sozinha, sem virar erro ao contrário.
 
    Margem embaixo num contêiner centralizado empurra o item para cima
-   pela METADE do valor — daí 47px para corrigir 23,5pt. */
+   pela METADE do valor — daí 47px para corrigir 23,5pt.
+
+   COMO A REGRA É ALCANÇADA: pela classe `.app-instalado`, posta no
+   <head> a partir de `navigator.standalone`. Antes eu usava
+   `@media (display-mode: standalone)`, que NUNCA casou aqui — essa
+   media query reflete o `display` do web manifest, e este projeto não
+   tem manifest. Dois prints do mesmo aparelho mediram +72px idênticos
+   antes e depois daquela versão: a regra jamais rodou.
+
+   Além de corrigir a barra de status, sobe mais um tanto de propósito:
+   logo de abertura centralizada na matemática parece BAIXA para o
+   olho. Os 8vh extras deixam ela por volta de 43% da altura, que é
+   onde splash screen costuma ficar. Quer mais ou menos? É esse número
+   e só ele: cada 2vh mexe ~8pt. */
+.app-instalado #intro-logo {
+    margin-bottom: calc(
+        max(0px, 47px - env(safe-area-inset-top, 0px))   /* corrige a barra de status */
+        + 8vh                                            /* sobe além do centro, por estética */
+    );
+}
+/* PWA de verdade (Android), onde o manifest existe e a media query vale */
 @media (display-mode: standalone) {
-    #intro-logo { margin-bottom: max(0px, calc(47px - env(safe-area-inset-top, 0px))); }
+    #intro-logo {
+        margin-bottom: calc(max(0px, 47px - env(safe-area-inset-top, 0px)) + 8vh);
+    }
 }
 
 #intro-logo {
