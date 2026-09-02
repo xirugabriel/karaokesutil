@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<!-- `intro-ativa` já vem no HTML, não pelo JS: precisa valer desde a
+     PRIMEIRA pintura, senão a página pisca antes da intro cobrir.
+     O app.js tira a classe quando a intro sai; se ele não rodar, o
+     CSS devolve a página sozinho em 4s. -->
+<html lang="pt-BR" class="intro-ativa">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -27,7 +31,7 @@
     <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=14">
+    <link rel="stylesheet" href="style.css?v=15">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -1053,7 +1057,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 14</p>
+            <p class="versao-app">versão 15</p>
 
         </div>
     </div>
@@ -2375,7 +2379,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=14"></script>
+<script src="app.js?v=15"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>

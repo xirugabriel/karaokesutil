@@ -2059,12 +2059,30 @@ button { position: relative; overflow: hidden; }
    pisca algumas vezes, hesita e firma. Combina com bar de karaokê
    e não custa nada — é só opacidade e filtro num elemento só.
 
-   `inset` negativo pra cobrir notch e barras: assim a intro é
-   preta de borda a borda em qualquer aparelho.
+   COBERTURA: não confiar na caixa da intro alcançar cada canto.
+   No Safari do iOS a âncora de um `position: fixed` não bate com a
+   área que a página pinta (barra translúcida + viewport-fit=cover),
+   e sobrava uma faixa embaixo mostrando a página por trás.
+
+   Em vez de perseguir esse cálculo, escondemos a PÁGINA INTEIRA
+   enquanto a intro está no ar. O que aparecer fora da caixa da intro
+   passa a ser o preto da raiz — que cobre a tela toda por definição.
+   Assim a intro fica preta de borda a borda em qualquer aparelho,
+   sem depender de medida nenhuma.
    ════════════════════════════════════════════════════════════ */
+.intro-ativa body > *:not(#intro) {
+    visibility: hidden;
+    /* Trava de segurança em CSS puro: se o app.js não rodar, a página
+       reaparece sozinha em 4s. Duração 0 e atraso 4s — o `forwards`
+       fixa o estado final. Tela preta presa é o pior desfecho de uma
+       abertura, e essa trava não depende de JS nenhum. */
+    animation: liberar-pagina 0s linear 4s forwards;
+}
+@keyframes liberar-pagina { to { visibility: visible; } }
+
 #intro {
     position: fixed;
-    inset: -200px;
+    inset: -50vh -50vw;   /* folga larga; é só preencher preto, não custa */
     z-index: 12000;
     display: grid;
     place-items: center;

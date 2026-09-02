@@ -946,12 +946,18 @@ setInterval(pollQueueMembership, 500);
 ══════════════════════════════════════════════════════════════ */
 (function () {
     const intro = document.getElementById('intro');
-    if (!intro) return;
+    /* Sem intro no DOM, a página não pode ficar escondida esperando
+       a trava de 4s do CSS. Devolve na hora. */
+    if (!intro) { document.documentElement.classList.remove('intro-ativa'); return; }
 
     let saiu = false;
     function sair() {
         if (saiu) return;
         saiu = true;
+        /* Devolve a página ANTES de começar o fade: assim ela aparece
+           por baixo enquanto a intro se apaga, em vez de surgir seca
+           quando o elemento some. */
+        document.documentElement.classList.remove('intro-ativa');
         intro.classList.add('saindo');
         setTimeout(() => intro.remove(), 650);
     }
