@@ -29,14 +29,17 @@
     --ambar:        #FBBF24;
 
     /* PALETA DO GOOEY NAV (--color-1..4 do componente, adaptadas).
-       contrast(100) só olha de que lado de 50% cada canal está, então
-       o que importa é isto: #A855F7 e #EC4899 caem em MAGENTA, branco
-       fica BRANCO, e #7C3AED (R=124, logo abaixo da metade) cai em
-       AZUL. Magenta + branco + azul é a família roxa da casa. */
+       Só importa de que lado de 50% cada canal cai, porque o
+       contrast(100) satura tudo. Estas quatro produzem MAGENTA e
+       BRANCO — e o magenta é devolvido ao roxo pela cadeia de cor
+       na .goo-camada.acesa.
+
+       Tirei o #7C3AED: com R=124, logo abaixo da metade, ele saía AZUL
+       PURO e era esse o halo azulado em volta do botão. */
     --goo-1:        #A855F7;
     --goo-2:        #FFFFFF;
-    --goo-3:        #7C3AED;
-    --goo-4:        #EC4899;
+    --goo-3:        #EC4899;
+    --goo-4:        #FFFFFF;
 
     --raio:         18px;
     --raio-g:       22px;
@@ -1176,8 +1179,11 @@ html {
 #bottom-nav button[aria-current="page"],
 #bottom-nav button.active {
     color: #EFE2FF;
-    background: linear-gradient(165deg, rgba(168, 85, 247, .38), rgba(124, 58, 237, .20)) !important;
-    box-shadow: 0 4px 14px rgba(168, 85, 247, .28);
+    /* Um pouco mais forte que antes para o POUSO do goo não dar salto:
+       o blob acende em roxo vivo e some; se o chip embaixo for pálido
+       demais, a animação parece terminar em outra coisa. */
+    background: linear-gradient(165deg, rgba(168, 85, 247, .50), rgba(124, 58, 237, .30)) !important;
+    box-shadow: 0 4px 14px rgba(168, 85, 247, .34);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -2298,7 +2304,22 @@ html {
    `lighten` do filho não tinha com o que misturar. */
 .goo-camada.acesa {
     opacity: 1;   /* a base é 0; sem isto a camada fica invisível */
-    filter: blur(7px) contrast(100) blur(0);
+    /* CORREÇÃO DE COR, e ela é calculada, não chutada.
+       O `contrast(100)` joga cada canal para 0 ou 255, então o roxo da
+       casa saía MAGENTA PURO na animação e o chip que ficava depois era
+       roxo apagado: duas cores diferentes na mesma interação.
+
+       A cadeia depois do contraste devolve o magenta ao roxo:
+         saturate(.5) hue-rotate(-20deg) brightness(1.28)
+       Calculado sobre as matrizes dos filtros CSS — leva (255,0,255)
+       para (163,57,243), contra (168,85,247) do --roxo.
+
+       Os dois casos que não podiam quebrar, e não quebram:
+         · branco continua branco → as partículas mantêm o brilho
+         · preto continua preto   → o `lighten` segue descartando o
+           substrato, que é o que faz a técnica funcionar */
+    filter: blur(7px) contrast(100) blur(0)
+            saturate(.5) hue-rotate(-20deg) brightness(1.28);
     mix-blend-mode: lighten;
 }
 /* substrato preto do contraste; -75px como no original */
@@ -2315,11 +2336,11 @@ html {
     position: absolute;
     inset: 0;
     z-index: -1;
-    border-radius: 100vw;
-    /* CORES ADAPTADAS. contrast(100) joga cada canal para 0 ou 255,
-       então a cor pintada não é a que sai: vale só de que lado de 50%
-       cada canal está. R e B altos com G baixo caem no magenta da
-       casa; branco continua branco. */
+    /* 19px, o MESMO raio do chip do botão ativo. Com o `100vw` do
+       original o blob era uma pílula de pontas redondas e o chip um
+       retângulo arredondado — a animação terminava numa forma e o
+       repouso ficava noutra. */
+    border-radius: 19px;
     background: var(--goo-1);
     transform: scale(0);
     opacity: 0;

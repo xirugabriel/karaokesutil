@@ -259,7 +259,7 @@ setInterval(pollQueueMembership, 500);
        filtro existindo só durante a animação isso não se justifica —
        e cortar partícula rala o efeito, que é justamente o pedido. */
     const QTD = 15;
-    const DIST = [90, 10];
+    /* DIST saiu daqui: agora é medido do botão, dentro do estourar() */
     const GIRO = 100;
     const TEMPO = 600;
     const VARIA = 300;
@@ -274,10 +274,23 @@ setInterval(pollQueueMembership, 500);
     }
 
     function estourar(camada) {
+        /* DISTÂNCIAS PROPORCIONAIS AO BOTÃO, não fixas.
+           Os 90px do componente são calibrados para os itens dele, que
+           são texto com folga — bem mais largos. Num botão de 80px as
+           partículas partiam de MAIS LONGE que a própria largura e
+           estouravam para fora da barra, desenquadrando o efeito.
+
+           A razão do original é ~0,75 da largura do item; mantida, mas
+           agora medida da caixa real. Assim vale para qualquer botão,
+           inclusive os do ranking, que têm outro tamanho. */
+        const larg = camada.offsetWidth || 80;
+        const longe = Math.max(34, larg * 0.72);
+        const perto = Math.max(6, larg * 0.12);
+
         for (let i = 0; i < QTD; i++) {
             const t = TEMPO * 2 + ruido(VARIA * 2);
-            const ini = pontoNoCirculo(DIST[0], QTD - i, QTD);
-            const fim = pontoNoCirculo(DIST[1] + ruido(7), QTD - i, QTD);
+            const ini = pontoNoCirculo(longe, QTD - i, QTD);
+            const fim = pontoNoCirculo(perto + ruido(7), QTD - i, QTD);
             let giro = ruido(GIRO / 10);
             giro = giro > 0 ? (giro + GIRO / 20) * 10 : (giro - GIRO / 20) * 10;
 
