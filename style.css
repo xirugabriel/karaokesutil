@@ -2196,6 +2196,28 @@ html {
 }
 #intro.saindo { opacity: 0; }
 
+/* ── A LOGO BAIXA NO APP DA TELA INICIAL ─────────────────────
+   Medido num print do iPhone (1170×2532, 3×): a logo caía 72px =
+   24pt abaixo do centro. A barra de status desse aparelho tem 47pt,
+   e 47/2 = 23,5. Não é coincidência.
+
+   Em standalone SEM a barra translúcida, a viewport do app começa
+   ABAIXO da barra de status. A intro centraliza nessa área reduzida,
+   então o centro dela fica meia barra abaixo do centro da TELA. No
+   Safari não acontece porque lá a página pinta atrás da barra.
+
+   A conta se corrige sozinha, e é essa a graça dela:
+     · barra NÃO sobreposta → env = 0    → margem 47px → sobe 23,5pt ✓
+     · barra sobreposta     → env = 47+  → margem 0    → não mexe    ✓
+   Ou seja: se você reinstalar o ícone e o `black-translucent` passar
+   a valer, esta regra se desliga sozinha, sem virar erro ao contrário.
+
+   Margem embaixo num contêiner centralizado empurra o item para cima
+   pela METADE do valor — daí 47px para corrigir 23,5pt. */
+@media (display-mode: standalone) {
+    #intro-logo { margin-bottom: max(0px, calc(47px - env(safe-area-inset-top, 0px))); }
+}
+
 #intro-logo {
     width: min(72vw, 420px);
     height: auto;
