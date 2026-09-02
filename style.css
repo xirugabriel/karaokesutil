@@ -64,8 +64,9 @@ html, body { max-width: 100%; }
 
 .container, #app { position: relative; z-index: 1; }
 
-/* rolagem não passa por baixo da barra de navegação */
-#client-screen { padding-bottom: 108px; }
+/* rolagem não passa por baixo da barra de navegação; acompanha a área
+   segura porque a barra também sobe com ela */
+#client-screen { padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
 
 /* ── ÍCONES ──────────────────────────────────────────────────
    Base obrigatória: sem ela, todo SVG que não tenha regra própria
@@ -997,45 +998,65 @@ button { position: relative; overflow: hidden; }
 /* ══════════════════════════════════════════════════════════════
    BARRA DE NAVEGAÇÃO
 ══════════════════════════════════════════════════════════════ */
+/* DESTAQUE DA BARRA — referência: o hub do Instagram.
+   Lá a pastilha salta porque o conteúdo atrás é claro. Aqui a página
+   é preta, então uma pastilha escura simplesmente some. A separação
+   tem que vir de ela ser uma SUPERFÍCIE ELEVADA: mais clara que a
+   página, com aresta de cima acesa e sombra funda por baixo — as três
+   pistas que o olho lê como "isto flutua".
+
+   Sem `backdrop-filter` de propósito: sobre fundo preto o desfoque não
+   acrescenta quase nada, e neste projeto blur em elemento fixo já
+   custou caro em rolagem no iPhone. Opaco dá mais contraste e é de
+   graça. */
 #bottom-nav {
     position: fixed;
-    left: 12px; right: 12px; bottom: 12px;
+    left: 12px; right: 12px;
+    /* `fixed` não herda o padding do body, então a área segura precisa
+       ser somada aqui — senão a barra encosta no indicador de home. */
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     z-index: 900;
     display: flex;
-    gap: 4px;
-    padding: 8px 8px;
-    background: rgba(17, 17, 25, 0.97);
-    border: 1px solid var(--linha);
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+    gap: 5px;
+    padding: 9px 8px;
+    background: linear-gradient(180deg, #22222F, #16161F);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 26px;
+    box-shadow:
+        0 16px 44px rgba(0, 0, 0, .9),          /* descola do fundo */
+        0 0 30px rgba(168, 85, 247, .12),       /* brilho da marca */
+        inset 0 1px 0 rgba(255, 255, 255, .10); /* aresta de cima acesa */
 }
 #bottom-nav button {
     flex: 1 1 0;
     width: auto; margin: 0;
-    padding: 9px 2px 8px;
+    padding: 10px 2px 9px;
     display: flex; flex-direction: column;
     align-items: center; gap: 5px;
     background: none !important;
     border: none; box-shadow: none;
-    border-radius: 14px;
+    border-radius: 19px;
     /* rótulo em UMA linha: "Pedir Música" quebrava em duas e
        desalinhava a altura de todos os itens */
-    font-size: 10.5px; font-weight: 600;
+    font-size: 11px; font-weight: 600;
     letter-spacing: -0.1px;
     white-space: nowrap;
-    color: var(--tinta-tenue);
+    /* legível de relance: o cinza anterior sumia na pastilha */
+    color: var(--tinta-fraca);
     transition: background var(--rapido), color var(--rapido);
 }
 #bottom-nav button span { display: block; }
 #bottom-nav button .ic {
-    width: 21px; height: 21px;
+    width: 22px; height: 22px;
     stroke: currentColor;
 }
+/* a aba atual é a única coisa acesa aqui — precisa ficar óbvia */
 #bottom-nav button.ativo,
 #bottom-nav button[aria-current="page"],
 #bottom-nav button.active {
-    color: var(--roxo-claro);
-    background: rgba(168, 85, 247, 0.15) !important;
+    color: #EFE2FF;
+    background: linear-gradient(165deg, rgba(168, 85, 247, .38), rgba(124, 58, 237, .20)) !important;
+    box-shadow: 0 4px 14px rgba(168, 85, 247, .28);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1129,6 +1150,14 @@ button { position: relative; overflow: hidden; }
     display: flex; align-items: center; gap: 12px;
     padding: 13px 15px;
     border-radius: var(--raio);
+    /* OBRIGATÓRIO: item de grid nasce com `min-width: auto`, que vale o
+       tamanho MIN-CONTENT. Como `.rk-sub` é nowrap, o min-content é a
+       frase inteira sem quebrar — a linha inchava para ~449px dentro de
+       uma pista de 288px e a pontuação era decepada pelo `overflow-x:
+       clip` do #app. Sem barra de rolagem e sem erro: só sumia.
+       Aparecia primeiro em telas estreitas (Zoom de Tela do iOS) e com
+       nomes/subtítulos longos, por isso só um aparelho reclamou. */
+    min-width: 0;
 }
 .rk-me-card { margin-bottom: 10px; }
 
@@ -1269,6 +1298,7 @@ button { position: relative; overflow: hidden; }
     display: flex; align-items: center; gap: 12px;
     padding: 13px 14px;
     border-left: 3px solid var(--roxo-escuro);
+    min-width: 0;   /* item de grid: sem isto o `min-width:auto` incha até o min-content */
 }
 /* Sem estado de :hover — o item da fila não é clicável, e no iOS o
    :hover gruda no toque. (Aqui já houve um `all: unset` para anular a
@@ -1470,6 +1500,7 @@ button { position: relative; overflow: hidden; }
     align-items: center;
     gap: 12px;
     width: 100%;
+    min-width: 0;   /* item de grid: sem isto o `min-width:auto` incha até o min-content */
     margin: 0;
     padding: 10px;
     text-align: left;
