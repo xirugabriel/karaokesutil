@@ -937,6 +937,162 @@ setInterval(pollQueueMembership, 500);
 
 
 /* ══════════════════════════════════════════════════════════════
+   🫧 GLASS SURFACE — porte do componente do ReactBits
+   https://reactbits.dev/components/glass-surface
+
+   COMO O VIDRO REFRATA. O truque é um mapa de deslocamento: um SVG
+   desenhado na hora, do tamanho exato da barra, com um degradê
+   vermelho na horizontal e um azul na vertical. O feDisplacementMap
+   lê o canal R como "empurra em x" e o G como "empurra em y", então
+   esse degradê vira a curvatura da lente — forte na borda, nula no
+   meio, que é como vidro de verdade entorta a luz.
+
+   A franja colorida sai de rodar o deslocamento TRÊS vezes, uma por
+   canal, com escalas um pouco diferentes (-180, -170, -160). Cada
+   passada guarda só a sua cor, e as três voltam somadas em `screen`.
+   É aberração cromática de propósito, igual à borda de uma lente.
+
+   O QUE O iPHONE VÊ. O componente original desliga tudo isto no
+   Safari, porque o WebKit não aplica filtro SVG dentro de
+   `backdrop-filter`. Mantive essa checagem: forçar o caminho SVG lá
+   deixaria a barra INVISÍVEL, não "menos bonita".
+══════════════════════════════════════════════════════════════ */
+(function () {
+    const nav = document.getElementById('bottom-nav');
+    if (!nav) return;
+
+    const ID = 'vidro-nav';
+    const NS = 'http://www.w3.org/2000/svg';
+
+    /* Valores do componente, com três ajustes de escala.
+
+       O padrão `distortionScale: -180` é calibrado para a caixa de
+       demonstração do site. Numa barra de 80px de altura ele desloca
+       mais que o DOBRO do próprio tamanho: o resultado é um arco-íris
+       que engolia os rótulos "Ranking" e "Regras". A distorção precisa
+       ser uma fração da caixa, não um número solto — daí -55, e os
+       desvios de canal reduzidos na mesma proporção.
+
+       O raio tem que casar com o da barra, senão o mapa curva num
+       canto que não existe. */
+    const A = {
+        raio: 26,
+        larguraBorda: 0.07,
+        brilho: 60,          /* 50 no original; subi porque o fundo é preto */
+        opacidade: 0.93,
+        desfoqueMapa: 11,
+        deslocar: 0.4,
+        escalaDistorcao: -55,
+        desvioR: 0, desvioG: 6, desvioB: 12,
+        canalX: 'R', canalY: 'G',
+        mistura: 'difference',
+    };
+
+    function suportaFiltroSVG() {
+        const ua = navigator.userAgent;
+        /* TODO navegador no iOS é WebKit por baixo — Chrome, Firefox e
+           Edge do iPhone são Safari com outra casca. Testar a marca
+           deixaria passar o Chrome do iPhone para o caminho SVG, que
+           lá não funciona. Por isso a checagem é pelo APARELHO. */
+        const iOS = /iPad|iPhone|iPod/.test(ua) ||
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const webkit = iOS || (/Safari/.test(ua) && !/Chrome|Chromium|Edg/.test(ua));
+        if (webkit || /Firefox/.test(ua)) return false;
+        const d = document.createElement('div');
+        d.style.backdropFilter = 'url(#' + ID + ')';
+        return d.style.backdropFilter !== '';
+    }
+
+    if (!suportaFiltroSVG()) {
+        nav.classList.add('vidro-reserva');
+        return;                       /* nada de SVG: não seria usado */
+    }
+
+    function tag(nome, attrs) {
+        const n = document.createElementNS(NS, nome);
+        for (const k in attrs) n.setAttribute(k, attrs[k]);
+        return n;
+    }
+
+    /* o mapa precisa do tamanho REAL da barra; a barra nasce escondida,
+       então há um palpite inicial e o ResizeObserver corrige depois */
+    function mapaDeDeslocamento() {
+        const r = nav.getBoundingClientRect();
+        const L = Math.round(r.width) || 350;
+        const H = Math.round(r.height) || 80;
+        const borda = Math.min(L, H) * (A.larguraBorda * 0.5);
+        const svg =
+            '<svg viewBox="0 0 ' + L + ' ' + H + '" xmlns="' + NS + '">' +
+              '<defs>' +
+                '<linearGradient id="gr" x1="100%" y1="0%" x2="0%" y2="0%">' +
+                  '<stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="red"/>' +
+                '</linearGradient>' +
+                '<linearGradient id="gb" x1="0%" y1="0%" x2="0%" y2="100%">' +
+                  '<stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="blue"/>' +
+                '</linearGradient>' +
+              '</defs>' +
+              '<rect width="' + L + '" height="' + H + '" fill="black"/>' +
+              '<rect width="' + L + '" height="' + H + '" rx="' + A.raio + '" fill="url(#gr)"/>' +
+              '<rect width="' + L + '" height="' + H + '" rx="' + A.raio + '" fill="url(#gb)" ' +
+                    'style="mix-blend-mode:' + A.mistura + '"/>' +
+              '<rect x="' + borda + '" y="' + borda + '" ' +
+                    'width="' + (L - borda * 2) + '" height="' + (H - borda * 2) + '" ' +
+                    'rx="' + A.raio + '" fill="hsl(0 0% ' + A.brilho + '% / ' + A.opacidade + ')" ' +
+                    'style="filter:blur(' + A.desfoqueMapa + 'px)"/>' +
+            '</svg>';
+        return 'data:image/svg+xml,' + encodeURIComponent(svg);
+    }
+
+    const svg = tag('svg', { width: 0, height: 0, 'aria-hidden': 'true' });
+    svg.style.cssText = 'position:absolute;width:0;height:0;pointer-events:none';
+    const defs = tag('defs');
+    const filtro = tag('filter', {
+        id: ID, 'color-interpolation-filters': 'sRGB',
+        x: '0%', y: '0%', width: '100%', height: '100%',
+    });
+
+    const feImage = tag('feImage', {
+        x: 0, y: 0, width: '100%', height: '100%',
+        preserveAspectRatio: 'none', result: 'map',
+    });
+    filtro.appendChild(feImage);
+
+    /* uma passada de deslocamento por canal, cada uma guardando só a
+       sua cor — é daqui que sai a franja das bordas */
+    [
+        ['R', A.desvioR, '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'],
+        ['G', A.desvioG, '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0'],
+        ['B', A.desvioB, '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0'],
+    ].forEach(function (c) {
+        filtro.appendChild(tag('feDisplacementMap', {
+            in: 'SourceGraphic', in2: 'map',
+            scale: A.escalaDistorcao + c[1],
+            xChannelSelector: A.canalX, yChannelSelector: A.canalY,
+            result: 'disp' + c[0],
+        }));
+        filtro.appendChild(tag('feColorMatrix', {
+            in: 'disp' + c[0], type: 'matrix', values: c[2], result: 'cor' + c[0],
+        }));
+    });
+
+    filtro.appendChild(tag('feBlend', { in: 'corR', in2: 'corG', mode: 'screen', result: 'rg' }));
+    filtro.appendChild(tag('feBlend', { in: 'rg', in2: 'corB', mode: 'screen', result: 'saida' }));
+    filtro.appendChild(tag('feGaussianBlur', { in: 'saida', stdDeviation: A.deslocar }));
+
+    defs.appendChild(filtro);
+    svg.appendChild(defs);
+    document.body.appendChild(svg);
+
+    function redesenhar() { feImage.setAttribute('href', mapaDeDeslocamento()); }
+    redesenhar();
+    nav.classList.add('vidro-svg');
+
+    /* a barra muda de tamanho ao girar a tela e ao sair do `hidden` */
+    if (window.ResizeObserver) new ResizeObserver(redesenhar).observe(nav);
+})();
+
+
+/* ══════════════════════════════════════════════════════════════
    🎬 INTRO — sai sozinha e entrega a tela
    Some em 2,2s, ou no primeiro toque pra quem não quer esperar.
 

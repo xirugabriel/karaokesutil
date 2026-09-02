@@ -998,17 +998,25 @@ button { position: relative; overflow: hidden; }
 /* ══════════════════════════════════════════════════════════════
    BARRA DE NAVEGAÇÃO
 ══════════════════════════════════════════════════════════════ */
-/* DESTAQUE DA BARRA — referência: o hub do Instagram.
-   Lá a pastilha salta porque o conteúdo atrás é claro. Aqui a página
-   é preta, então uma pastilha escura simplesmente some. A separação
-   tem que vir de ela ser uma SUPERFÍCIE ELEVADA: mais clara que a
-   página, com aresta de cima acesa e sombra funda por baixo — as três
-   pistas que o olho lê como "isto flutua".
+/* ════════════════════════════════════════════════════════════
+   🫧 GLASS SURFACE na barra — porte do componente do ReactBits
+   https://reactbits.dev/components/glass-surface
 
-   Sem `backdrop-filter` de propósito: sobre fundo preto o desfoque não
-   acrescenta quase nada, e neste projeto blur em elemento fixo já
-   custou caro em rolagem no iPhone. Opaco dá mais contraste e é de
-   graça. */
+   O original tem DOIS caminhos, e o app.js escolhe entre eles:
+
+   · `.vidro-svg` — vidro refratado de verdade: um filtro SVG com
+     feDisplacementMap por canal (R, G e B deslocados em escalas
+     ligeiramente diferentes, o que produz a franja cromática das
+     bordas) entra dentro do `backdrop-filter`.
+
+   · `.vidro-reserva` — desfoque simples de backdrop.
+
+   O PRÓPRIO COMPONENTE desliga o caminho SVG no Safari e no Firefox:
+   o WebKit não aceita filtro SVG em `backdrop-filter`. Como este site
+   é usado quase só em iPhone, o caminho de reserva é o que os seus
+   clientes veem — então ele foi ajustado para ficar bom sozinho, não
+   para ser um consolo.
+   ════════════════════════════════════════════════════════════ */
 #bottom-nav {
     position: fixed;
     left: 12px; right: 12px;
@@ -1019,13 +1027,56 @@ button { position: relative; overflow: hidden; }
     display: flex;
     gap: 5px;
     padding: 9px 8px;
+    border-radius: 26px;
+    /* o vidro é o fundo desta caixa; nada de dentro pode vazar por cima */
+    isolation: isolate;
+    /* Fundo enquanto o app.js não decidiu o caminho, e para quem não
+       tem backdrop-filter nenhum. Sem isto a barra nasceria invisível. */
     background: linear-gradient(180deg, #22222F, #16161F);
     border: 1px solid rgba(255, 255, 255, 0.13);
-    border-radius: 26px;
     box-shadow:
         0 16px 44px rgba(0, 0, 0, .9),          /* descola do fundo */
         0 0 30px rgba(168, 85, 247, .12),       /* brilho da marca */
         inset 0 1px 0 rgba(255, 255, 255, .10); /* aresta de cima acesa */
+}
+
+/* ── caminho 1: vidro refratado (Chrome, Android) ───────────── */
+#bottom-nav.vidro-svg {
+    /* Base escura + brilho branco por cima. O véu só branco do original
+       deixava a barra clara demais quando o carrossel colorido passava
+       por trás, e os rótulos sumiam. A base garante um piso de
+       contraste; o vidro continua aparecendo através dela. */
+    background-color: rgba(18, 18, 28, .62);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .03));
+    -webkit-backdrop-filter: url(#vidro-nav) saturate(1.7);
+    backdrop-filter: url(#vidro-nav) saturate(1.7);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow:
+        0 0 2px 1px rgba(255, 255, 255, .35) inset,
+        0 0 10px 4px rgba(255, 255, 255, .15) inset,
+        0 16px 44px rgba(0, 0, 0, .9),
+        0 0 30px rgba(168, 85, 247, .12);
+}
+
+/* ── caminho 2: reserva — é ESTE que o iPhone usa ───────────── */
+#bottom-nav.vidro-reserva {
+    /* O véu não é enfeite: sobre página preta, desfocar preto continua
+       dando preto. É ele que faz a pastilha existir. Base escura por
+       baixo do brilho para o rótulo não sumir quando o carrossel
+       colorido passa por trás. */
+    background-color: rgba(18, 18, 28, .52);
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .04));
+    -webkit-backdrop-filter: blur(14px) saturate(1.8) brightness(1.2);
+    backdrop-filter: blur(14px) saturate(1.8) brightness(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    /* O original solta a sombra externa no tema escuro. Aqui ela fica:
+       sem ela a barra volta a colar no preto — a queixa que originou
+       esta rodada. */
+    box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, .22),
+        inset 0 -1px 0 0 rgba(255, 255, 255, .10),
+        0 16px 44px rgba(0, 0, 0, .85),
+        0 0 30px rgba(168, 85, 247, .12);
 }
 #bottom-nav button {
     flex: 1 1 0;
