@@ -29,16 +29,12 @@
     --ambar:        #FBBF24;
 
     /* PALETA DO GOOEY NAV (--color-1..4 do componente, adaptadas).
-       Só importa de que lado de 50% cada canal cai, porque o
-       contrast(100) satura tudo. Estas quatro produzem MAGENTA e
-       BRANCO — e o magenta é devolvido ao roxo pela cadeia de cor
-       na .goo-camada.acesa.
-
-       Tirei o #7C3AED: com R=124, logo abaixo da metade, ele saía AZUL
-       PURO e era esse o halo azulado em volta do botão. */
+       Com a fusão pelo alfa, estas são as cores que APARECEM de fato —
+       não precisam mais ser escolhidas pensando em como o contraste
+       vai saturá-las. É a família roxa da casa, com branco de brilho. */
     --goo-1:        #A855F7;
-    --goo-2:        #FFFFFF;
-    --goo-3:        #EC4899;
+    --goo-2:        #C79BFF;
+    --goo-3:        #7C3AED;
     --goo-4:        #FFFFFF;
 
     --raio:         18px;
@@ -2273,10 +2269,20 @@ html {
    🫧 GOOEY NAV — bolha escorrida + estouro de partículas
    Porte do componente do ReactBits.
 
-   O truque: blur() borra as bordas, contrast(100) devolve elas
-   duras. Onde dois borrões se tocam, viram um só — daí o
-   escorrido. O ::before preto é o substrato que o contraste
-   precisa; o lighten apaga esse preto ao compor.
+   O truque: borrar e depois endurecer. Onde dois borrões se tocam,
+   viram um só — daí o escorrido.
+
+   O componente endurece com `contrast(100)` sobre um substrato preto
+   e descarta o preto com `mix-blend-mode: lighten`. Aqui o
+   endurecimento é no CANAL ALFA, por um filtro SVG (ver app.js).
+
+   POR QUE TROQUEI: o contrast(100) joga cada canal para 0 ou 255, ou
+   seja, DESCARTA a cor pintada e devolve sempre uma primária — o roxo
+   da casa saía magenta. Tentei reconstruí-lo com saturate/hue-rotate/
+   brightness e o resultado derivou para azul; com recorte de canal a
+   cada etapa, essa conta não fecha na prática. Pelo alfa a cor passa
+   intacta. Some junto o substrato preto, que transbordava a barra e
+   criava uma caixa preta atrás dela.
 
    ⚠ ADAPTAÇÃO IMPORTANTE: aqui o filtro só existe ENQUANTO a
    animação roda (.acesa). Ligado o tempo todo, como no original,
@@ -2302,53 +2308,18 @@ html {
                 top  .32s cubic-bezier(.22,1,.36,1),
                 width .32s cubic-bezier(.22,1,.36,1);
 }
-/* só enquanto anima é que o filtro caro entra em cena */
-/* TÉCNICA DO COMPONENTE, sem substituto: `blur(7px) contrast(100)
-   blur(0)` gruda os blobs, o substrato PRETO dá o contraste, e o
-   `mix-blend-mode: lighten` descarta esse preto no fim. É o que
-   produz a borda dura e o escorrimento característicos.
-
-   Isto só voltou a funcionar depois que o vidro saiu do nav e foi
-   para um ::before — com `backdrop-filter` no próprio nav, o
-   `lighten` do filho não tinha com o que misturar. */
+/* só enquanto anima é que o filtro entra em cena */
 .goo-camada.acesa {
-    opacity: 1;   /* a base é 0; sem isto a camada fica invisível */
-    /* CORREÇÃO DE COR, e ela é calculada, não chutada.
-       O `contrast(100)` joga cada canal para 0 ou 255, então o roxo da
-       casa saía MAGENTA PURO na animação e o chip que ficava depois era
-       roxo apagado: duas cores diferentes na mesma interação.
-
-       A cadeia depois do contraste devolve o magenta ao roxo:
-         saturate(.5) hue-rotate(-20deg) brightness(1.28)
-       Calculado sobre as matrizes dos filtros CSS — leva (255,0,255)
-       para (163,57,243), contra (168,85,247) do --roxo.
-
-       Os dois casos que não podiam quebrar, e não quebram:
-         · branco continua branco → as partículas mantêm o brilho
-         · preto continua preto   → o `lighten` segue descartando o
-           substrato, que é o que faz a técnica funcionar */
-    filter: blur(7px) contrast(100) blur(0)
-            saturate(.5) hue-rotate(-20deg) brightness(1.28);
-    mix-blend-mode: lighten;
+    opacity: 1;                    /* a base é 0 */
+    filter: url(#goo-filtro);      /* funde pelo alfa; a cor passa intacta */
 }
-/* substrato preto do contraste; -75px como no original */
-.goo-camada.acesa::before {
-    content: '';
-    position: absolute;
-    inset: -75px;
-    z-index: -2;
-    background: #000;
-}
-/* a pílula que escorre */
+/* a pílula que escorre — MESMO raio do chip do botão, para a animação
+   terminar exatamente na forma em que o repouso começa */
 .goo-camada.acesa::after {
     content: '';
     position: absolute;
     inset: 0;
     z-index: -1;
-    /* 19px, o MESMO raio do chip do botão ativo. Com o `100vw` do
-       original o blob era uma pílula de pontas redondas e o chip um
-       retângulo arredondado — a animação terminava numa forma e o
-       repouso ficava noutra. */
     border-radius: 19px;
     background: var(--goo-1);
     transform: scale(0);

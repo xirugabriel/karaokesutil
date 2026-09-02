@@ -258,6 +258,35 @@ setInterval(pollQueueMembership, 500);
        Eu tinha baixado a contagem no celular por medo de custo. Com o
        filtro existindo só durante a animação isso não se justifica —
        e cortar partícula rala o efeito, que é justamente o pedido. */
+    /* FUSÃO PELO CANAL ALFA — a razão de não usar o contrast(100).
+       O truque do componente é `blur + contrast(100)` sobre preto,
+       depois `lighten`. Ele funciona, mas o contraste joga cada canal
+       para 0 ou 255: a cor pintada é DESCARTADA e sai sempre uma
+       primária (magenta, no nosso caso). Tentei reconstruir o roxo
+       com saturate/hue-rotate/brightness e o resultado derivou para
+       azul — cada etapa satura e recorta os canais, então a conta não
+       fecha na prática.
+
+       Este filtro borra e depois endurece o ALFA (`0 0 0 20 -9`). A
+       fusão é idêntica — é o mesmo princípio de "goo" — mas a COR
+       passa intacta: o roxo pintado é o roxo que aparece. Some junto
+       a necessidade do substrato preto, que era o que criava a caixa
+       preta atrás da barra. */
+    (function injetarFiltro() {
+        if (document.getElementById('goo-filtro')) return;
+        const NS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.style.cssText = 'position:absolute;width:0;height:0;pointer-events:none';
+        svg.innerHTML =
+            '<defs><filter id="goo-filtro" color-interpolation-filters="sRGB">' +
+              '<feGaussianBlur in="SourceGraphic" stdDeviation="7" result="borrado"/>' +
+              '<feColorMatrix in="borrado" type="matrix" ' +
+                'values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"/>' +
+            '</filter></defs>';
+        document.body.appendChild(svg);
+    })();
+
     const QTD = 15;
     /* DIST saiu daqui: agora é medido do botão, dentro do estourar() */
     const GIRO = 100;
