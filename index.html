@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=30">
+    <link rel="stylesheet" href="style.css?v=31">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -652,7 +652,27 @@
      em 2,2s (ou no primeiro toque) e entrega a tela por baixo. -->
 <div id="intro">
     <div id="intro-miolo">
-        <img id="intro-logo" src="logo-neon.png" alt="Sutil-Okê" decoding="async">
+        <!-- STROKE TEXT (ReactBits) adaptado. O componente desenha um
+             <text> SVG com stroke-dashoffset — só funciona em vetor, e
+             a logo aqui é PNG. O contorno é extraído da imagem por
+             feMorphology: dilata o alfa e subtrai o original, sobrando
+             a borda. Fica no HTML, e não no app.js, porque o CSS já
+             referencia o filtro na primeira pintura: se ele chegasse
+             depois, a logo piscaria inteira antes de ser contornada. -->
+        <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+            <defs>
+                <filter id="contorno-logo" color-interpolation-filters="sRGB">
+                    <feMorphology in="SourceAlpha" operator="dilate" radius="2" result="grosso"/>
+                    <feComposite in="grosso" in2="SourceAlpha" operator="out" result="borda"/>
+                    <feFlood flood-color="#A78BFA" result="cor"/>
+                    <feComposite in="cor" in2="borda" operator="in"/>
+                </filter>
+            </defs>
+        </svg>
+        <div id="intro-logo-palco">
+            <img id="intro-logo" src="logo-neon.png" alt="Sutil-Okê" decoding="async">
+            <img id="intro-logo-traco" src="logo-neon.png" alt="" aria-hidden="true" decoding="async">
+        </div>
         <!-- Placar apurando, no estilo do COUNT UP do ReactBits.
              aria-hidden porque é enfeite: o leitor de tela já anunciou
              a logo, e um número subindo só atrapalharia. -->
@@ -1104,7 +1124,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 30</p>
+            <p class="versao-app">versão 31</p>
 
         </div>
     </div>
@@ -2604,7 +2624,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=30"></script>
+<script src="app.js?v=31"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
