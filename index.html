@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=44">
+    <link rel="stylesheet" href="style.css?v=46">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -679,8 +679,11 @@
         <div id="intro-placar" aria-hidden="true">
             <span id="intro-nota">0</span>
             <span id="intro-pts">pontos</span>
+            <!-- (a assinatura da intro está no fim deste bloco, fora do
+                 miolo, para ficar colada no rodapé da tela) -->
         </div>
     </div>
+    <p class="intro-assinatura">powered by <b>sutilgastrobeer</b></p>
 </div>
 
 <!-- Camada de fundo que cobre a tela inteira (atrás do notch e da barra) -->
@@ -1177,7 +1180,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 44</p>
+            <p class="versao-app">versão 46</p>
 
         </div>
     </div>
@@ -1343,6 +1346,10 @@
     <svg class="ic ic-sm" viewBox="0 0 24 24" style="vertical-align:-3px; stroke: rgba(255,255,255,0.2); margin-right:6px;"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M9 12v6M13 12v6"/><path d="M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5S9.44 3 11 3s2 .5 3 .5 1.72-.5 2.5-.5a2.5 2.5 0 0 1 0 5c-.78 0-1.5-.5-2.5-.5Z"/><path d="M5 8v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2V8"/></svg>
     CHOPP GELADO &middot; BOA MÚSICA &middot; BOA COMPANHIA
 </div>
+
+<!-- Assinatura da casa. Fica FORA das abas, depois do #app, então
+     aparece no fim de todas elas sem precisar repetir markup. -->
+<p class="assinatura">powered by <b>sutilgastrobeer</b></p>
 
 <!-- ── FIREBASE ───────────────────────────────────────────── -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -2773,7 +2780,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=44"></script>
+<script src="app.js?v=46"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>

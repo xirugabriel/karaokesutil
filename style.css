@@ -2230,6 +2230,44 @@ html {
 
 .footer-badge { color: var(--tinta-tenue); font-size: 10.5px; letter-spacing: 1.4px; }
 
+/* ── ASSINATURA DA CASA ──────────────────────────────────────
+   Discreta de propósito: é crédito, não chamada. Fica abaixo do
+   rodapé e vale para todas as abas, porque mora fora do #app. */
+.assinatura {
+    /* A folga de baixo é obrigatória: o espaço reservado para a barra
+       fixa mora no #client-screen, e o rodapé fica FORA dele. Sem esta
+       margem a assinatura termina atrás do hub — medido, 30px cobertos. */
+    margin: 10px 0 calc(104px + env(safe-area-inset-bottom, 0px));
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: .6px;
+    color: rgba(255, 255, 255, .22);
+}
+.assinatura b {
+    font-weight: 600;
+    color: rgba(255, 255, 255, .38);
+}
+
+/* Mesma assinatura no rodapé da intro.
+   `fixed`, e não `absolute`: a caixa da intro transborda 50vh para
+   baixo (a folga preta), então um `bottom` relativo a ela cairia bem
+   fora da tela. Fixo, ela se ancora na viewport de verdade.
+   Some junto com a intro porque a opacidade do pai leva o filho. */
+.intro-assinatura {
+    position: fixed;
+    left: 0; right: 0;
+    bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+    margin: 0;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: .6px;
+    color: rgba(255, 255, 255, .20);
+}
+.intro-assinatura b {
+    font-weight: 600;
+    color: rgba(255, 255, 255, .34);
+}
+
 /* ════════════════════════════════════════════════════════════
    ✂️ AJUSTAR A FOTO DE PERFIL
    Palco quadrado com máscara redonda: o que aparece dentro do
