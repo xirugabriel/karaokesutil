@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=36">
+    <link rel="stylesheet" href="style.css?v=37">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -802,6 +802,9 @@
         <!-- ═══════ ABA: PEDIR (início) ═══════ -->
         <div id="tab-pedir" class="tab-panel">
 
+            <!-- Encaixe do "Tocando agora" nesta aba. O card nasce dentro
+                 dele e volta para cá sempre que a aba inicial abre. -->
+            <div id="np-slot-pedir">
             <!-- Tocando agora (controlado pelo DJ) -->
             <section id="now-playing" class="np-card borda-eletrica hidden">
                 <!-- Star Border: dois borrões que correm nas beiradas -->
@@ -819,6 +822,7 @@
                     <div class="np-wave" id="np-wave"></div>
                 </div>
             </section>
+            </div><!-- /#np-slot-pedir -->
 
             <!-- Sua vez -->
             <section id="your-turn" class="turn-card hidden">
@@ -1008,6 +1012,9 @@
 
         <!-- ═══════ ABA: MINHA FILA ═══════ -->
         <div id="tab-fila" class="tab-panel hidden">
+            <!-- Encaixe do "Tocando agora". O card é ÚNICO e vem parar
+                 aqui quando esta aba abre — ver moverTocandoAgora(). -->
+            <div id="np-slot-fila"></div>
             <p class="queue-section-title titulo-fuzzy">
                 <svg class="title-ic" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                 Fila Atual
@@ -1127,7 +1134,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 36</p>
+            <p class="versao-app">versão 37</p>
 
         </div>
     </div>
@@ -2149,8 +2156,24 @@
     }
 
     /* ════════ TOCANDO AGORA / SUA VEZ ════════ */
+    /* O "Tocando agora" aparece na tela inicial E no topo da fila, mas
+       é UM card só, que viaja entre as duas abas.
+
+       Não duplico o markup porque ele é todo montado por id — np-art,
+       np-wave, np-title, np-singer. Duas cópias significariam ids
+       repetidos, e aí o getElementById pega sempre a primeira: a
+       segunda ficaria parada, sem vinil e sem equalizador. Como só uma
+       aba está visível por vez, mover dá o mesmo resultado na tela e
+       ainda poupa um segundo card sendo animado à toa. */
+    function moverTocandoAgora(card) {
+        const destino = document.getElementById(
+            currentTab === 'fila' ? 'np-slot-fila' : 'np-slot-pedir');
+        if (destino && card.parentElement !== destino) destino.appendChild(card);
+    }
+
     function renderNowPlaying() {
         const card = document.getElementById('now-playing');
+        moverTocandoAgora(card);
         const art = document.getElementById('np-art');
         const wave = document.getElementById('np-wave');
         if (!wave.childElementCount) {
@@ -2627,7 +2650,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=36"></script>
+<script src="app.js?v=37"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
