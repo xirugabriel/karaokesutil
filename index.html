@@ -35,7 +35,7 @@
     <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=24">
+    <link rel="stylesheet" href="style.css?v=25">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -1080,7 +1080,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 24</p>
+            <p class="versao-app">versão 25</p>
 
         </div>
     </div>
@@ -1668,9 +1668,14 @@
        altura isso fica borrado — e a própria URL aceita outro tamanho.
        Foto enviada pelo site já sai em 200px e passa direto. */
     function fotoGrande(url) {
-        return /googleusercontent\.com/.test(url)
-            ? url.replace(/=s\d+(-c)?$/, '=s400-c')
-            : url;
+        if (!/googleusercontent\.com/.test(url)) return url;
+        /* O Google serve a mesma foto em três formatos de URL, e o
+           anterior só cobria um deles (ancorado no fim). Quando não
+           casava, a imagem continuava vindo em 96px — borrada no
+           painel. Os três: */
+        if (/\/s\d+-c\//.test(url))  return url.replace(/\/s\d+-c\//, '/s512-c/');   // tamanho no caminho
+        if (/=s\d+/.test(url))       return url.replace(/=s\d+/, '=s512');           // tamanho no parâmetro
+        return url + '=s512-c';                                                       // sem tamanho nenhum
     }
 
     async function carregarTop5(forcar) {
@@ -2284,16 +2289,34 @@
 
     function aplicarCorte() {
         if (!corte.img) return;
-        const S = 200;
         const s = escalaAtual();
         // canto superior esquerdo do palco, em pixels da imagem original
         const sx = -corte.x / s;
         const sy = -corte.y / s;
         const lado = corte.lado / s;   // quanto da imagem cabe no palco
+
+        /* A foto era gravada em 200px com qualidade 0,72. Servia para um
+           avatar de 40px, mas o painel do Top 5 tem 186px de altura — e
+           num iPhone 3× isso vira 558px de tela. A imagem apareceia
+           ampliada quase 3 vezes, e é daí que vinha a falta de nitidez.
+
+           O teto não é estético, é a REGRA do Firebase: perfis/$uid/foto
+           aceita no máximo 90000 caracteres. Como data URL é base64,
+           isso dá uns 67KB de imagem. Em vez de chutar um tamanho e
+           torcer, tenta do maior para o menor e fica no primeiro que
+           couber com folga — assim uma foto detalhada nunca é recusada
+           com "foto muito pesada" na cara do cliente. */
+        const TETO = 88000;   // pouco abaixo dos 90000 da regra, por segurança
         const canvas = document.createElement('canvas');
-        canvas.width = S; canvas.height = S;
-        canvas.getContext('2d').drawImage(corte.img, sx, sy, lado, lado, 0, 0, S, S);
-        fotoEditada = canvas.toDataURL('image/jpeg', 0.72);
+        const tentativas = [[512, .82], [512, .72], [400, .78], [400, .68], [320, .7], [200, .72]];
+        for (const [S, q] of tentativas) {
+            canvas.width = S; canvas.height = S;
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingQuality = 'high';   // reamostragem melhor ao reduzir
+            ctx.drawImage(corte.img, sx, sy, lado, lado, 0, 0, S, S);
+            fotoEditada = canvas.toDataURL('image/jpeg', q);
+            if (fotoEditada.length <= TETO) break;
+        }
         const el = document.getElementById('pf-avatar');
         el.style.backgroundImage = `url('${fotoEditada}')`;
         el.textContent = '';
@@ -2546,7 +2569,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=24"></script>
+<script src="app.js?v=25"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
