@@ -27,7 +27,7 @@
     <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="style.css?v=14">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -302,103 +302,11 @@
             gap: 9px;
         }
 
-        .queue-list { list-style: none; padding: 0; margin: 0; }
-
-        .queue-item {
-            background: var(--panel-raised);
-            margin: 10px 0;
-            padding: 16px 18px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 4px solid var(--edge);
-            transition: all 0.2s;
-            animation: fadeUp 0.3s ease-out;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .queue-item::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(90deg, rgba(177,78,255,0.05) 0%, transparent 60%);
-            pointer-events: none;
-        }
-
-        .queue-item:hover {
-            transform: translateX(5px);
-            border-left-color: var(--primary);
-            background: var(--panel-hover);
-        }
-
-        /* Primeiro da fila — destaque */
-        .queue-item:first-child {
-            background: linear-gradient(135deg, #241934 0%, #15121F 100%);
-            border-left: 5px solid var(--primary);
-            box-shadow: 0 4px 20px rgba(43,184,255,0.22), inset 0 1px 0 rgba(255,255,255,0.04);
-        }
-
-        .queue-item:first-child .song-title { color: var(--primary-light); font-size: 18px; }
-
-        .stage-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: var(--primary);
-            background: rgba(177,78,255,0.14);
-            border: 1px solid rgba(177,78,255,0.3);
-            padding: 3px 10px;
-            border-radius: 20px;
-            white-space: nowrap;
-            flex-shrink: 0;
-            margin-left: 10px;
-        }
-        /* Selo do PRÓXIMO da fila (verde "pronto pra subir") */
-        .next-badge {
-            display: inline-flex; align-items: center; gap: 4px;
-            font-size: 11px; font-weight: 700; letter-spacing: 1px;
-            color: #2BE0A6;
-            background: rgba(43,224,166,0.14);
-            border: 1px solid rgba(43,224,166,0.35);
-            padding: 3px 10px; border-radius: 20px;
-            white-space: nowrap; flex-shrink: 0; margin-left: 10px;
-            animation: badge-pulse-next 2.5s ease-in-out infinite;
-        }
-        @keyframes badge-pulse-next {
-            0%, 100% { box-shadow: 0 0 0 0   rgba(43,224,166,0.55); }
-            50%       { box-shadow: 0 0 0 8px rgba(43,224,166,0);   }
-        }
-
-        .position-badge {
-            font-family: 'Outfit', sans-serif;
-            font-size: 26px;
-            font-weight: 500;
-            color: var(--text-muted);
-            line-height: 1;
-            margin-right: 16px;
-            min-width: 22px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .queue-item:first-child .position-badge { color: var(--primary); }
-
-        .song-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-        .song-title {
-            font-weight: 700;
-            font-size: 16px;
-            color: var(--text);
-            margin-bottom: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .singer-name { font-size: 13px; color: var(--text-muted); }
+        /* AS REGRAS DA FILA VIVEM NO style.css.
+           O bloco que estava aqui era do design antigo e, por vir depois
+           do <link>, vencia o style.css. Entre elas um
+           `.queue-item:hover { transform: translateX(5px) }` — a animação
+           que desmontava o cartão a cada toque. */
 
         /* ─── DJ PANEL ACTIONS ───────────────────────────── */
         .admin-actions {
@@ -1145,7 +1053,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 13</p>
+            <p class="versao-app">versão 14</p>
 
         </div>
     </div>
@@ -2467,7 +2375,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=13"></script>
+<script src="app.js?v=14"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>

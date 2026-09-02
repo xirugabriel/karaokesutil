@@ -1270,7 +1270,10 @@ button { position: relative; overflow: hidden; }
     padding: 13px 14px;
     border-left: 3px solid var(--roxo-escuro);
 }
-.queue-item::before, .queue-item:hover { all: unset; }
+/* Sem estado de :hover — o item da fila não é clicável, e no iOS o
+   :hover gruda no toque. (Aqui já houve um `all: unset` para anular a
+   regra antiga do index.html: `all` reseta TUDO, inclusive `display`,
+   que voltava a `inline` e derrubava o flex. A regra antiga saiu.) */
 .queue-item.is-me {
     border-left-color: var(--roxo);
     background: linear-gradient(120deg, rgba(168,85,247,.13), transparent 62%), var(--cartao);
@@ -1311,17 +1314,14 @@ button { position: relative; overflow: hidden; }
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    font-size: 15px !important;
+    font-size: 15px;
     font-weight: 700;
-    color: #fff !important;
+    color: #fff;
     line-height: 1.3;
     overflow: hidden;
-    /* O <style> embutido no index.html vem DEPOIS deste arquivo no
-       <head>, então ele vencia e prendia o título em `nowrap`. Daí o
-       clamp de 2 linhas não ter efeito nenhum. */
-    white-space: normal !important;
-    text-overflow: clip !important;
-    margin-bottom: 3px;
+    /* Título em 2 linhas: nome de música de karaokê é comprido e uma
+       linha só cortava tudo em "Matogr…". */
+        margin-bottom: 3px;
 }
 .queue-item.is-first .song-title { color: #fff; font-size: 15px; }
 .singer-name {
