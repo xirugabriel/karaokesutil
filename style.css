@@ -1103,6 +1103,15 @@ html {
     border-radius: 26px;
     /* prende a mistura do goo dentro da barra */
     isolation: isolate;
+    /* E PRENDE O DESENHO TAMBÉM. O substrato preto do goo transborda
+       75px de propósito (o contraste precisa de margem), mas fora da
+       barra, dentro do grupo isolado, não existe nada pintado embaixo
+       — e `lighten` contra transparente não descarta o preto: ele
+       aparece como é. Era a caixa preta atrás do hub.
+
+       Recortando na própria pastilha, o efeito nasce e morre dentro
+       dela, com o mesmo canto arredondado. */
+    overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.13);
     box-shadow:
         0 16px 44px rgba(0, 0, 0, .9),          /* descola do fundo */

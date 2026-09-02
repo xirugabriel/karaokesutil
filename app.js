@@ -330,8 +330,14 @@ setInterval(pollQueueMembership, 500);
             if (!item) return;
             const rc = caixa.getBoundingClientRect();
             const ri = item.getBoundingClientRect();
-            camada.style.left   = (ri.x - rc.x) + 'px';
-            camada.style.top    = (ri.y - rc.y) + 'px';
+            /* Desconta a BORDA da caixa. `getBoundingClientRect` mede a
+               partir da borda externa, mas um filho `position:absolute`
+               se posiciona a partir da caixa de PADDING — e a barra tem
+               1px de borda. Sem isto o blob nascia 1px deslocado em x e
+               em y, e não encaixava no chip do botão.
+               `clientLeft`/`clientTop` são exatamente essas espessuras. */
+            camada.style.left   = (ri.x - rc.x - caixa.clientLeft) + 'px';
+            camada.style.top    = (ri.y - rc.y - caixa.clientTop) + 'px';
             camada.style.width  = ri.width + 'px';
             camada.style.height = ri.height + 'px';
             if (!comEstouro) return;   // só reposiciona, sem acender
