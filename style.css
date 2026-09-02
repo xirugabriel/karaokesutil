@@ -1790,19 +1790,80 @@ html {
 }
 
 /* conta bloqueada */
+/* ── AVISO DE CONTA BLOQUEADA ────────────────────────────────
+   Só o título e a caixa do motivo tinham estilo aqui; o texto, o
+   rótulo "Motivo" e o rodapé eram divs cruas. Daí o "Motivo" ficar
+   órfão colado na linha de cima e nada ter hierarquia.
+
+   É a pior notícia que o app dá para alguém — precisa ser SÉRIO e
+   claro, não decorado: quem lê quer saber o motivo e o que fazer. */
 #banido-aviso {
     text-align: center;
-    padding: 26px 22px;
-    border-color: rgba(255, 77, 109, .4);
-    background: linear-gradient(150deg, rgba(255, 77, 109, .12), transparent 60%), var(--cartao);
+    padding: 28px 20px 22px;
+    border-color: rgba(255, 77, 109, .38);
+    /* o vermelho desce do topo, atrás do cadeado, e some no meio */
+    background:
+        radial-gradient(115% 75% at 50% 0%, rgba(255, 77, 109, .17), transparent 62%),
+        var(--cartao);
 }
-.ban-titulo { font-size: 18px; font-weight: 700; color: #fff; margin: 10px 0 6px; }
+
+/* o cadeado solto se perdia no card; num selo ele ancora a leitura */
+.ban-selo {
+    width: 62px; height: 62px;
+    margin: 0 auto 17px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: rgba(255, 77, 109, .12);
+    border: 1px solid rgba(255, 77, 109, .32);
+    box-shadow: 0 0 26px rgba(255, 77, 109, .16);
+}
+.ban-selo .ic { width: 27px; height: 27px; stroke: #FF6B85; }
+
+.ban-titulo {
+    font-size: 19px; font-weight: 700; color: #fff;
+    letter-spacing: -.2px;
+    margin: 0 0 7px;
+}
+.ban-texto {
+    font-size: 14px; line-height: 1.5;
+    color: var(--tinta-fraca);
+    margin: 0 0 18px;
+}
+
+/* caixa alta e espaçada: mesma linguagem dos títulos de seção do site */
+.ban-motivo-rotulo {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1.6px; text-transform: uppercase;
+    color: #FF8A9E;
+    margin-bottom: 8px;
+}
+
+/* CITAÇÃO, não campo de formulário. A borda arredondada dos quatro
+   lados com fundo mais claro parecia um input desabilitado — dava a
+   entender que dava para editar. Barra de acento à esquerda resolve,
+   e o texto vai alinhado à esquerda: o motivo é escrito pelo DJ na
+   hora, então pode ser curto ou virar três linhas, e frase de tamanho
+   imprevisível se lê muito melhor alinhada. */
 .ban-motivo {
-    background: var(--cartao-alto);
-    border: 1px solid var(--linha-forte);
-    border-radius: 13px;
-    padding: 12px 14px;
+    text-align: left;
+    background: rgba(255, 77, 109, .07);
+    border: 1px solid rgba(255, 77, 109, .20);
+    border-left: 3px solid #FF4D6D;
+    border-radius: 4px 13px 13px 4px;
+    padding: 13px 15px;
+    font-size: 14.5px; font-weight: 600; line-height: 1.45;
     color: var(--tinta);
+    /* motivo digitado à mão pode vir com uma palavra enorme */
+    overflow-wrap: anywhere;
+}
+
+/* separado por um fio: é a saída, não mais explicação do problema */
+.ban-rodape {
+    margin-top: 18px;
+    padding-top: 15px;
+    border-top: 1px solid var(--linha);
+    font-size: 13px; line-height: 1.5;
+    color: var(--tinta-tenue);
 }
 
 .footer-badge { color: var(--tinta-tenue); font-size: 10.5px; letter-spacing: 1.4px; }
