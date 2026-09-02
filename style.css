@@ -50,7 +50,9 @@
    Esticando 120px para cima e para baixo, a pintura cobre o notch, a
    barra do Safari e o indicador de início, sobrando em qualquer caso. */
 #bg-fill, #crt-fundo, #dither {
-    position: fixed;
+    /* !important pra nenhuma folha de estilo padrão de celular
+       sobrescrever a ancoragem no viewport */
+    position: fixed !important;
     left: 0; right: 0;
     /* !important porque o <style> embutido no index.html vem DEPOIS do
        link deste arquivo no <head>: em empate de especificidade quem
