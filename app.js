@@ -307,6 +307,17 @@ setInterval(pollQueueMembership, 500);
 
     const ruido = (n) => n / 2 - Math.random() * n;
 
+    /* Saída da bolha. Antes era só tirar `.acesa`, e ela sumia num
+       quadro: corte seco para o chip escuro do botão. Agora passa por
+       `.apagando`, que segura o filtro enquanto a opacidade cai, e só
+       depois volta ao repouso. Os 500ms cobrem os 450ms do fade com
+       folga — tirar a classe no meio da transição a cortaria de novo. */
+    function apagarBolha(camada) {
+        camada.classList.remove('acesa');
+        camada.classList.add('apagando');
+        setTimeout(() => camada.classList.remove('apagando'), 500);
+    }
+
     function pontoNoCirculo(raio, i, total) {
         const ang = ((360 + ruido(8)) / total) * i * (Math.PI / 180);
         return [raio * Math.cos(ang), raio * Math.sin(ang)];
@@ -389,7 +400,7 @@ setInterval(pollQueueMembership, 500);
             camada.querySelectorAll('.goo-particula').forEach((p) => p.remove());
             estourar(camada);
             clearTimeout(apagar);
-            apagar = setTimeout(() => camada.classList.remove('acesa'), 1200);
+            apagar = setTimeout(() => apagarBolha(camada), 1200);
         }
 
         const ativo = () => caixa.querySelector(seletorAtivo);
@@ -440,7 +451,7 @@ setInterval(pollQueueMembership, 500);
                 camada.querySelectorAll('.goo-particula').forEach((p) => p.remove());
                 estourar(camada);
                 clearTimeout(apagar);
-                apagar = setTimeout(() => camada.classList.remove('acesa'), 1200);
+                apagar = setTimeout(() => apagarBolha(camada), 1200);
             });
         });
     }

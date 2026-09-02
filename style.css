@@ -2309,13 +2309,28 @@ html {
                 width .32s cubic-bezier(.22,1,.36,1);
 }
 /* só enquanto anima é que o filtro entra em cena */
-.goo-camada.acesa {
-    opacity: 1;                    /* a base é 0 */
+/* DOIS ESTADOS, e o `.apagando` não é firula.
+   O efeito terminava tirando `.acesa` de uma vez: a bolha sumia num
+   quadro e o chip escuro aparecia de estalo. A camada só transiciona
+   left/top/width, então opacidade não tinha como suavizar.
+
+   O `.apagando` mantém o FILTRO ligado enquanto a opacidade cai. Se o
+   filtro saísse junto, a bolha "desfundiria" no meio do fade — as
+   partículas voltariam a ser círculos soltos por uma fração de
+   segundo, que é pior que o corte seco. */
+.goo-camada.acesa,
+.goo-camada.apagando {
     filter: url(#goo-filtro);      /* funde pelo alfa; a cor passa intacta */
+}
+.goo-camada.acesa    { opacity: 1; }   /* a base é 0 */
+.goo-camada.apagando {
+    opacity: 0;
+    transition: opacity .45s ease;
 }
 /* a pílula que escorre — MESMO raio do chip do botão, para a animação
    terminar exatamente na forma em que o repouso começa */
-.goo-camada.acesa::after {
+.goo-camada.acesa::after,
+.goo-camada.apagando::after {
     content: '';
     position: absolute;
     inset: 0;
