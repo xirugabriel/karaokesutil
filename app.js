@@ -251,41 +251,20 @@ setInterval(pollQueueMembership, 500);
    que o filtro leva para magenta.
 ══════════════════════════════════════════════════════════════ */
 (function () {
-    /* ── A FUSÃO AGORA É UM FILTRO SVG, NÃO contrast() + blend ──
-       O jeito clássico é `blur + contrast(100)` sobre um substrato
-       PRETO, e depois `mix-blend-mode: lighten` para descartar esse
-       preto. Funcionava — até o hub ganhar o Glass Surface.
 
-       `backdrop-filter` transforma o hub em raiz de composição, e o
-       `lighten` do filho passa a misturar com um grupo vazio em vez
-       do fundo do hub: o efeito sumia por completo. Confirmado por
-       teste — tirando um dos dois, ele reaparece.
-
-       Este filtro faz a fusão pelo CANAL ALFA: borra e depois joga o
-       alfa para 0 ou 1 (`0 0 0 20 -9`). Não precisa de substrato
-       preto nem de mistura, então compõe limpo sobre o vidro. E o
-       Safari aceita SVG em `filter` — só em `backdrop-filter` é que
-       não aceita. */
-    (function injetarFiltro() {
-        if (document.getElementById('goo-filtro')) return;
-        const NS = 'http://www.w3.org/2000/svg';
-        const svg = document.createElementNS(NS, 'svg');
-        svg.setAttribute('aria-hidden', 'true');
-        svg.style.cssText = 'position:absolute;width:0;height:0;pointer-events:none';
-        svg.innerHTML =
-            '<defs><filter id="goo-filtro" color-interpolation-filters="sRGB">' +
-              '<feGaussianBlur in="SourceGraphic" stdDeviation="7" result="borrado"/>' +
-              '<feColorMatrix in="borrado" type="matrix" ' +
-                'values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"/>' +
-            '</filter></defs>';
-        document.body.appendChild(svg);
-    })();
-
-    const QTD = MOBILE_UI ? 10 : 14;   // menos partículas no celular
-    const DIST = [76, 10];
+    /* Valores do componente, sem arredondar:
+         particleCount 15 · particleDistances [90,10] · particleR 100
+         animationTime 600 · timeVariance 300
+       Eu tinha baixado a contagem no celular por medo de custo. Com o
+       filtro existindo só durante a animação isso não se justifica —
+       e cortar partícula rala o efeito, que é justamente o pedido. */
+    const QTD = 15;
+    const DIST = [90, 10];
     const GIRO = 100;
-    const TEMPO = 560;
-    const VARIA = 280;
+    const TEMPO = 600;
+    const VARIA = 300;
+    /* mesma tabela de sorteio do componente: [1,2,3,1,2,3,1,4] */
+    const CORES = [1, 2, 3, 1, 2, 3, 1, 4];
 
     const ruido = (n) => n / 2 - Math.random() * n;
 
@@ -311,6 +290,8 @@ setInterval(pollQueueMembership, 500);
             p.style.setProperty('--t', t + 'ms');
             p.style.setProperty('--escala', (1 + ruido(0.2)).toFixed(2));
             p.style.setProperty('--giro', giro + 'deg');
+            p.style.setProperty('--cor',
+                'var(--goo-' + CORES[Math.floor(Math.random() * CORES.length)] + ')');
 
             const ponto = document.createElement('span');
             ponto.className = 'goo-ponto';
@@ -355,11 +336,22 @@ setInterval(pollQueueMembership, 500);
 
         const ativo = () => caixa.querySelector(seletorAtivo);
 
+        /* ESTE ERA O BUG QUE SUMIA COM O EFEITO NO HUB.
+           O guarda antigo era `if (item.matches(seletorAtivo)) return`,
+           para não reanimar quem já está aberto. Só que o `onclick` do
+           próprio botão roda ANTES de o evento borbulhar até aqui, e o
+           updateUI já marcou aquele botão como `.active`. Ou seja: no
+           momento em que este handler executava, o item clicado sempre
+           casava com o seletor de ativo — e a função desistia. Sempre.
+
+           A memória de qual item foi animado por último é nossa, então
+           não depende de quando o app troca a classe. */
+        let ultimo = null;
         caixa.addEventListener('click', (e) => {
             const item = e.target.closest(seletorItem);
-            if (!item || item.matches(seletorAtivo)) return;
-            // o app troca a classe no mesmo clique; espera o quadro seguinte
-            requestAnimationFrame(() => posicionar(ativo() || item, true));
+            if (!item || item === ultimo) return;
+            ultimo = item;
+            requestAnimationFrame(() => posicionar(item, true));
         });
 
         /* O item ativo não existe ainda quando este código roda: quem

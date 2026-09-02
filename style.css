@@ -28,6 +28,16 @@
     --verde:        #34D399;
     --ambar:        #FBBF24;
 
+    /* PALETA DO GOOEY NAV (--color-1..4 do componente, adaptadas).
+       contrast(100) só olha de que lado de 50% cada canal está, então
+       o que importa é isto: #A855F7 e #EC4899 caem em MAGENTA, branco
+       fica BRANCO, e #7C3AED (R=124, logo abaixo da metade) cai em
+       AZUL. Magenta + branco + azul é a família roxa da casa. */
+    --goo-1:        #A855F7;
+    --goo-2:        #FFFFFF;
+    --goo-3:        #7C3AED;
+    --goo-4:        #EC4899;
+
     --raio:         18px;
     --raio-g:       22px;
     --rapido:       .18s ease;
@@ -1040,6 +1050,15 @@ html {
    clientes veem — então ele foi ajustado para ficar bom sozinho, não
    para ser um consolo.
    ════════════════════════════════════════════════════════════ */
+/* O VIDRO MORA NUM ::before, NÃO NO PRÓPRIO NAV — e isso não é
+   capricho de organização. `backdrop-filter` no nav o transforma em
+   raiz de composição, e aí o `mix-blend-mode: lighten` do Gooey Nav
+   (que é filho) passa a misturar com um grupo vazio: o efeito some.
+   Medido — tirando um dos dois, ele reaparece.
+
+   Num pseudo-elemento, o vidro é uma CAMADA dentro do nav. O nav
+   deixa de ser raiz de composição, o goo volta a misturar com o que
+   está pintado embaixo dele, e os dois convivem. */
 #bottom-nav {
     position: fixed;
     left: 12px; right: 12px;
@@ -1051,20 +1070,27 @@ html {
     gap: 5px;
     padding: 9px 8px;
     border-radius: 26px;
-    /* o vidro é o fundo desta caixa; nada de dentro pode vazar por cima */
+    /* prende a mistura do goo dentro da barra */
     isolation: isolate;
-    /* Fundo enquanto o app.js não decidiu o caminho, e para quem não
-       tem backdrop-filter nenhum. Sem isto a barra nasceria invisível. */
-    background: linear-gradient(180deg, #22222F, #16161F);
     border: 1px solid rgba(255, 255, 255, 0.13);
     box-shadow:
         0 16px 44px rgba(0, 0, 0, .9),          /* descola do fundo */
         0 0 30px rgba(168, 85, 247, .12),       /* brilho da marca */
         inset 0 1px 0 rgba(255, 255, 255, .10); /* aresta de cima acesa */
 }
+/* a camada de vidro; o fundo chapado é a reserva de quem não tem
+   backdrop-filter nenhum, senão a barra nasceria invisível */
+#bottom-nav::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, #22222F, #16161F);
+}
 
 /* ── caminho 1: vidro refratado (Chrome, Android) ───────────── */
-#bottom-nav.vidro-svg {
+#bottom-nav.vidro-svg::before {
     /* Base escura + brilho branco por cima. O véu só branco do original
        deixava a barra clara demais quando o carrossel colorido passava
        por trás, e os rótulos sumiam. A base garante um piso de
@@ -1073,16 +1099,14 @@ html {
     background-image: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .03));
     -webkit-backdrop-filter: url(#vidro-nav) saturate(1.7);
     backdrop-filter: url(#vidro-nav) saturate(1.7);
-    border-color: rgba(255, 255, 255, 0.16);
     box-shadow:
         0 0 2px 1px rgba(255, 255, 255, .35) inset,
-        0 0 10px 4px rgba(255, 255, 255, .15) inset,
-        0 16px 44px rgba(0, 0, 0, .9),
-        0 0 30px rgba(168, 85, 247, .12);
+        0 0 10px 4px rgba(255, 255, 255, .15) inset;
 }
+#bottom-nav.vidro-svg { border-color: rgba(255, 255, 255, 0.16); }
 
 /* ── caminho 2: reserva — é ESTE que o iPhone usa ───────────── */
-#bottom-nav.vidro-reserva {
+#bottom-nav.vidro-reserva::before {
     /* O véu não é enfeite: sobre página preta, desfocar preto continua
        dando preto. É ele que faz a pastilha existir. Base escura por
        baixo do brilho para o rótulo não sumir quando o carrossel
@@ -1091,16 +1115,11 @@ html {
     background-image: linear-gradient(180deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .04));
     -webkit-backdrop-filter: blur(14px) saturate(1.8) brightness(1.2);
     backdrop-filter: blur(14px) saturate(1.8) brightness(1.2);
-    border: 1px solid rgba(255, 255, 255, 0.20);
-    /* O original solta a sombra externa no tema escuro. Aqui ela fica:
-       sem ela a barra volta a colar no preto — a queixa que originou
-       esta rodada. */
     box-shadow:
         inset 0 1px 0 0 rgba(255, 255, 255, .22),
-        inset 0 -1px 0 0 rgba(255, 255, 255, .10),
-        0 16px 44px rgba(0, 0, 0, .85),
-        0 0 30px rgba(168, 85, 247, .12);
+        inset 0 -1px 0 0 rgba(255, 255, 255, .10);
 }
+#bottom-nav.vidro-reserva { border-color: rgba(255, 255, 255, 0.20); }
 #bottom-nav button {
     flex: 1 1 0;
     width: auto; margin: 0;
@@ -2241,16 +2260,26 @@ html {
                 width .32s cubic-bezier(.22,1,.36,1);
 }
 /* só enquanto anima é que o filtro caro entra em cena */
-/* A fusão vem do filtro SVG injetado pelo app.js, que gruda os blobs
-   pelo canal ALFA. Antes era `blur + contrast(100)` sobre um substrato
-   preto mais `mix-blend-mode: lighten` para descartar esse preto — e
-   o `backdrop-filter` do vidro do hub matava a mistura, sumindo com o
-   efeito inteiro. Pelo alfa não há substrato nem mistura, então os
-   dois convivem. Bônus: a cor agora é a cor de verdade, sem depender
-   do contraste saturar o canal. */
+/* TÉCNICA DO COMPONENTE, sem substituto: `blur(7px) contrast(100)
+   blur(0)` gruda os blobs, o substrato PRETO dá o contraste, e o
+   `mix-blend-mode: lighten` descarta esse preto no fim. É o que
+   produz a borda dura e o escorrimento característicos.
+
+   Isto só voltou a funcionar depois que o vidro saiu do nav e foi
+   para um ::before — com `backdrop-filter` no próprio nav, o
+   `lighten` do filho não tinha com o que misturar. */
 .goo-camada.acesa {
-    opacity: .62;
-    filter: url(#goo-filtro);
+    opacity: 1;   /* a base é 0; sem isto a camada fica invisível */
+    filter: blur(7px) contrast(100) blur(0);
+    mix-blend-mode: lighten;
+}
+/* substrato preto do contraste; -75px como no original */
+.goo-camada.acesa::before {
+    content: '';
+    position: absolute;
+    inset: -75px;
+    z-index: -2;
+    background: #000;
 }
 /* a pílula que escorre */
 .goo-camada.acesa::after {
@@ -2259,7 +2288,13 @@ html {
     inset: 0;
     z-index: -1;
     border-radius: 100vw;
-    background: var(--roxo);
+    /* CORES ADAPTADAS. contrast(100) joga cada canal para 0 ou 255,
+       então a cor pintada não é a que sai: vale só de que lado de 50%
+       cada canal está. R e B altos com G baixo caem no magenta da
+       casa; branco continua branco. */
+    background: var(--goo-1);
+    transform: scale(0);
+    opacity: 0;
     animation: goo-pilula .3s ease both;
 }
 @keyframes goo-pilula {
@@ -2274,25 +2309,24 @@ html {
 .goo-solo { overflow: visible; }
 .goo-solo .ripple { display: none; }   /* o estouro substitui a ondinha */
 
+/* 20px e os deslocamentos do componente, sem arredondar */
 .goo-particula, .goo-ponto {
     display: block;
-    width: 17px; height: 17px;
-    border-radius: 50%;
+    width: 20px; height: 20px;
+    border-radius: 100%;
     opacity: 0;
     transform-origin: center;
 }
 .goo-particula {
     position: absolute;
-    top: calc(50% - 8.5px);
-    left: calc(50% - 8.5px);
-    animation: goo-voa var(--t) ease 1 -340ms;
+    top: calc(50% - 8px);
+    left: calc(50% - 8px);
+    animation: goo-voa var(--t) ease 1 -350ms;
 }
 .goo-ponto {
-    /* mesma cor da pílula: sem o contrast(100) saturando os canais, a
-       cor pintada é a cor que aparece */
-    background: var(--roxo);
+    background: var(--cor);   /* sorteada entre as --goo-N */
     opacity: 1;
-    animation: goo-incha var(--t) ease 1 -340ms;
+    animation: goo-incha var(--t) ease 1 -350ms;
 }
 
 @keyframes goo-voa {
