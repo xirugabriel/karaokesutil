@@ -34,68 +34,15 @@
     --suave:        .28s cubic-bezier(.22, 1, .36, 1);
 }
 
-/* ── FUNDO ────────────────────────────────────────────────────
-   Um respiro roxo no topo e o resto chapado. É pintado uma vez
-   e nunca mais — não custa nada por quadro. */
-/* Empilhamento: preto no fundo → tubo → véu → conteúdo.
-   O véu é leve de propósito; quem segura a intensidade é a cor
-   escura do fósforo, não uma camada cinza por cima. */
-/* O !important não é preguiça: o <style> embutido no index.html crava
-   z-index -1 aqui, e como essa camada é PRETA OPACA, com -1 ela fica
-   na frente do canvas (-2) e tapa o tubo por completo. */
-/* AS TRÊS CAMADAS TRANSBORDAM DE PROPÓSITO.
-   Elemento `position: fixed` se apoia no viewport SEM a área do chrome
-   do navegador — então `inset: 0` parava logo abaixo da barra de status
-   e o fundo não subia até o topo, mesmo com a página já indo até lá.
-   Esticando 120px para cima e para baixo, a pintura cobre o notch, a
-   barra do Safari e o indicador de início, sobrando em qualquer caso. */
-#bg-fill, #crt-fundo, #dither {
-    /* !important pra nenhuma folha de estilo padrão de celular
-       sobrescrever a ancoragem no viewport */
-    position: fixed !important;
-    left: 0; right: 0;
-    /* !important porque o <style> embutido no index.html vem DEPOIS do
-       link deste arquivo no <head>: em empate de especificidade quem
-       vence é ele, e o `inset: 0` de lá anulava esta sangra. */
-    top: calc(-1 * var(--sangra)) !important;
-    bottom: auto !important;
-    /* `100%` num elemento fixo mede o viewport com as barras ABERTAS.
-       Quando o Safari recolhe as barras a área cresce e sobraria uma
-       faixa. `lvh` é a altura com as barras recolhidas — o maior caso.
-       A primeira linha é reserva pra quem não conhece `lvh`. */
-    height: calc(100% + var(--sangra) * 2) !important;
-    height: calc(100lvh + var(--sangra) * 2) !important;
-    pointer-events: none;
-}
-:root {
-    /* Folga que o fundo transborda pra cada lado. A barra do Safari e o
-       notch somam bem menos que isto — a sobra é de propósito, pra que
-       nem o solavanco das barras recolhendo deixe faixa descoberta. */
-    --sangra: 180px;
-}
+/* ── FUNDO ───────────────────────────────────────────────────
+   Preto sólido. O fundo animado saiu.
 
-#bg-fill {
-    z-index: -3 !important;
-    background-image: none !important;
-    background-color: #000 !important;
-}
-#crt-fundo {
-    width: 100%;
-    display: block;
-    z-index: -2;
-}
-#dither {
-    z-index: -1;
-    opacity: 1 !important;
-    background-color: rgba(0, 0, 0, 0.18);
-}
-@media (hover: none) {
-    #dither { background-color: rgba(0, 0, 0, 0.22); }
-}
-@media (prefers-reduced-motion: reduce) {
-    #crt-fundo { opacity: .45; }
-}
-
+   Não precisa de camada nenhuma nem da sangra que cobria o notch:
+   a cor da RAIZ é propagada pelo navegador para a tela inteira,
+   inclusive atrás da barra de status e da barra do Safari. Era
+   justamente isso que um elemento `position: fixed` não conseguia
+   fazer — e o motivo de toda a ginástica anterior.
+   ════════════════════════════════════════════════════════════ */
 body { background-color: #000; color: var(--tinta); }
 /* NADA de overflow em html/body. Aprendi na marra que os dois valores
    quebram coisas diferentes aqui:

@@ -27,7 +27,7 @@
     <link rel="icon" type="image/png" href="icon-192.png" sizes="192x192">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=13">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -61,9 +61,9 @@
            `window.scrollTo` não funcionava: quem rolava era o body.) */
         html { min-height: 100%; }
 
-        /* Cor base sólida na raiz (cobre overscroll/safe-area como fallback). */
-        /* Casa com o preto do CRT: é esta cor que aparece nas áreas
-           que a página não pinta (chrome do Safari, overscroll). */
+        /* O FUNDO DO SITE INTEIRO mora aqui. A cor da raiz é a única que o
+           navegador propaga para a tela toda: notch, barra do Safari,
+           overscroll. Não existe camada de fundo além desta. */
         html {
             background: #000;
             /* TRAVA A INFLAÇÃO DE TEXTO DO iOS. Sem isto o Safari decide
@@ -77,26 +77,18 @@
             text-size-adjust: 100%;
         }
 
-        /* Camada de fundo FIXA que cobre a tela inteira — inclusive atrás do
-           notch e da barra do Safari (graças ao viewport-fit=cover). É o que
-           garante o app ocupando a tela toda, sem faixa preta. */
-        #bg-fill {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            pointer-events: none;
-            background-color: var(--bg-dark);
-            background-image:
-                radial-gradient(ellipse at 18% 10%, rgba(125, 45, 220, 0.24) 0%, transparent 55%),
-                radial-gradient(ellipse at 85% 94%, rgba(20, 110, 210, 0.22) 0%, transparent 58%),
-                radial-gradient(ellipse at 80% 12%, rgba(255, 77, 157, 0.14) 0%, transparent 52%),
-                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.015'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            background-repeat: no-repeat, no-repeat, no-repeat, repeat;
-        }
+        /* O fundo é preto sólido e vem da RAIZ (regra `html` acima).
+           A cor da raiz é propagada pelo navegador para a tela inteira,
+           inclusive atrás do notch e da barra do Safari — coisa que um
+           elemento `position: fixed` nunca conseguiu fazer. Por isso a
+           antiga camada #bg-fill deixou de existir. */
 
         body {
             font-family: 'Inter', sans-serif;
-            background: transparent;
+            /* Preto explícito. Antes era `transparent` para o canvas do CRT
+               aparecer por trás; sem o canvas isso viraria preto por acaso,
+               dependendo da raiz. Melhor cravar. */
+            background: #000;
             color: var(--text);
             margin: 0;
             padding:
@@ -732,7 +724,6 @@
 </div>
 
 <!-- Camada de fundo que cobre a tela inteira (atrás do notch e da barra) -->
-<div id="bg-fill"></div>
 
 <!-- ── MODAL DJ ──────────────────────────────────────────── -->
 <div id="dj-modal" class="modal-overlay hidden">
@@ -1154,7 +1145,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 12</p>
+            <p class="versao-app">versão 13</p>
 
         </div>
     </div>
@@ -2476,7 +2467,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=12"></script>
+<script src="app.js?v=13"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
