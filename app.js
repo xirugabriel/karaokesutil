@@ -287,13 +287,23 @@ setInterval(pollQueueMembership, 500);
         document.body.appendChild(svg);
     })();
 
-    const QTD = 15;
+    /* 15 partículas de 20px são calibradas para os itens do
+       componente, que são largos. Num botão de 80px viravam "um monte
+       de bolinha": nesse tamanho elas ficam longe demais umas das
+       outras para o filtro fundir, e cada uma aparece como um círculo
+       sólido em vez de virar respingo. Menos e menores se tocam, e é
+       o toque que produz a fusão. */
+    const QTD = 9;
     /* DIST saiu daqui: agora é medido do botão, dentro do estourar() */
     const GIRO = 100;
     const TEMPO = 600;
     const VARIA = 300;
-    /* mesma tabela de sorteio do componente: [1,2,3,1,2,3,1,4] */
-    const CORES = [1, 2, 3, 1, 2, 3, 1, 4];
+    /* COR ÚNICA, igual à da pílula. A variedade do componente vinha
+       do contrast(100), que achatava tudo em primárias e escondia a
+       diferença. Com a cor passando intacta, uma partícula branca ao
+       lado de uma roxa não lê como respingo do mesmo líquido: lê como
+       bolinha estranha por cima. Mesmo tom = massa única. */
+    const CORES = [1, 1, 1, 1];
 
     const ruido = (n) => n / 2 - Math.random() * n;
 
@@ -313,7 +323,7 @@ setInterval(pollQueueMembership, 500);
            agora medida da caixa real. Assim vale para qualquer botão,
            inclusive os do ranking, que têm outro tamanho. */
         const larg = camada.offsetWidth || 80;
-        const longe = Math.max(34, larg * 0.72);
+        const longe = Math.max(28, larg * 0.58);   /* mais perto: precisam se tocar para fundir */
         const perto = Math.max(6, larg * 0.12);
 
         for (let i = 0; i < QTD; i++) {

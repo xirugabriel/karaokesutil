@@ -2338,18 +2338,19 @@ html {
 .goo-solo { overflow: visible; }
 .goo-solo .ripple { display: none; }   /* o estouro substitui a ondinha */
 
-/* 20px e os deslocamentos do componente, sem arredondar */
+/* 14px, e não os 20px do componente: num botão pequeno a bolinha de
+   20px é grande demais para virar respingo — ela vira bola. */
 .goo-particula, .goo-ponto {
     display: block;
-    width: 20px; height: 20px;
+    width: 14px; height: 14px;
     border-radius: 100%;
     opacity: 0;
     transform-origin: center;
 }
 .goo-particula {
     position: absolute;
-    top: calc(50% - 8px);
-    left: calc(50% - 8px);
+    top: calc(50% - 7px);
+    left: calc(50% - 7px);
     animation: goo-voa var(--t) ease 1 -350ms;
 }
 .goo-ponto {
