@@ -986,11 +986,25 @@ setInterval(pollQueueMembership, 500);
 
     if (!window.IntersectionObserver) return;
 
+    /* REVELA ANTES DE APARECER, E UMA VEZ SÓ.
+
+       Antes era `threshold: 0.5` — o item precisava estar METADE dentro
+       da tela para começar a animar, então você já o via antes de ele
+       aparecer: era o "atraso" em relação à rolagem.
+
+       Agora o `rootMargin` estica a borda de baixo em 25%: o item é
+       avisado enquanto ainda está ABAIXO da tela e chega pronto.
+
+       E `add`, não `toggle`: antes o item era re-escondido ao sair da
+       tela, então rolar de volta reanimava tudo de novo. Conteúdo já
+       visto não deve piscar. Depois de revelado, sai da observação. */
     const olho = new IntersectionObserver((entradas) => {
         entradas.forEach((e) => {
-            e.target.classList.toggle('na-vista', e.isIntersecting);
+            if (!e.isIntersecting) return;
+            e.target.classList.add('na-vista');
+            olho.unobserve(e.target);
         });
-    }, { threshold: 0.5 });
+    }, { threshold: 0, rootMargin: '0px 0px 25% 0px' });
 
     function inscrever(lista) {
         const itens = [].slice.call(lista.children);
@@ -998,8 +1012,14 @@ setInterval(pollQueueMembership, 500);
             if (el.dataset.animado) return;
             el.dataset.animado = '1';
             el.classList.add('item-anim');
-            // escalona a entrada, mas sem deixar o fim da lista lento demais
-            el.style.setProperty('--atraso', (Math.min(i, TETO) * PASSO) + 'ms');
+            /* O escalonamento é o floreio de "a lista apareceu" — vale
+               só para os itens já visíveis quando a lista é montada.
+               Um item que entra por ROLAGEM tem de responder na hora:
+               era esse atraso herdado que fazia o oitavo item esperar
+               0,36s depois de você já ter rolado até ele. */
+            const jaNaTela = el.getBoundingClientRect().top < window.innerHeight;
+            el.style.setProperty('--atraso',
+                jaNaTela ? (Math.min(i, TETO) * PASSO) + 'ms' : '0ms');
             olho.observe(el);
 
             /* REDE DE SEGURANÇA. O item começa invisível e só aparece
