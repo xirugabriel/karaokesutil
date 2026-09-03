@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=47">
+    <link rel="stylesheet" href="style.css?v=48">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -960,7 +960,7 @@
                         <div class="passo">
                             <span class="passo-ic"><svg viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="15" rx="3"/><polygon points="10 9 15.5 12 10 15"/></svg></span>
                             <h4>Escolha a versão</h4>
-                            <p>Toque na sugestão que tiver O TEMPO certo. É exatamente esse vídeo que vai tocar no telão.</p>
+                            <p>Toque na sugestão que tiver a capa certa. É exatamente esse vídeo que vai tocar no telão.</p>
                         </div>
                         <div class="passo">
                             <span class="passo-ic"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>
@@ -1008,7 +1008,7 @@
                     <div class="lead-selo">
                         <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18"/><path d="M12 8S9.5 3.5 7 5s1 3 5 3M12 8s2.5-4.5 5-3-1 3-5 3"/></svg>
                     </div>
-                    <h3 class="lead-titulo">Quer o <b>Sutil-Okê</b> no seu bar ou evento?</h3>
+                    <h3 class="lead-titulo">Quer o <b>Sutil-Okê</b> no seu bar?</h3>
                     <p class="lead-texto">Deixe seu contato e a gente explica como levar o sistema para o seu espaço ou evento.</p>
 
                     <form id="lead-form" onsubmit="enviarLead(event)" novalidate>
@@ -1180,7 +1180,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 47</p>
+            <p class="versao-app">versão 48</p>
 
         </div>
     </div>
@@ -1830,17 +1830,6 @@
         }).then(() => {
             document.getElementById('lead-form').classList.add('hidden');
             document.getElementById('lead-obrigado').classList.remove('hidden');
-            /* EMPURRÃO DE REPINTURA. Esconder o formulário encolhe o
-               cartão em ~55px, e o Safari do iOS às vezes deixa a
-               pintura antiga na região que sobrou: a borda de baixo não
-               é redesenhada e o cartão aparece cortado. Um ciclo de
-               `display` obriga layout e pintura do zero.
-               Não reproduz no Chrome — é defesa para o comportamento
-               visto no iPhone. */
-            const cartao = document.getElementById('lead');
-            cartao.style.display = 'none';
-            void cartao.offsetHeight;
-            cartao.style.display = '';
             lembrarLeadEnviado();
             showToast('Contato enviado! Falamos com você em breve.', 'success');
         }).catch((e) => {
@@ -2791,7 +2780,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=47"></script>
+<script src="app.js?v=48"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
