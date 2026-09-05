@@ -1178,6 +1178,16 @@
   }
   .admin-size-chip:hover{border-color:var(--wine);}
   .admin-size-chip.on{background:var(--wine);color:var(--cream);border-color:var(--wine);}
+  .admin-size-chip.propria{display:inline-flex;align-items:center;gap:8px;padding-right:9px;}
+  .admin-size-chip .tirar{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:19px;height:19px;border-radius:50%;font-size:.62rem;
+    background:rgba(46,17,25,.09);transition:background .18s;
+  }
+  .admin-size-chip .tirar:hover{background:#a5555f;color:#fff;}
+  .admin-size-chip.on .tirar{background:rgba(255,255,255,.24);}
+  .admin-tamanho-novo{display:flex;gap:8px;align-items:center;margin-top:11px;flex-wrap:wrap;}
+  .admin-field .admin-tamanho-novo input[type=text]{flex:1 1 160px;min-width:0;max-width:230px;}
 
   /* barra de salvar fixa no rodapé */
   .admin-salvar-barra{
@@ -1455,6 +1465,9 @@
     .admin-save-btn{width:100%;padding:15px;}
     .admin-reset-btn{width:100%;padding:14px;}
     .admin-size-chip{padding:11px 18px;font-size:.84rem;}
+    .admin-tamanho-novo{gap:8px;}
+    .admin-field .admin-tamanho-novo input[type=text]{flex:1 1 100%;max-width:none;}
+    .admin-tamanho-novo .admin-mini-btn{flex:1 1 100%;padding:11px;}
     .admin-image-drop{padding:22px 14px;}
     .admin-image-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
     .grade-linha{flex-direction:column;align-items:stretch;gap:10px;padding:12px 10px;}
@@ -2259,9 +2272,11 @@ function tamanhosOferecidos(){
       (p.sizes || []).forEach(t=>{ if(t) achados.add(String(t).trim()); });
     }
   });
+  // os tamanhos prontos vêm na ordem natural; os criados pela loja
+  // vêm depois, em ordem alfabética
   return [...achados].sort((a,b)=>{
     const ia = ORDEM_TAMANHOS.indexOf(a), ib = ORDEM_TAMANHOS.indexOf(b);
-    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b, 'pt-BR');
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b, 'pt-BR', {numeric:true});
   });
 }
 
@@ -3191,6 +3206,7 @@ let editingProductId = null;
 let formSizes = [];
 let formImages = [];
 let formColors = [];   // [{name, hex}]
+let formTamanhosExtras = [];   // tamanhos criados pela loja (ex: "G/GG", "38")
 let formGrade = {};    // { "cor||tamanho": quantidade } — ausente = não vendemos
 let pendingDeleteId = null;
 const ALL_CATEGORIES = ["Conjuntos","Sutiãs","Calcinhas","Acessórios"];
@@ -3621,6 +3637,8 @@ document.getElementById('confirmDeleteYes').addEventListener('click', async ()=>
 /* ---------- adicionar / editar produto ---------- */
 function renderProductForm(p){
   formSizes = p && p.sizes ? p.sizes.slice() : [];
+  // tudo que o produto usa e não está na lista pronta é tamanho próprio
+  formTamanhosExtras = formSizes.filter(t => !COMMON_SIZES.includes(t));
   formImages = p ? productImages(p).slice() : [];
   formColors = p && p.colors ? p.colors.map(c=>({name:(c.name||'').trim(), hex:c.hex})) : [];
   formGrade = {};
@@ -3700,8 +3718,14 @@ function renderProductForm(p){
 
       <div class="admin-field">
         <label>Tamanhos disponíveis</label>
-        <div class="admin-size-options" id="sizeChips">
-          ${COMMON_SIZES.map(s=>`<div class="admin-size-chip ${formSizes.includes(s)?'on':''}" data-size="${s}">${s}</div>`).join('')}
+        <div class="admin-size-options" id="sizeChips"></div>
+        <div class="admin-tamanho-novo">
+          <input type="text" id="f-tamanho-novo" placeholder="Ex: G/GG, 38, Plus" maxlength="14" autocomplete="off">
+          <button type="button" class="admin-mini-btn" id="addTamanhoBtn">+ Criar tamanho</button>
+        </div>
+        <div class="admin-image-hint">
+          Além dos prontos, crie o tamanho do jeito que você usa — <b>G/GG</b>, <b>36/38</b>, <b>Plus</b>.
+          Ele entra na grade de estoque e vira filtro na loja. O ✕ apaga um tamanho que você criou.
         </div>
       </div>
 
@@ -3729,21 +3753,10 @@ function renderProductForm(p){
     </div>
   `;
 
-  document.querySelectorAll('#sizeChips .admin-size-chip').forEach(chip=>{
-    chip.addEventListener('click', ()=>{
-      const s = chip.dataset.size;
-      if(formSizes.includes(s)){
-        formSizes = formSizes.filter(x=>x!==s);
-        // some com o estoque das combinações desse tamanho
-        const cores = formColors.length ? formColors.map(c=>c.name) : [null];
-        cores.forEach(cor=>{ delete formGrade[chaveGrade(cor, s)]; });
-      } else {
-        // mantém a ordem P, M, G, GG, Único
-        formSizes = COMMON_SIZES.filter(x => x === s || formSizes.includes(x));
-      }
-      chip.classList.toggle('on');
-      renderGradeEstoque();
-    });
+  renderChipsTamanhos();
+  document.getElementById('addTamanhoBtn').addEventListener('click', criarTamanho);
+  document.getElementById('f-tamanho-novo').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ e.preventDefault(); criarTamanho(); }
   });
 
   renderImageGrid();
@@ -3890,6 +3903,80 @@ function renderProductForm(p){
       btn.textContent = textoOriginal;
     }
   });
+}
+
+/* ---------- tamanhos do produto ---------- */
+
+/* ordem em que os chips aparecem: os prontos primeiro, depois os criados */
+function ordemDeTamanhos(){
+  return COMMON_SIZES.concat(formTamanhosExtras.filter(t => !COMMON_SIZES.includes(t)));
+}
+
+/* tira do estoque todas as combinações de um tamanho */
+function apagarCelulasDoTamanho(tam){
+  const cores = formColors.length ? formColors.map(c=>c.name) : [null];
+  cores.forEach(cor=>{ delete formGrade[chaveGrade(cor, tam)]; });
+}
+
+function renderChipsTamanhos(){
+  const caixa = document.getElementById('sizeChips');
+  if(!caixa) return;
+  caixa.innerHTML = ordemDeTamanhos().map(t=>{
+    const marcado = formSizes.includes(t);
+    const proprio = !COMMON_SIZES.includes(t);
+    return `<div class="admin-size-chip ${marcado?'on':''} ${proprio?'propria':''}" data-size="${esc(t)}">
+      ${esc(t)}${proprio?`<span class="tirar" data-apagar="${esc(t)}" title="Apagar este tamanho">&#10005;</span>`:''}
+    </div>`;
+  }).join('');
+
+  caixa.querySelectorAll('.admin-size-chip').forEach(chip=>{
+    chip.addEventListener('click', (e)=>{
+      // clique no ✕ apaga o tamanho em vez de marcar/desmarcar
+      if(e.target.dataset && e.target.dataset.apagar !== undefined){
+        const alvo = e.target.dataset.apagar;
+        apagarCelulasDoTamanho(alvo);
+        formTamanhosExtras = formTamanhosExtras.filter(x => x !== alvo);
+        formSizes = formSizes.filter(x => x !== alvo);
+        renderChipsTamanhos();
+        renderGradeEstoque();
+        return;
+      }
+      const t = chip.dataset.size;
+      if(formSizes.includes(t)){
+        formSizes = formSizes.filter(x => x !== t);
+        apagarCelulasDoTamanho(t);
+      } else {
+        // reconstrói respeitando a ordem, sem perder os tamanhos criados
+        formSizes = ordemDeTamanhos().filter(x => x === t || formSizes.includes(x));
+      }
+      renderChipsTamanhos();
+      renderGradeEstoque();
+    });
+  });
+}
+
+function criarTamanho(){
+  const campo = document.getElementById('f-tamanho-novo');
+  const msg = document.getElementById('saveProductMsg');
+  if(!campo) return;
+  const nome = campo.value.trim().replace(/\s+/g, ' ');
+  if(!nome) return;
+
+  const jaExiste = ordemDeTamanhos().find(t => t.toLowerCase() === nome.toLowerCase());
+  if(jaExiste){
+    // já existe: só marca ele em vez de duplicar
+    if(!formSizes.includes(jaExiste)){
+      formSizes = ordemDeTamanhos().filter(x => x === jaExiste || formSizes.includes(x));
+    }
+    if(msg){ msg.style.color = 'var(--muted)'; msg.textContent = `"${jaExiste}" já estava na lista — deixei marcado.`; }
+  } else {
+    formTamanhosExtras.push(nome);
+    formSizes = ordemDeTamanhos().filter(x => x === nome || formSizes.includes(x));
+    if(msg){ msg.style.color = '#3d6b34'; msg.textContent = `Tamanho "${nome}" criado. Preencha o estoque dele na grade abaixo.`; }
+  }
+  campo.value = '';
+  renderChipsTamanhos();
+  renderGradeEstoque();
 }
 
 /* ---------- cores do produto ---------- */
