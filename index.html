@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=49">
+    <link rel="stylesheet" href="style.css?v=52">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -1180,7 +1180,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 49</p>
+            <p class="versao-app">versão 52</p>
 
         </div>
     </div>
@@ -1369,9 +1369,43 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const queueRef = db.ref('fila_karaoke');
-    const settingsRef = db.ref('configuracoes/filaAberta');
-    const nowPlayingRef = db.ref('configuracoes/tocandoAgora');
+
+    /* ════════ UNIDADE (qual bar é este) ════════
+       O mesmo site atende todas as unidades. Quem separa uma da outra
+       NÃO é o endereço — é o caminho no banco. Fila, ranking e
+       configurações vivem em `unidades/{id}/...`, então dois bares no
+       mesmo link nunca se misturam.
+
+       O id vem SÓ do link: `?u=centro`. Sem parâmetro é `zonasul`, a
+       primeira casa — cujos QR de mesa já impressos não carregam
+       parâmetro nenhum. É por isso que ela é o padrão: os adesivos que
+       já estão colados continuam valendo.
+
+       NÃO guardo a última unidade no aparelho, e isso é de propósito.
+       Guardando, quem tivesse visitado o Centro e depois escaneasse o
+       QR da Zona Sul (que não tem parâmetro) continuaria vendo o
+       Centro — entraria na fila do bar errado sem perceber. A memória
+       resolveria só o caso de alguém digitar o endereço na mão; o QR
+       sempre traz o parâmetro, inclusive quando é salvo ou repassado.
+       Entre "cair na casa padrão" e "cair na casa errada em silêncio",
+       o primeiro é muito menos grave.
+
+       Fica GLOBAL (fora de `unidades/`): perfis, porque é a mesma
+       pessoa nos dois bares e a foto deve acompanhar; admins, para o
+       DJ operar qualquer casa; e leads, que são contatos de venda. */
+    const UNIDADE_PADRAO = 'zonasul';
+    const UNIDADE = (function () {
+        const doLink = new URLSearchParams(location.search).get('u');
+        const limpo = (doLink || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+        return limpo || UNIDADE_PADRAO;
+    })();
+
+    /* Monta o caminho de um nó que pertence a ESTA unidade. */
+    function noUnidade(caminho) { return 'unidades/' + UNIDADE + '/' + caminho; }
+
+    const queueRef = db.ref(noUnidade('fila_karaoke'));
+    const settingsRef = db.ref(noUnidade('configuracoes/filaAberta'));
+    const nowPlayingRef = db.ref(noUnidade('configuracoes/tocandoAgora'));
     const provider = new firebase.auth.GoogleAuthProvider();
 
     /* ─────────────────────────────────────────────────────────────
@@ -1450,14 +1484,14 @@
         });
 
         // 🚫 O usuário foi banido? (o app do bar grava em banidos/{uid})
-        db.ref('banidos/' + currentUID).on('value', (snapshot) => {
+        db.ref(noUnidade('banidos/' + currentUID)).on('value', (snapshot) => {
             meuBanimento = snapshot.val();
             updateUI();
         }, () => { meuBanimento = null; });
 
         // 🪞 Fila COMPLETA publicada pelo app do bar (inclui os pedidos
         // feitos pelo operador/DJ, que não existem em fila_karaoke).
-        db.ref('fila_espelho').on('value', (snapshot) => {
+        db.ref(noUnidade('fila_espelho')).on('value', (snapshot) => {
             const v = snapshot.val();
             if (v && v.ts) {
                 const itens = v.itens
@@ -1647,9 +1681,9 @@
         return chaveMesAtual() + '-' + String(new Date().getDate()).padStart(2, '0');
     }
     function refDoRanking() {
-        if (rankingModo === 'geral') return db.ref('ranking/geral');
-        if (rankingModo === 'mensal') return db.ref('ranking/mensal/' + chaveMesAtual());
-        return db.ref('ranking/diario/' + chaveDiaAtual());
+        if (rankingModo === 'geral') return db.ref(noUnidade('ranking/geral'));
+        if (rankingModo === 'mensal') return db.ref(noUnidade('ranking/mensal/' + chaveMesAtual()));
+        return db.ref(noUnidade('ranking/diario/' + chaveDiaAtual()));
     }
 
     function carregarRanking() {
@@ -1826,6 +1860,7 @@
             nome: nome,
             whatsapp: digitos,
             uid: currentUID || '',
+            unidade: UNIDADE,   /* de qual bar veio o interesse */
             quando: Date.now(),
         }).then(() => {
             document.getElementById('lead-form').classList.add('hidden');
@@ -1881,7 +1916,7 @@
            o que dá vontade de tentar bater. */
         let linhas = [];
         try {
-            linhas = await topDe(db.ref('ranking/geral'));
+            linhas = await topDe(db.ref(noUnidade('ranking/geral')));
         } catch (e) {
             secao.classList.add('hidden');   // regra bloqueada não vira erro na home
             return;
@@ -2081,7 +2116,7 @@
     function buscarViaApp(termo) {
         return new Promise((resolve, reject) => {
             if (!currentUID) { reject(new Error('Entre com sua conta para buscar.')); return; }
-            const ref = db.ref('buscas').push();
+            const ref = db.ref(noUnidade('buscas')).push();
             let pronto = false;
             const limpar = () => { ref.off(); ref.remove().catch(() => {}); };
             const prazo = setTimeout(() => {
@@ -2780,7 +2815,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=49"></script>
+<script src="app.js?v=52"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
