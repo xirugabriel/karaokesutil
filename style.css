@@ -2234,6 +2234,43 @@ html {
 }
 .lead-nota .ic { width: 12px; height: 12px; stroke: var(--tinta-tenue); }
 
+/* ── AVISO DE PEDIDO PARA OUTRA PESSOA ───────────────────────
+   Âmbar, e não vermelho: é uma advertência, não um erro. Vermelho
+   ali dentro pareceria que algo deu errado no pedido. */
+.rq-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 14px 0 4px;
+    padding: 11px 13px;
+    text-align: left;
+    border-radius: 13px;
+    background: rgba(251, 191, 36, .09);
+    border: 1px solid rgba(251, 191, 36, .28);
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--tinta-fraca);
+}
+.rq-aviso .ic { flex: none; margin-top: 1px; stroke: var(--ambar); }
+.rq-aviso b { color: var(--ambar); font-weight: 700; }
+
+/* Link, não botão: um segundo botão cheio competiria com o
+   "Confirmar pedido" logo abaixo e roubaria o toque. */
+.rq-aviso-link {
+    display: inline;
+    width: auto; margin: 0; padding: 0;
+    background: none !important;
+    border: none; box-shadow: none;
+    font: inherit;
+    font-weight: 700;
+    color: var(--roxo-claro);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* o rótulo colava no título da música quando não havia campo de busca */
+.rq-rotulo-mesa { margin-top: 14px; }
+
 .footer-badge { color: var(--tinta-tenue); font-size: 10.5px; letter-spacing: 1.4px; }
 
 /* ── ASSINATURA DA CASA ──────────────────────────────────────

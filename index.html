@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=53">
+    <link rel="stylesheet" href="style.css?v=54">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -1183,7 +1183,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 53</p>
+            <p class="versao-app">versão 54</p>
 
         </div>
     </div>
@@ -1242,8 +1242,20 @@
             <label>Música + Cantor / Banda</label>
             <input id="rq-song" type="text" placeholder="ex.: Evidências – Chitãozinho & Xororó">
         </div>
-        <label style="text-align:left; display:block;">Número da mesa</label>
+        <label class="rq-rotulo-mesa" style="text-align:left; display:block;">Número da mesa</label>
         <input id="rq-table" type="number" inputmode="numeric" placeholder="ex.: 7">
+
+        <!-- Aviso no ponto da decisão. Fica ACIMA do botão de confirmar
+             de propósito: depois de confirmar já não adianta avisar. -->
+        <div class="rq-aviso">
+            <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+            <div>
+                <b>Peça só para você.</b> Pedir no lugar de outra pessoa
+                pode resultar em banimento do karaokê.
+                <button type="button" class="rq-aviso-link" onclick="verRegrasDoPedido()">Ler as regras</button>
+            </div>
+        </div>
+
         <button class="btn-success btn-estrela" onclick="confirmRequest()">
             <svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
             Confirmar pedido
@@ -1648,7 +1660,7 @@
         updateUI();
         tituloDaAba(tab);
         if (tab === 'ranking') carregarRanking();
-        if (tab === 'pedir') carregarTop5();
+        if (tab === 'pedir') { carregarTop5(); retomarPedidoSeVeioDasRegras(); }
         /* Quem rola aqui é o <body> (o CSS fixa html/body em 100% de
            altura), não a janela — window.scrollTo não tinha efeito.
            Mando nos dois pra funcionar de qualquer jeito. */
@@ -2259,6 +2271,27 @@
         pendingVideo = null;
     }
 
+    /* Ler as regras NÃO pode custar o pedido.
+       `closeRequestSheet` limpa o `pendingVideo`; se eu usasse ela
+       aqui, a pessoa voltaria das Regras e teria que buscar a música
+       de novo. Quem foi conferir se pode pedir é justamente quem está
+       tentando fazer certo — punir esse com retrabalho é o contrário
+       do que o aviso quer.
+
+       Então: esconde a folha, guarda o pedido, e reabre sozinha quando
+       ela voltar para a aba de pedir. */
+    let voltarParaPedido = false;
+    function verRegrasDoPedido() {
+        document.getElementById('request-sheet').classList.add('hidden');
+        voltarParaPedido = !!pendingVideo;
+        goTab('regras');
+    }
+    function retomarPedidoSeVeioDasRegras() {
+        if (!voltarParaPedido) return;
+        voltarParaPedido = false;
+        if (pendingVideo) document.getElementById('request-sheet').classList.remove('hidden');
+    }
+
     function confirmRequest() {
         if (meuBanimento) {
             alert('Sua conta está bloqueada para pedidos.\n\nMotivo: ' +
@@ -2834,7 +2867,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=53"></script>
+<script src="app.js?v=54"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
