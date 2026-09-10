@@ -2421,10 +2421,16 @@ html {
    Continua com cara de link, e não de botão cheio: um segundo botão
    sólido competiria com o "Confirmar pedido" logo abaixo. */
 .rq-aviso-link {
-    display: inline-flex;
+    /* `flex`, não `inline-flex`: o link precisa CAIR numa linha só
+       dele. Com inline-flex ele continuava sendo conteúdo de linha e
+       só ia para baixo quando o parágrafo por acaso enchia a última
+       linha — bastou a caixa ficar um pouco mais larga para ele voltar
+       a pendurar no fim do texto, com a entrelinha inchada pela margem.
+       `fit-content` mantém o sublinhado colado ao texto. */
+    display: flex;
     align-items: center;
     gap: 3px;
-    width: auto;
+    width: fit-content;
     margin: 7px 0 0;
     padding: 2px 0;
     background: none !important;
@@ -2444,8 +2450,130 @@ html {
     stroke-linejoin: round;
 }
 
-/* o rótulo colava no título da música quando não havia campo de busca */
-.rq-rotulo-mesa { margin-top: 14px; }
+/* ════════════════════════════════════════════════════════════
+   🎤 FOLHA DE PEDIDO — a caixa de confirmar a música
+   ════════════════════════════════════════════════════════════
+
+   RITMO VERTICAL POR `gap`, NÃO POR MARGEM.
+   Antes cada filho trazia a sua própria margem e o resultado era
+   irregular: entre o campo da mesa e o aviso davam 28px (a margem
+   do input é inline-block, então não colapsa com a do aviso), mas
+   entre o aviso e o "Confirmar pedido" davam 8px. O aviso ficava
+   grudado no botão e distante do campo. Com um `gap` único na
+   coluna, todo espaçamento passa a ser o mesmo por construção —
+   não há margem para desregular de novo. */
+/* TELA CURTA. Com os dois avisos (unidade errada + pedir para outro)
+   a folha passa de 688px, e um iPhone SE tem 667px. O `align-items:
+   center` do overlay cortaria o TOPO de um jeito irrecuperável: a
+   rolagem só vai para baixo, então o título e a música sumiriam sem
+   volta. `flex-start` + `margin: auto` centraliza quando sobra espaço
+   e rola a caixa inteira quando falta. */
+#request-sheet {
+    align-items: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 0;
+}
+#request-sheet > .modal-box { margin: auto; }
+
+.modal-box.sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 26px 22px;   /* 28px de lado deixava a miniatura sem espaço */
+}
+.modal-box.sheet > * { margin: 0 !important; }
+.modal-box.sheet > .hidden { display: none; }
+
+/* ── PRÉVIA DA MÚSICA ────────────────────────────────────────
+   Estes cinco seletores não tinham UMA linha de CSS. O `<span>`
+   da miniatura ficava 0×0, então a capa do vídeo nunca aparecia
+   — nem aqui nem em produção — e o título e o canal saíam com o
+   mesmo tamanho e a mesma cor, centralizados, sem hierarquia
+   nenhuma: o nome do canal parecia a segunda linha do título. */
+.rq-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    text-align: left;
+    border-radius: 14px;
+    background: var(--cartao-alto);
+    border: 1px solid var(--linha);
+}
+.rq-thumb {
+    flex: none;
+    width: 54px; height: 54px;
+    border-radius: 10px;
+    /* A cor de base não é decoração: se a capa não carregar (rede
+       ruim, vídeo removido), sobra um bloco do tema no lugar de um
+       buraco branco. */
+    background-color: rgba(168, 85, 247, .16);
+    background-size: cover;
+    background-position: center;
+    border: 1px solid var(--linha);
+}
+.rq-meta { flex: 1 1 auto; min-width: 0; }
+/* Duas linhas no máximo: título de karaokê vem com "(Ao Vivo)",
+   "(Clipe Oficial)" e afins, e sem limite ele empurrava o resto
+   da caixa para baixo. */
+.rq-title {
+    font-size: 14.5px; font-weight: 700; line-height: 1.3;
+    color: #fff;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+.rq-channel {
+    margin-top: 3px;
+    font-size: 11.5px; font-weight: 500;
+    color: var(--tinta-tenue);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── CAMPOS ──────────────────────────────────────────────────
+   Rótulo e campo são uma coisa só; por isso moram num grupo com
+   folga curta, em vez de flutuarem no `gap` grande da coluna. */
+.rq-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+}
+.rq-campo label {
+    font-size: 11.5px; font-weight: 700;
+    letter-spacing: 1.1px; text-transform: uppercase;
+    color: var(--tinta-fraca);
+}
+.modal-box.sheet input {
+    width: 100%;
+    height: 48px;
+    padding: 0 15px;
+    font-size: 16px;   /* menos que isto e o iOS dá zoom ao focar */
+}
+
+/* ── AÇÕES ───────────────────────────────────────────────────
+   Juntas e no fim. O "Cancelar" é saída, não etapa. */
+.rq-acoes { display: flex; flex-direction: column; gap: 8px; }
+.rq-acoes button { margin: 0 !important; }
+
+/* "Trocar música" é um caminho lateral: não pode competir com o
+   botão de confirmar, mas precisa ser alcançável com o dedo. */
+.rq-trocar {
+    align-self: flex-start;
+    width: auto !important;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 12px !important;
+    background: var(--cartao-alto) !important;
+    border: 1px solid var(--linha-forte) !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+    font-size: 12.5px; font-weight: 600;
+    color: var(--tinta-fraca) !important;
+}
+.rq-trocar .ic { width: 14px; height: 14px; stroke: var(--roxo-claro); }
 
 .footer-badge { color: var(--tinta-tenue); font-size: 10.5px; letter-spacing: 1.4px; }
 

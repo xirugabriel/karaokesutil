@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=58">
+    <link rel="stylesheet" href="style.css?v=59">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -699,7 +699,7 @@
         <p>Apenas contas autorizadas controlam a fila. Este é o seu identificador:</p>
         <code id="dj-uid" class="uid-box"></code>
         <button onclick="copyUID()">Copiar meu ID</button>
-        <p class="modal-hint">No <b>Realtime Database</b> (atenção: não é o Firestore!) crie o nó <b>admins</b> e, dentro dele, um item cujo <b>NOME</b> seja exatamente este ID, com valor <b>true</b>.</p>
+        <p class="modal-hint">No <b>Realtime Database</b> (atenção: não é o Firestore!) abra <b id="dj-caminho">unidades/…/admins</b> e crie ali dentro um item cujo <b>NOME</b> seja exatamente este ID, com valor <b>true</b>. Cada unidade tem a sua lista de DJs.</p>
         <p id="dj-diag" class="modal-diag"></p>
         <button id="dj-claim" class="btn-success hidden" onclick="claimFirstAdmin()">
             <svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
@@ -1184,7 +1184,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 58</p>
+            <p class="versao-app">versão 59</p>
 
         </div>
     </div>
@@ -1239,12 +1239,14 @@
             <svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             Trocar música
         </button>
-        <div id="rq-song-row" class="hidden" style="text-align:left;">
-            <label>Música + Cantor / Banda</label>
+        <div id="rq-song-row" class="rq-campo hidden">
+            <label for="rq-song">Música + Cantor / Banda</label>
             <input id="rq-song" type="text" placeholder="ex.: Evidências – Chitãozinho & Xororó">
         </div>
-        <label class="rq-rotulo-mesa" style="text-align:left; display:block;">Número da mesa</label>
-        <input id="rq-table" type="number" inputmode="numeric" placeholder="ex.: 7">
+        <div class="rq-campo">
+            <label for="rq-table">Número da mesa</label>
+            <input id="rq-table" type="number" inputmode="numeric" placeholder="ex.: 7">
+        </div>
 
         <!-- Só aparece quando a pessoa está OLHANDO outra unidade. É o
              erro mais caro possível aqui: o pedido entra na fila de um
@@ -1275,11 +1277,16 @@
             </div>
         </div>
 
-        <button class="btn-success btn-estrela" onclick="confirmRequest()">
-            <svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
-            Confirmar pedido
-        </button>
-        <button class="btn-cancel" onclick="closeRequestSheet()">Cancelar</button>
+        <!-- Os dois botões andam juntos, separados do resto. Soltos na
+             coluna eles herdavam o mesmo espaçamento dos campos e o
+             "Cancelar" parecia mais um passo do formulário. -->
+        <div class="rq-acoes">
+            <button class="btn-success btn-estrela" onclick="confirmRequest()">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+                Confirmar pedido
+            </button>
+            <button class="btn-cancel" onclick="closeRequestSheet()">Cancelar</button>
+        </div>
     </div>
 </div>
 
@@ -1454,8 +1461,9 @@
        o primeiro é muito menos grave.
 
        Fica GLOBAL (fora de `unidades/`): perfis, porque é a mesma
-       pessoa nos dois bares e a foto deve acompanhar; admins, para o
-       DJ operar qualquer casa; e leads, que são contatos de venda. */
+       pessoa nos dois bares e a foto deve acompanhar; e leads, que são
+       contatos de venda, não têm dono. `admins` NÃO é global — cada
+       casa tem o seu DJ, então a lista mora em unidades/<id>/admins. */
     const UNIDADE_PADRAO = 'zonasul';
 
     /* DUAS UNIDADES, NÃO UMA.
@@ -1728,8 +1736,13 @@
     }
 
     // DJ access is granted only to Google accounts whose UID is listed under
-    // /admins in the database (managed in the Firebase console, enforced by
+    // unidades/<unidade>/admins (managed in the Firebase console, enforced by
     // the database security rules). No shared password lives in the code.
+    //
+    // Cada casa tem o SEU DJ: o cadastro fica dentro da unidade, não na raiz.
+    // Quem é DJ da Zona Sul não opera o Centro — e como o caminho acompanha
+    // `UNIDADE`, um DJ que trocar o emblema para espiar a outra casa perde o
+    // painel enquanto estiver olhando de fora, que é o comportamento certo.
     function toggleAdmin() {
         if (isAdmin) { isAdmin = false; updateUI(); return; }
 
@@ -1738,8 +1751,8 @@
             return;
         }
 
-        db.ref('admins/' + currentUID).once('value').then((snap) => {
-            console.log('[DJ] UID:', currentUID, '| /admins value:', snap.val());
+        db.ref(noUnidade('admins/' + currentUID)).once('value').then((snap) => {
+            console.log('[DJ] UID:', currentUID, '| unidade:', UNIDADE, '| admins value:', snap.val());
             // Accept any present value (true, "true", 1, ...) to avoid type pitfalls
             if (snap.exists() && snap.val() !== false && snap.val() !== 0) {
                 isAdmin = true;
@@ -1755,6 +1768,7 @@
 
     function showAdminDenied() {
         document.getElementById('dj-uid').textContent = currentUID;
+        document.getElementById('dj-caminho').textContent = noUnidade('admins');
         document.getElementById('dj-modal').classList.remove('hidden');
 
         // Auto-diagnosis: figure out WHY access was denied and explain in plain words.
@@ -1763,34 +1777,37 @@
         claimBtn.classList.add('hidden');
         diag.textContent = 'Verificando seu cadastro...';
         diag.className = 'modal-diag';
-        db.ref('admins').once('value').then((s) => {
+        const caminhoAdmins = noUnidade('admins');
+        db.ref(caminhoAdmins).once('value').then((s) => {
             const keys = s.exists() && s.val() ? Object.keys(s.val()) : [];
             if (keys.length === 0) {
-                diag.textContent = '⚠ Ainda não existe nenhum DJ cadastrado. Toque no botão abaixo para tornar ESTA conta o DJ principal.';
+                /* Sem "na"/"no" antes do nome: o artigo muda com a unidade
+                   ("na Zona Sul", mas "no Centro"), e o nome vem do banco. */
+                diag.textContent = '⚠ Nenhum DJ cadastrado nesta unidade (' + UNIDADE_NOME + '). Toque no botão abaixo para tornar ESTA conta o DJ desta casa.';
                 claimBtn.classList.remove('hidden');   // offer one-tap bootstrap
             } else if (keys.indexOf(currentUID) === -1) {
-                diag.textContent = '⚠ Existem ' + keys.length + ' ID(s) em /admins, mas nenhum é igual ao seu. Verifique se colou o ID certo (sem espaços) e se está logado na mesma conta Google.';
+                diag.textContent = '⚠ Existem ' + keys.length + ' ID(s) em ' + caminhoAdmins + ', mas nenhum é igual ao seu. Verifique se colou o ID certo (sem espaços), se está logado na mesma conta Google e se esta é a unidade certa (' + UNIDADE_NOME + ').';
             } else {
-                diag.textContent = '✓ Seu ID está em /admins. Feche e toque em DJ novamente.';
+                diag.textContent = '✓ Seu ID está em ' + caminhoAdmins + '. Feche e toque em DJ novamente.';
                 diag.className = 'modal-diag ok';
             }
         }).catch((e) => {
-            diag.textContent = '⚠ Não consegui ler /admins (as regras podem estar bloqueando a leitura). Detalhe: ' + (e && e.message ? e.message : e);
+            diag.textContent = '⚠ Não consegui ler ' + caminhoAdmins + ' (as regras podem estar bloqueando a leitura). Detalhe: ' + (e && e.message ? e.message : e);
         });
     }
 
-    // One-tap bootstrap for the first DJ — only works while the database is
-    // still open (before the security rules are published). After that, admins
-    // must be added through the Firebase console.
+    // One-tap bootstrap for the first DJ of THIS unidade — only works while
+    // that unidade ainda não tem nenhum DJ. Depois disso, novos DJs entram
+    // pelo console do Firebase.
     async function claimFirstAdmin() {
         if (!currentUID) return;
         const ok = await perguntar({
-            titulo: 'Tornar esta conta o DJ principal?',
-            detalhe: 'Ela passa a controlar a fila do karaokê.',
+            titulo: 'Tornar esta conta o DJ desta unidade?',
+            detalhe: 'Ela passa a controlar a fila do karaokê da unidade ' + UNIDADE_NOME + '. As outras casas não são afetadas.',
             sim: 'Sim, sou o DJ',
         });
         if (!ok) return;
-        db.ref('admins/' + currentUID).set(true).then(() => {
+        db.ref(noUnidade('admins/' + currentUID)).set(true).then(() => {
             isAdmin = true;
             closeDJModal();
             updateUI();
@@ -3103,7 +3120,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=58"></script>
+<script src="app.js?v=59"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
