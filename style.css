@@ -2234,6 +2234,58 @@ html {
 }
 .lead-nota .ic { width: 12px; height: 12px; stroke: var(--tinta-tenue); }
 
+/* ════════════════════════════════════════════════════════════
+   ❓ PERGUNTA DE SIM/NÃO — no lugar do confirm() do navegador
+   ════════════════════════════════════════════════════════════ */
+.pergunta-box { text-align: center; }
+
+.pergunta-selo {
+    width: 56px; height: 56px;
+    margin: 0 auto 14px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: rgba(168, 85, 247, .13);
+    border: 1px solid rgba(168, 85, 247, .32);
+}
+.pergunta-selo .ic { width: 25px; height: 25px; stroke: var(--roxo-claro); }
+/* ação destrutiva veste vermelho — a cor avisa antes do texto */
+.pergunta-selo.perigo {
+    background: rgba(255, 77, 109, .12);
+    border-color: rgba(255, 77, 109, .34);
+    box-shadow: 0 0 24px rgba(255, 77, 109, .16);
+}
+.pergunta-selo.perigo .ic { stroke: #FF6B85; }
+
+.pergunta-box h3 { margin: 0 0 6px; font-size: 18px; color: #fff; }
+
+/* O detalhe é o nome da música. `anywhere` porque título de karaokê
+   vem com parênteses e traços e pode não ter espaço onde quebrar. */
+.pergunta-detalhe {
+    margin: 0 0 18px;
+    padding: 10px 13px;
+    border-radius: 12px;
+    background: var(--cartao-alto);
+    border: 1px solid var(--linha);
+    font-size: 13.5px; font-weight: 600; line-height: 1.4;
+    color: var(--tinta);
+    overflow-wrap: anywhere;
+}
+.pergunta-detalhe.hidden { display: none; }
+
+.pergunta-sim {
+    width: 100%;
+    margin: 0 0 9px;
+    padding: 14px;
+    border: none;
+    border-radius: var(--raio);
+    background: linear-gradient(120deg, var(--roxo-escuro), var(--roxo)) !important;
+    font-size: 14.5px; font-weight: 700; color: #fff;
+}
+.pergunta-sim.perigo {
+    background: linear-gradient(120deg, #B3253F, #FF4D6D) !important;
+    box-shadow: 0 8px 22px rgba(255, 77, 109, .28);
+}
+
 /* ── AVISO DE PEDIDO PARA OUTRA PESSOA ───────────────────────
    Âmbar, e não vermelho: é uma advertência, não um erro. Vermelho
    ali dentro pareceria que algo deu errado no pedido. */
