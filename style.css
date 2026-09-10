@@ -1508,7 +1508,7 @@ html {
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-.next-badge, .stage-badge {
+.next-badge {
     flex: none;
     display: inline-flex; align-items: center; gap: 5px;
     font-size: 10.5px; font-weight: 700;
@@ -1519,7 +1519,7 @@ html {
     background: rgba(52, 211, 153, .12);
     border: 1px solid rgba(52, 211, 153, .3);
 }
-.next-badge .ic, .stage-badge .ic { width: 13px; height: 13px; stroke: var(--verde); }
+.next-badge .ic { width: 13px; height: 13px; stroke: var(--verde); }
 
 /* ── CARD "SUA VEZ" ─────────────────────────────────────────── */
 .turn-card {

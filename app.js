@@ -137,7 +137,7 @@ const appRoot = document.getElementById('app');
 
 const uiObserver = new MutationObserver(() => {
     // Equalizer on headings
-    appRoot.querySelectorAll('.queue-section-title, .admin-title').forEach(injectEqualizer);
+    appRoot.querySelectorAll('.queue-section-title').forEach(injectEqualizer);
 
     // Stagger queue item animations
     appRoot.querySelectorAll('.queue-item').forEach((el, i) => {
