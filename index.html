@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=61">
+    <link rel="stylesheet" href="style.css?v=62">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -1079,7 +1079,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 61</p>
+            <p class="versao-app">versão 62</p>
 
         </div>
     </div>
@@ -1177,6 +1177,28 @@
      cinza do sistema no meio de uma tela que é toda escura e roxa.
      Além de destoar, ele não diz O QUE está sendo cancelado — e numa
      ação destrutiva isso importa mais que a aparência. -->
+<!-- ── PRÉVIA DA MÚSICA ────────────────────────────────────── -->
+<div id="previa-sheet" class="modal-overlay hidden">
+    <div class="modal-box previa-box">
+        <div class="previa-video" id="previa-video"></div>
+        <div class="previa-textos">
+            <div class="previa-titulo" id="previa-titulo"></div>
+            <div class="previa-canal" id="previa-canal"></div>
+        </div>
+        <button class="btn-success btn-estrela" onclick="pedirDaPrevia()">
+            <svg class="ic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+            Quero cantar esta
+        </button>
+        <!-- Nem todo vídeo permite ser tocado fora do YouTube. Quando o
+             player mostrar "indisponível", esta é a saída. -->
+        <a class="previa-link" id="previa-link" href="#" target="_blank" rel="noopener noreferrer">
+            Não carregou? Abrir no YouTube
+            <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
+        <button class="btn-cancel" onclick="fecharPrevia()">Fechar</button>
+    </div>
+</div>
+
 <!-- ── ESCOLHER UNIDADE ────────────────────────────────────── -->
 <div id="unidade-sheet" class="modal-overlay hidden">
     <div class="modal-box unidade-box">
@@ -1495,6 +1517,8 @@
 
     let currentUser = null;
     let currentUID = null;
+    let resultadosBusca = [];   // resultado da última busca; o HTML guarda só o índice
+    let previaAtual = null;     // o vídeo aberto na prévia, para pedir dali mesmo
     let localQueue = [];
     let espelhoQueue = null; // fila completa espelhada pelo app (site + DJ)
     let meuBanimento = null; // {nome, motivo, quando} se a conta estiver banida
@@ -2154,24 +2178,92 @@
                     (nome da música + cantor).</div>`;
                 return;
             }
-            box.innerHTML = items.map(v => {
-                const data = encodeURIComponent(JSON.stringify(v));
+            /* Os resultados ficam num array e o HTML só guarda o ÍNDICE.
+               Antes cada botão carregava o JSON inteiro codificado dentro
+               de um `onclick` — aspas dentro de aspas dentro de string,
+               que é exatamente onde um escape se perde e derruba o script
+               todo. Com um número não há o que escapar. */
+            resultadosBusca = items;
+            box.innerHTML = items.map((v, i) => {
                 const dur = v.duration ? esc(v.duration) : '';
                 // Já está na biblioteca do PC — sem risco de falhar o
                 // download. (Não muda a ordem da fila, só a garantia.)
                 const pronta = !!v.offline;
-                return `<button class="sr-item${pronta ? ' sr-pronta' : ''}" onclick='openRequest(JSON.parse(decodeURIComponent("${data}")))'>
-                    <span class="sr-thumb" style="background-image:url('${v.thumb}')">${dur ? `<span class="sr-dur">${dur}</span>` : ''}</span>
-                    <span class="sr-info">
-                        <span class="sr-title">${esc(v.title)}</span>
-                        <span class="sr-ch"><span class="sr-ch-name">${esc(v.channel)}</span>${dur ? `<span class="sr-time">${ic('relogio','ic-xs')}${dur}</span>` : ''}${pronta ? `<span class="sr-pronta-chip">${ic('check','ic-xs')}Já baixada</span>` : ''}</span>
-                    </span>
-                    <span class="sr-add">${ic('play','ic-sm')}</span>
-                </button>`;
+                return `<div class="sr-item${pronta ? ' sr-pronta' : ''}">
+                    <button class="sr-previa" onclick="verPrevia(${i})" aria-label="Ver prévia de ${esc(v.title)}">
+                        <span class="sr-thumb" style="background-image:url('${esc(v.thumb)}')">
+                            <span class="sr-play">${ic('play','ic-sm')}</span>
+                            ${dur ? `<span class="sr-dur">${dur}</span>` : ''}
+                        </span>
+                    </button>
+                    <button class="sr-escolher" onclick="escolherResultado(${i})">
+                        <span class="sr-info">
+                            <span class="sr-title">${esc(v.title)}</span>
+                            <span class="sr-ch"><span class="sr-ch-name">${esc(v.channel)}</span>${dur ? `<span class="sr-time">${ic('relogio','ic-xs')}${dur}</span>` : ''}${pronta ? `<span class="sr-pronta-chip">${ic('check','ic-xs')}Já baixada</span>` : ''}</span>
+                        </span>
+                        <span class="sr-add">${ic('mic','ic-sm')}</span>
+                    </button>
+                </div>`;
             }).join('');
         } catch (e) {
             box.innerHTML = `<div class="sr-msg">Erro na busca: ${esc(e.message)}.<br>Tente novamente em instantes.</div>`;
         }
+    }
+
+    /* ════════ PRÉVIA DA MÚSICA ════════
+       Antes de entrar na fila, a pessoa ouve o que vai tocar no telão.
+       Importa porque "Evidências" tem dezenas de versões no YouTube e
+       algumas não são karaokê de verdade — vinha gente descobrir isso
+       só no palco, com o microfone na mão.
+
+       Toca DENTRO do site, num iframe, em vez de mandar para o YouTube.
+       Abrir o app do YouTube tira a pessoa daqui e, no iPhone, voltar
+       significa trocar de aplicativo — muita gente não voltaria. */
+    function verPrevia(i) {
+        const v = resultadosBusca[i];
+        if (!v || !v.id) return;
+        previaAtual = v;
+
+        document.getElementById('previa-titulo').textContent = v.title || '';
+        document.getElementById('previa-canal').textContent = v.channel || '';
+        document.getElementById('previa-link').href =
+            'https://www.youtube.com/watch?v=' + encodeURIComponent(v.id);
+
+        /* `playsinline=1` é obrigatório no iPhone: sem ele o iOS joga o
+           vídeo em tela cheia e a pessoa perde a folha de pedido. */
+        const palco = document.getElementById('previa-video');
+        palco.innerHTML = '';
+        const f = document.createElement('iframe');
+        f.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(v.id) +
+                '?playsinline=1&autoplay=1&rel=0&modestbranding=1';
+        f.allow = 'autoplay; encrypted-media; picture-in-picture';
+        f.allowFullscreen = true;
+        f.setAttribute('frameborder', '0');
+        f.title = 'Prévia: ' + (v.title || '');
+        palco.appendChild(f);
+
+        document.getElementById('previa-sheet').classList.remove('hidden');
+    }
+
+    function fecharPrevia() {
+        /* Apagar o iframe é o que CORTA o som. Só esconder o modal
+           deixaria o vídeo tocando atrás, invisível e sem pausa. */
+        document.getElementById('previa-video').innerHTML = '';
+        document.getElementById('previa-sheet').classList.add('hidden');
+        previaAtual = null;
+    }
+
+    /* A prévia não pode virar beco sem saída: quem gostou pede dali
+       mesmo, sem ter que fechar e procurar a linha na lista de novo. */
+    function pedirDaPrevia() {
+        const v = previaAtual;
+        fecharPrevia();
+        if (v) openRequest(v);
+    }
+
+    function escolherResultado(i) {
+        const v = resultadosBusca[i];
+        if (v) openRequest(v);
     }
 
     function searchCategory(name) {
@@ -2829,7 +2921,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=61"></script>
+<script src="app.js?v=62"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
