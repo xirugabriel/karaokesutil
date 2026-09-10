@@ -1347,20 +1347,6 @@ function contarAte(el, alvo, aoTerminar) {
 
     const NOTA = 1000;   /* acima dos 950 da roleta: nota de quem ganhou */
 
-    /* Trocar de unidade recarrega a página. Repetir a abertura a cada
-       troca seria cansativo — a pessoa já viu a marca há dez segundos.
-       A marca some, mas o `sessionStorage` só; numa visita nova (aba
-       nova pelo QR) a intro volta normalmente. */
-    let pularIntro = false;
-    try {
-        pularIntro = sessionStorage.getItem('semIntro') === '1';
-        if (pularIntro) sessionStorage.removeItem('semIntro');
-    } catch (e) {}
-    if (pularIntro) {
-        document.documentElement.classList.remove('intro-ativa');
-        intro.remove();
-        return;
-    }
 
     let saiu = false;
     function sair() {

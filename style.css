@@ -2248,40 +2248,77 @@ html {
     box-shadow: 0 0 8px var(--ambar);
 }
 
+.unidade-box { text-align: center; }
+.unidade-selo {
+    width: 54px; height: 54px;
+    margin: 0 auto 14px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: rgba(168, 85, 247, .13);
+    border: 1px solid rgba(168, 85, 247, .32);
+}
+.unidade-selo .ic { width: 25px; height: 25px; stroke: var(--roxo-claro); }
+.unidade-box h3 { margin: 0 0 7px; font-size: 18px; color: #fff; }
+
 .unidade-ajuda {
-    margin: 0 0 16px;
+    margin: 0 0 18px;
     font-size: 13px; line-height: 1.5;
     color: var(--tinta-fraca);
 }
+.unidade-ajuda b { color: var(--tinta); font-weight: 700; }
+
 .unidade-opcao {
     width: 100%;
     margin: 0 0 9px;
     padding: 14px 15px;
-    display: flex; align-items: center; gap: 9px;
+    display: flex; align-items: center; gap: 11px;
     border-radius: var(--raio);
     background: var(--cartao-alto) !important;
     border: 1px solid var(--linha-forte);
     font-size: 15px; font-weight: 700;
     color: var(--tinta);
     text-align: left;
+    transition: border-color var(--rapido);
 }
 .unidade-opcao.atual {
-    border-color: rgba(168, 85, 247, .55);
-    background: linear-gradient(120deg, rgba(168,85,247,.16), transparent 62%), var(--cartao-alto) !important;
+    border-color: rgba(168, 85, 247, .5);
+    background: linear-gradient(120deg, rgba(168,85,247,.15), transparent 65%), var(--cartao-alto) !important;
     color: #fff;
 }
-.unidade-opcao .ic { margin-left: auto; stroke: var(--roxo-claro); }
-.unidade-opcao-nome { flex: none; }
+
+/* Ponto de status: verde onde a pessoa está, roxo no que ela olha,
+   apagado no resto. A linha se lê sem nenhuma palavra. */
+.unidade-ponto {
+    flex: none;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--linha-forte);
+}
+.unidade-ponto.casa  { background: var(--verde);      box-shadow: 0 0 8px var(--verde); }
+.unidade-ponto.vendo { background: var(--roxo-claro); box-shadow: 0 0 8px var(--roxo); }
+
+/* Nome em cima, legenda embaixo. Em linha única os três blocos não
+   cabiam em 375px e o nome quebrava no meio ("Zona / Sul"). */
+.unidade-textos {
+    flex: 1 1 auto; min-width: 0;
+    display: flex; flex-direction: column; gap: 3px;
+}
+.unidade-opcao-nome { line-height: 1.2; }
+
 /* "você está aqui" desfaz a dúvida de qual bar é o da pessoa */
 .unidade-tag {
-    font-size: 9.5px; font-weight: 700;
-    letter-spacing: .8px; text-transform: uppercase;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .4px;
     color: var(--verde);
-    background: rgba(52, 211, 153, .13);
-    border: 1px solid rgba(52, 211, 153, .3);
-    padding: 3px 7px;
-    border-radius: 20px;
 }
+/* "vendo" / "ver" no fim: diz o que a linha É e o que ela FAZ */
+.unidade-estado {
+    flex: none;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--tinta-tenue);
+}
+.unidade-opcao.atual .unidade-estado { color: var(--roxo-claro); }
 
 /* Aviso vermelho no modal do pedido quando ela está vendo outra casa.
    Vermelho, e não âmbar como o outro aviso ali: aquele é conselho,
@@ -2989,6 +3026,11 @@ html {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    /* `width: auto` NÃO é redundante: o `button` global do index.html
+       manda `width: 100%`, e ao virar botão o emblema esticou para a
+       largura toda. A regra de classe vence nas outras propriedades,
+       mas não naquilo que eu não declarei. */
+    width: auto;
     margin: 0 0 14px;
     padding: 5px 12px 5px 10px;
     border-radius: 20px;
