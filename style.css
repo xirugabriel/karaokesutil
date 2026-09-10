@@ -2794,6 +2794,46 @@ html {
     width: min(72vw, 420px);
     line-height: 0;
 }
+
+/* Nome da casa na abertura. Discreto, mas legível: existe para quem
+   escaneou o QR errado perceber antes de entrar na fila. */
+.intro-unidade {
+    margin: 4px 0 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--tinta-fraca);
+}
+.intro-unidade:empty { display: none; }
+
+/* Mesma informação, permanente, no topo da tela inicial — é ali que a
+   pessoa pede música, então é ali que o engano custa caro. */
+.unidade-aqui {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 14px;
+    padding: 5px 12px 5px 10px;
+    border-radius: 20px;
+    background: rgba(168, 85, 247, .12);
+    border: 1px solid rgba(168, 85, 247, .28);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--roxo-claro);
+}
+.unidade-aqui:empty { display: none; }
+/* o ponto que marca "você está aqui" */
+.unidade-aqui::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--verde);
+    box-shadow: 0 0 8px var(--verde);
+}
+
 #intro-logo, #intro-logo-traco {
     width: 100%;
     height: auto;

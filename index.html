@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=52">
+    <link rel="stylesheet" href="style.css?v=53">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -679,9 +679,10 @@
         <div id="intro-placar" aria-hidden="true">
             <span id="intro-nota">0</span>
             <span id="intro-pts">pontos</span>
-            <!-- (a assinatura da intro está no fim deste bloco, fora do
-                 miolo, para ficar colada no rodapé da tela) -->
         </div>
+        <!-- Em qual bar a pessoa está. Serve de conferência: quem
+             escaneou um QR errado percebe antes de entrar na fila. -->
+        <p class="intro-unidade" id="intro-unidade"></p>
     </div>
     <p class="intro-assinatura">powered by <b>sutilgastrobeer</b></p>
 </div>
@@ -804,6 +805,8 @@
 
         <!-- ═══════ ABA: PEDIR (início) ═══════ -->
         <div id="tab-pedir" class="tab-panel">
+
+            <p class="unidade-aqui" id="unidade-aqui"></p>
 
             <!-- Encaixe do "Tocando agora" nesta aba. O card nasce dentro
                  dele e volta para cá sempre que a aba inicial abre. -->
@@ -1180,7 +1183,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 52</p>
+            <p class="versao-app">versão 53</p>
 
         </div>
     </div>
@@ -1400,8 +1403,24 @@
         return limpo || UNIDADE_PADRAO;
     })();
 
+    /* Nome de gente para mostrar na tela. Sem entrada na tabela, cai
+       no próprio id — é feio, mas é melhor que a tela ficar muda e o
+       cliente não descobrir em que bar está. */
+    const NOMES_UNIDADE = { zonasul: 'Zona Sul', centro: 'Centro' };
+    const UNIDADE_NOME = NOMES_UNIDADE[UNIDADE] || UNIDADE;
+
     /* Monta o caminho de um nó que pertence a ESTA unidade. */
     function noUnidade(caminho) { return 'unidades/' + UNIDADE + '/' + caminho; }
+
+    /* Escreve o nome da casa nos dois lugares. Roda já, e não no
+       carregamento: a intro aparece na primeira pintura e ficaria com
+       um espaço vazio se esperasse. */
+    (function mostrarUnidade() {
+        const na = document.getElementById('intro-unidade');
+        const no = document.getElementById('unidade-aqui');
+        if (na) na.textContent = UNIDADE_NOME;
+        if (no) no.textContent = UNIDADE_NOME;
+    })();
 
     const queueRef = db.ref(noUnidade('fila_karaoke'));
     const settingsRef = db.ref(noUnidade('configuracoes/filaAberta'));
@@ -2815,7 +2834,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=52"></script>
+<script src="app.js?v=53"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
