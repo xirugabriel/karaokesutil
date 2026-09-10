@@ -2234,6 +2234,75 @@ html {
 }
 .lead-nota .ic { width: 12px; height: 12px; stroke: var(--tinta-tenue); }
 
+/* ── TROCA DE UNIDADE ────────────────────────────────────────
+   O emblema virou botão. Quando a pessoa está SÓ OLHANDO outra
+   casa ele fica âmbar: a cor avisa de relance, sem depender de ela
+   ler o nome do bar. */
+.unidade-aqui.so-olhando {
+    background: rgba(251, 191, 36, .12);
+    border-color: rgba(251, 191, 36, .34);
+    color: var(--ambar);
+}
+.unidade-aqui.so-olhando::before {
+    background: var(--ambar);
+    box-shadow: 0 0 8px var(--ambar);
+}
+
+.unidade-ajuda {
+    margin: 0 0 16px;
+    font-size: 13px; line-height: 1.5;
+    color: var(--tinta-fraca);
+}
+.unidade-opcao {
+    width: 100%;
+    margin: 0 0 9px;
+    padding: 14px 15px;
+    display: flex; align-items: center; gap: 9px;
+    border-radius: var(--raio);
+    background: var(--cartao-alto) !important;
+    border: 1px solid var(--linha-forte);
+    font-size: 15px; font-weight: 700;
+    color: var(--tinta);
+    text-align: left;
+}
+.unidade-opcao.atual {
+    border-color: rgba(168, 85, 247, .55);
+    background: linear-gradient(120deg, rgba(168,85,247,.16), transparent 62%), var(--cartao-alto) !important;
+    color: #fff;
+}
+.unidade-opcao .ic { margin-left: auto; stroke: var(--roxo-claro); }
+.unidade-opcao-nome { flex: none; }
+/* "você está aqui" desfaz a dúvida de qual bar é o da pessoa */
+.unidade-tag {
+    font-size: 9.5px; font-weight: 700;
+    letter-spacing: .8px; text-transform: uppercase;
+    color: var(--verde);
+    background: rgba(52, 211, 153, .13);
+    border: 1px solid rgba(52, 211, 153, .3);
+    padding: 3px 7px;
+    border-radius: 20px;
+}
+
+/* Aviso vermelho no modal do pedido quando ela está vendo outra casa.
+   Vermelho, e não âmbar como o outro aviso ali: aquele é conselho,
+   este é erro prestes a acontecer. */
+.rq-fora {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 14px 0 0;
+    padding: 12px 14px;
+    text-align: left;
+    border-radius: 13px;
+    background: rgba(255, 77, 109, .10);
+    border: 1px solid rgba(255, 77, 109, .34);
+    font-size: 12.5px; line-height: 1.45;
+    color: var(--tinta-fraca);
+}
+.rq-fora.hidden { display: none; }
+.rq-fora .ic { flex: none; margin-top: 1px; stroke: #FF6B85; }
+.rq-fora b { display: block; color: #FF8A9E; font-weight: 700; }
+
 /* ════════════════════════════════════════════════════════════
    ❓ PERGUNTA DE SIM/NÃO — no lugar do confirm() do navegador
    ════════════════════════════════════════════════════════════ */
@@ -2294,7 +2363,7 @@ html {
     align-items: flex-start;
     gap: 9px;
     margin: 14px 0 4px;
-    padding: 11px 13px;
+    padding: 12px 14px;
     text-align: left;
     border-radius: 13px;
     background: rgba(251, 191, 36, .09);
@@ -2306,18 +2375,36 @@ html {
 .rq-aviso .ic { flex: none; margin-top: 1px; stroke: var(--ambar); }
 .rq-aviso b { color: var(--ambar); font-weight: 700; }
 
-/* Link, não botão: um segundo botão cheio competiria com o
-   "Confirmar pedido" logo abaixo e roubaria o toque. */
+/* LINHA PRÓPRIA, não pendurado no fim do parágrafo.
+   Inline, ele caía no fim da terceira linha: deixava a borda direita
+   irregular e virava um alvo de toque estreito, espremido entre o
+   texto e a margem. Em linha separada o parágrafo fecha limpo e o
+   link ganha área inteira para o dedo.
+
+   Continua com cara de link, e não de botão cheio: um segundo botão
+   sólido competiria com o "Confirmar pedido" logo abaixo. */
 .rq-aviso-link {
-    display: inline;
-    width: auto; margin: 0; padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    width: auto;
+    margin: 7px 0 0;
+    padding: 2px 0;
     background: none !important;
     border: none; box-shadow: none;
     font: inherit;
     font-weight: 700;
     color: var(--roxo-claro);
     text-decoration: underline;
-    text-underline-offset: 2px;
+    text-underline-offset: 3px;
+}
+.rq-aviso-link svg {
+    width: 13px; height: 13px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 /* o rótulo colava no título da música quando não havia campo de busca */

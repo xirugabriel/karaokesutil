@@ -50,7 +50,7 @@
             document.documentElement.classList.add('app-instalado');
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=55">
+    <link rel="stylesheet" href="style.css?v=57">
     <style>
         :root {
             --primary:        #B14EFF;   /* neon purple */
@@ -806,7 +806,8 @@
         <!-- ═══════ ABA: PEDIR (início) ═══════ -->
         <div id="tab-pedir" class="tab-panel">
 
-            <p class="unidade-aqui" id="unidade-aqui"></p>
+            <button type="button" class="unidade-aqui" id="unidade-aqui"
+                    onclick="abrirTrocaUnidade()"></button>
 
             <!-- Encaixe do "Tocando agora" nesta aba. O card nasce dentro
                  dele e volta para cá sempre que a aba inicial abre. -->
@@ -1183,7 +1184,7 @@
                     <li class="aviso-banimento"><svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Burlar a fila resulta em banimento do karaokê.</span></li>
                 </ul>
             </div>
-            <p class="versao-app">versão 55</p>
+            <p class="versao-app">versão 57</p>
 
         </div>
     </div>
@@ -1245,6 +1246,21 @@
         <label class="rq-rotulo-mesa" style="text-align:left; display:block;">Número da mesa</label>
         <input id="rq-table" type="number" inputmode="numeric" placeholder="ex.: 7">
 
+        <!-- Só aparece quando a pessoa está OLHANDO outra unidade. É o
+             erro mais caro possível aqui: o pedido entra na fila de um
+             bar onde ela não está, e o DJ de lá chama o nome no vazio. -->
+        <div class="rq-fora hidden" id="rq-fora">
+            <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+            <div>
+                <b>Você está vendo outra unidade.</b>
+                <span id="rq-fora-texto"></span>
+                <button type="button" class="rq-aviso-link" id="rq-fora-voltar">
+                    Voltar para a minha unidade
+                    <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
+            </div>
+        </div>
+
         <!-- Aviso no ponto da decisão. Fica ACIMA do botão de confirmar
              de propósito: depois de confirmar já não adianta avisar. -->
         <div class="rq-aviso">
@@ -1252,7 +1268,10 @@
             <div>
                 <b>Peça só para você.</b> Pedir no lugar de outra pessoa
                 pode resultar em banimento do karaokê.
-                <button type="button" class="rq-aviso-link" onclick="verRegrasDoPedido()">Ler as regras</button>
+                <button type="button" class="rq-aviso-link" onclick="verRegrasDoPedido()">
+                    Ler as regras
+                    <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+                </button>
             </div>
         </div>
 
@@ -1269,6 +1288,17 @@
      cinza do sistema no meio de uma tela que é toda escura e roxa.
      Além de destoar, ele não diz O QUE está sendo cancelado — e numa
      ação destrutiva isso importa mais que a aparência. -->
+<!-- ── ESCOLHER UNIDADE ────────────────────────────────────── -->
+<div id="unidade-sheet" class="modal-overlay hidden">
+    <div class="modal-box">
+        <h3>Qual unidade?</h3>
+        <p class="unidade-ajuda">Você pode ver a fila e o ranking da outra casa.
+            Para pedir música, precisa estar na unidade certa.</p>
+        <div id="unidade-lista"></div>
+        <button class="btn-cancel" onclick="fecharTrocaUnidade()">Fechar</button>
+    </div>
+</div>
+
 <div id="pergunta-sheet" class="modal-overlay hidden">
     <div class="modal-box pergunta-box">
         <div class="pergunta-selo" id="pergunta-selo"></div>
@@ -1424,17 +1454,66 @@
        pessoa nos dois bares e a foto deve acompanhar; admins, para o
        DJ operar qualquer casa; e leads, que são contatos de venda. */
     const UNIDADE_PADRAO = 'zonasul';
-    const UNIDADE = (function () {
-        const doLink = new URLSearchParams(location.search).get('u');
-        const limpo = (doLink || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
-        return limpo || UNIDADE_PADRAO;
+
+    /* DUAS UNIDADES, NÃO UMA.
+
+       `UNIDADE_DA_CASA` é o bar onde a pessoa ESTÁ — vem do QR da mesa
+       e não muda enquanto a aba viver. `UNIDADE` é o bar que ela está
+       OLHANDO, que pode ser outro se ela trocar pelo emblema.
+
+       Separar as duas é o que torna a troca segura: dá para espiar o
+       ranking da outra casa, mas na hora de pedir música o site sabe
+       que você não está lá e avisa. Sem essa distinção, alguém
+       espiaria o Centro, esqueceria, pediria — e entraria na fila de
+       um bar onde não está. O DJ chamaria o nome dela no vazio.
+
+       Como o site distingue um QR de uma troca: o link de troca leva
+       `&v=1`. Link com `u` e SEM `v` é QR de mesa e define a casa. */
+    const _p = new URLSearchParams(location.search);
+    const _limpa = (x) => (x || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+
+    const UNIDADE = _limpa(_p.get('u')) || UNIDADE_PADRAO;
+
+    const UNIDADE_DA_CASA = (function () {
+        const ehTroca = _p.get('v') === '1';
+        try {
+            if (!ehTroca) {
+                /* QR de mesa (ou entrada direta): esta é a casa. */
+                sessionStorage.setItem('casa', UNIDADE);
+                return UNIDADE;
+            }
+            return sessionStorage.getItem('casa') || UNIDADE;
+        } catch (e) {
+            /* Sem sessionStorage (navegação privada em alguns casos),
+               assume que onde ela está é onde ela olha. Perde o aviso,
+               mas nada quebra. */
+            return UNIDADE;
+        }
     })();
+
+    const SO_OLHANDO = UNIDADE !== UNIDADE_DA_CASA;
 
     /* Nome de gente para mostrar na tela. Sem entrada na tabela, cai
        no próprio id — é feio, mas é melhor que a tela ficar muda e o
        cliente não descobrir em que bar está. */
     const NOMES_UNIDADE = { zonasul: 'Zona Sul', centro: 'Centro' };
-    const UNIDADE_NOME = NOMES_UNIDADE[UNIDADE] || UNIDADE;
+    const nomeDaUnidade = (id) => NOMES_UNIDADE[id] || id;
+    const UNIDADE_NOME = nomeDaUnidade(UNIDADE);
+
+    /* Troca de unidade recarregando a página.
+       Poderia desligar e religar os ouvintes do Firebase na mão, mas
+       são vários (fila, tocando agora, banimento, espelho) e qualquer
+       um que ficasse para trás continuaria escutando o bar antigo —
+       bug silencioso e difícil de achar. Recarregar rebuilda tudo do
+       zero, e a intro é pulada para a troca ser instantânea. */
+    function trocarUnidade(id) {
+        if (id === UNIDADE) { fecharTrocaUnidade(); return; }
+        try { sessionStorage.setItem('semIntro', '1'); } catch (e) {}
+        const alvo = (id === UNIDADE_DA_CASA)
+            ? (id === UNIDADE_PADRAO ? location.pathname : location.pathname + '?u=' + id)
+            : location.pathname + '?u=' + id + '&v=1';
+        location.href = alvo;
+    }
 
     /* Monta o caminho de um nó que pertence a ESTA unidade. */
     function noUnidade(caminho) { return 'unidades/' + UNIDADE + '/' + caminho; }
@@ -1444,10 +1523,57 @@
        um espaço vazio se esperasse. */
     (function mostrarUnidade() {
         const na = document.getElementById('intro-unidade');
-        const no = document.getElementById('unidade-aqui');
         if (na) na.textContent = UNIDADE_NOME;
-        if (no) no.textContent = UNIDADE_NOME;
+
+        const no = document.getElementById('unidade-aqui');
+        if (!no) return;
+        no.textContent = UNIDADE_NOME;
+        /* Só olhando = âmbar. A cor faz a diferença ser notada de
+           relance, sem depender de a pessoa ler o nome do bar. */
+        no.classList.toggle('so-olhando', SO_OLHANDO);
+        no.title = SO_OLHANDO
+            ? 'Você está na ' + nomeDaUnidade(UNIDADE_DA_CASA) + ' e está vendo a ' + UNIDADE_NOME
+            : 'Trocar de unidade';
     })();
+
+    function abrirTrocaUnidade() {
+        const lista = document.getElementById('unidade-lista');
+        lista.innerHTML = '';
+        /* Monta por DOM em vez de juntar texto: o `onclick` inline exigia
+           aspas dentro de aspas dentro de string, e foi exatamente ali
+           que o escape se perdeu e derrubou o script inteiro. Sem texto
+           com aspas, não há o que escapar errado. */
+        Object.keys(NOMES_UNIDADE).forEach((id) => {
+            const atual = id === UNIDADE;
+            const casa = id === UNIDADE_DA_CASA;
+
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'unidade-opcao' + (atual ? ' atual' : '');
+            b.addEventListener('click', () => trocarUnidade(id));
+
+            const nome = document.createElement('span');
+            nome.className = 'unidade-opcao-nome';
+            nome.textContent = NOMES_UNIDADE[id];
+            b.appendChild(nome);
+
+            if (casa) {
+                const tag = document.createElement('span');
+                tag.className = 'unidade-tag';
+                tag.textContent = 'você está aqui';
+                b.appendChild(tag);
+            }
+            if (atual) {
+                b.insertAdjacentHTML('beforeend',
+                    '<svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>');
+            }
+            lista.appendChild(b);
+        });
+        document.getElementById('unidade-sheet').classList.remove('hidden');
+    }
+    function fecharTrocaUnidade() {
+        document.getElementById('unidade-sheet').classList.add('hidden');
+    }
 
     const queueRef = db.ref(noUnidade('fila_karaoke'));
     const settingsRef = db.ref(noUnidade('configuracoes/filaAberta'));
@@ -2286,6 +2412,17 @@
             goTab('pedir');
         }
     }
+    /* Liga/desliga o aviso de "outra unidade" sempre que a folha abre. */
+    (function prepararAvisoDeUnidade() {
+        const cx = document.getElementById('rq-fora');
+        if (!cx || !SO_OLHANDO) return;
+        cx.classList.remove('hidden');
+        document.getElementById('rq-fora-texto').textContent =
+            'Você entrou pela ' + nomeDaUnidade(UNIDADE_DA_CASA) + ', mas está vendo a ' +
+            UNIDADE_NOME + '. O pedido vai para a fila da ' + UNIDADE_NOME + '.';
+        document.getElementById('rq-fora-voltar').onclick = () => trocarUnidade(UNIDADE_DA_CASA);
+    })();
+
     function closeRequestSheet() {
         document.getElementById('request-sheet').classList.add('hidden');
         pendingVideo = null;
@@ -2312,7 +2449,23 @@
         if (pendingVideo) document.getElementById('request-sheet').classList.remove('hidden');
     }
 
-    function confirmRequest() {
+    async function confirmRequest() {
+        /* Última barreira antes de entrar numa fila errada. Não bloqueio
+           de vez porque a "casa" vem do sessionStorage e pode se perder
+           (aba reaproveitada, navegação privada) — travar alguém que
+           está no lugar certo seria pior. Uma confirmação explícita
+           impede o engano sem impedir o uso. */
+        if (SO_OLHANDO) {
+            const ok = await perguntar({
+                titulo: 'Pedir na ' + UNIDADE_NOME + '?',
+                detalhe: 'Você entrou pela ' + nomeDaUnidade(UNIDADE_DA_CASA) +
+                         '. Se não estiver na ' + UNIDADE_NOME +
+                         ' agora, ninguém vai te chamar ao palco.',
+                sim: 'Sim, estou na ' + UNIDADE_NOME,
+                perigo: true,
+            });
+            if (!ok) return;
+        }
         if (meuBanimento) {
             alert('Sua conta está bloqueada para pedidos.\n\nMotivo: ' +
                   (meuBanimento.motivo || 'descumprimento das regras da casa') +
@@ -2932,7 +3085,7 @@
 
     updateUI();
 </script>
-<script src="app.js?v=55"></script>
+<script src="app.js?v=57"></script>
 <svg width="0" height="0" style="position:absolute"><defs><filter id="gooey-filtro"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="g"/><feBlend in="SourceGraphic" in2="g"/></filter></defs></svg>
 </body>
 </html>
