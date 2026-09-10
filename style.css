@@ -207,6 +207,12 @@ button { position: relative; overflow: hidden; }
     /* 88% e não 100%: preenchendo a coluna inteira a logo encostava no
        "Perfil". A sobra vira respiro dos dois lados. */
     max-width: min(235px, 88%);
+    /* E a sobra precisa ser DIVIDIDA. O <span> em volta dimensiona pela
+       largura NATURAL da imagem; a imagem então encolhe para 88% dentro
+       dele e, sendo bloco, fica rente à esquerda — os ~20px que sobram
+       vão todos para a direita. Medido: a logo saía 9,8px à esquerda do
+       "Peça sua música". `auto` nas duas margens reparte o vão. */
+    margin-inline: auto;
     object-fit: contain;
 }
 .tb-titulo {
