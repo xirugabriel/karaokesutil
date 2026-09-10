@@ -3353,16 +3353,12 @@ html {
 }
 
 /* ════════════════════════════════════════════════════════════
-   🔔 AVISO RÁPIDO (TOAST) E CONFETE
+   🔔 AVISO RÁPIDO (TOAST)
    ════════════════════════════════════════════════════════════
 
-   Nenhum destes seletores tinha CSS. O `app.js` criava os
-   elementos, mas sem regra nenhuma o toast virava texto solto no
-   fim do <body> — "🎉 Pedido confirmado!" cru no canto — e os
-   confetes, que só recebem `left`/`top` inline, ficavam sem
-   `position` para obedecer: empilhavam como blocos comuns numa
-   coluna encostada na margem esquerda, parados, até o setTimeout
-   apagar. Era exatamente isso que aparecia na tela. */
+   Nenhum destes seletores tinha CSS. O `app.js` criava o elemento,
+   mas sem regra nenhuma o toast virava texto solto no fim do
+   <body> — "🎉 Pedido confirmado!" cru no canto da tela. */
 
 #toast-container {
     position: fixed;
@@ -3414,22 +3410,6 @@ html {
     to { opacity: 0; transform: translateY(-10px); }
 }
 
-/* ── CONFETE ─────────────────────────────────────────────────
-   `position: fixed` é o que faltava: sem ele o `left: 42vw` que o
-   app.js escreve não vale nada. Cai só em `transform` e `opacity`,
-   que a GPU resolve sem refazer layout — são 75 peças de uma vez. */
-.confetti-piece {
-    position: fixed;
-    z-index: 1200;
-    pointer-events: none;
-    animation: confete-cai var(--dur, 1.4s) linear var(--delay, 0s) forwards;
-}
-@keyframes confete-cai {
-    from { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
-    to   { transform: translate3d(var(--desvio, 0px), 108vh, 0) rotate(540deg); opacity: .15; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-    .confetti-piece { display: none; }
     .toast { animation: none; }
 }

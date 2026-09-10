@@ -78,38 +78,8 @@ document.addEventListener('click', function (e) {
 })();
 
 
-/* ══════════════════════════════════════════════════════════════
-   4. CONFETTI BURST
-══════════════════════════════════════════════════════════════ */
-window.fireConfetti = function () {
-    /* Laranja e marrom eram de um tema antigo e destoavam do roxo do
-       app. Roxo, magenta, dourado e branco: continua lendo como festa
-       e agora pertence à tela em que cai. */
-    const colors = [
-        '#A855F7', '#CD8BFF', '#7B27CC', '#FF4D9D',
-        '#FFD700', '#FFAA44', '#ffffff', '#F2F0FA'
-    ];
-    for (let i = 0; i < 75; i++) {
-        const el = document.createElement('div');
-        el.className = 'confetti-piece';
-        const size = `${Math.floor(Math.random() * 6 + 5)}px`;
-        el.style.cssText = `
-            left: ${15 + Math.random() * 70}vw;
-            top: -12px;
-            width: ${size};
-            height: ${size};
-            background: ${colors[Math.floor(Math.random() * colors.length)]};
-            --dur:   ${(Math.random() * 1.6 + 0.9).toFixed(2)}s;
-            --delay: ${(Math.random() * 0.5).toFixed(2)}s;
-            --desvio: ${(Math.random() * 70 - 35).toFixed(0)}px;
-            border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-        `;
-        document.body.appendChild(el);
-        const total = (parseFloat(el.style.getPropertyValue('--dur')) +
-                       parseFloat(el.style.getPropertyValue('--delay'))) * 1000 + 200;
-        setTimeout(() => el.remove(), total);
-    }
-};
+/* O confete do pedido confirmado foi removido a pedido da casa. Quem
+   avisa que deu certo é o toast. */
 
 
 /* (Removed the header sound-wave — the refined header keeps the top clean.) */
@@ -163,23 +133,10 @@ const uiObserver = new MutationObserver(() => {
 uiObserver.observe(appRoot, { childList: true, subtree: true });
 
 
-/* ══════════════════════════════════════════════════════════════
-   7. CONFETTI TRIGGER — detect when current user joins queue
-══════════════════════════════════════════════════════════════ */
-let _wasInQueue = false;
-
-function pollQueueMembership() {
-    try {
-        if (typeof localQueue === 'undefined' || typeof currentUID === 'undefined') return;
-        const inQueue = Array.isArray(localQueue) && localQueue.some(r => r.uid === currentUID);
-        if (inQueue && !_wasInQueue) {
-            setTimeout(fireConfetti, 200);
-        }
-        _wasInQueue = inQueue;
-    } catch (_) {}
-}
-
-setInterval(pollQueueMembership, 500);
+/* Aqui havia um `setInterval` de 500ms que vigiava a fila só para
+   disparar o confete quando a pessoa entrasse nela. Sem o confete, o
+   laço não tinha mais razão de existir — e ele rodava a noite toda,
+   no celular de todo mundo. */
 
 
 /* ══════════════════════════════════════════════════════════════
