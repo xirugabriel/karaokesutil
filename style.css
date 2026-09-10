@@ -3216,3 +3216,85 @@ html {
         clip-path: none;
     }
 }
+
+/* ════════════════════════════════════════════════════════════
+   🔔 AVISO RÁPIDO (TOAST) E CONFETE
+   ════════════════════════════════════════════════════════════
+
+   Nenhum destes seletores tinha CSS. O `app.js` criava os
+   elementos, mas sem regra nenhuma o toast virava texto solto no
+   fim do <body> — "🎉 Pedido confirmado!" cru no canto — e os
+   confetes, que só recebem `left`/`top` inline, ficavam sem
+   `position` para obedecer: empilhavam como blocos comuns numa
+   coluna encostada na margem esquerda, parados, até o setTimeout
+   apagar. Era exatamente isso que aparecia na tela. */
+
+#toast-container {
+    position: fixed;
+    /* No topo: o rodapé é do hub fixo, e um aviso ali brigaria com
+       ele. `fixed` não herda o padding do body, então a área segura
+       entra na conta aqui. */
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    left: 12px; right: 12px;
+    z-index: 1300;   /* acima do hub (900), das folhas (1000) e do corte (1100) */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    /* O aviso some sozinho; não pode roubar o toque de quem está
+       tentando usar o que está embaixo dele. */
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 420px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    text-align: left;
+    background: var(--cartao-alto);
+    border: 1px solid var(--linha-forte);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .55);
+    font-size: 13.5px; font-weight: 600; line-height: 1.35;
+    color: var(--tinta);
+    animation: toast-entra .28s cubic-bezier(.2, .9, .3, 1.2) both;
+}
+/* o app.js põe `.exit` e remove o nó 330ms depois */
+.toast.exit { animation: toast-sai .3s ease forwards; }
+.toast-icon { flex: none; font-size: 15px; line-height: 1; }
+
+/* a borda diz o tipo antes de a pessoa terminar de ler */
+.toast.success { border-color: rgba(52, 211, 153, .42); }
+.toast.error   { border-color: rgba(255, 77, 109, .48); }
+.toast.warning { border-color: rgba(251, 191, 36, .42); }
+.toast.info    { border-color: rgba(168, 85, 247, .42); }
+
+@keyframes toast-entra {
+    from { opacity: 0; transform: translateY(-14px) scale(.96); }
+    to   { opacity: 1; transform: none; }
+}
+@keyframes toast-sai {
+    to { opacity: 0; transform: translateY(-10px); }
+}
+
+/* ── CONFETE ─────────────────────────────────────────────────
+   `position: fixed` é o que faltava: sem ele o `left: 42vw` que o
+   app.js escreve não vale nada. Cai só em `transform` e `opacity`,
+   que a GPU resolve sem refazer layout — são 75 peças de uma vez. */
+.confetti-piece {
+    position: fixed;
+    z-index: 1200;
+    pointer-events: none;
+    animation: confete-cai var(--dur, 1.4s) linear var(--delay, 0s) forwards;
+}
+@keyframes confete-cai {
+    from { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
+    to   { transform: translate3d(var(--desvio, 0px), 108vh, 0) rotate(540deg); opacity: .15; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .confetti-piece { display: none; }
+    .toast { animation: none; }
+}

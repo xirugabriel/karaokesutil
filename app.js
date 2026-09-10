@@ -82,9 +82,12 @@ document.addEventListener('click', function (e) {
    4. CONFETTI BURST
 ══════════════════════════════════════════════════════════════ */
 window.fireConfetti = function () {
+    /* Laranja e marrom eram de um tema antigo e destoavam do roxo do
+       app. Roxo, magenta, dourado e branco: continua lendo como festa
+       e agora pertence à tela em que cai. */
     const colors = [
-        '#E8821A', '#F5A543', '#C9931A', '#FFD700',
-        '#FFF5E0', '#FF9F40', '#ffffff', '#B85E0A', '#FFAA44'
+        '#A855F7', '#CD8BFF', '#7B27CC', '#FF4D9D',
+        '#FFD700', '#FFAA44', '#ffffff', '#F2F0FA'
     ];
     for (let i = 0; i < 75; i++) {
         const el = document.createElement('div');
@@ -98,6 +101,7 @@ window.fireConfetti = function () {
             background: ${colors[Math.floor(Math.random() * colors.length)]};
             --dur:   ${(Math.random() * 1.6 + 0.9).toFixed(2)}s;
             --delay: ${(Math.random() * 0.5).toFixed(2)}s;
+            --desvio: ${(Math.random() * 70 - 35).toFixed(0)}px;
             border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
         `;
         document.body.appendChild(el);
